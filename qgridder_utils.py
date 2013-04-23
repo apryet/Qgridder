@@ -211,8 +211,8 @@ def refine_by_split(featIds, n, m, topoRules, vLayer, progressBar = QProgressDia
 	itCount+=1
 	labelIter.setText(unicode(itCount))
     
-    print('Number of iterations :' )
-    print(itCount)
+    #print('Number of iterations :' )
+    #print(itCount)
 
 # --------------------------------------------------------------------------------------------------------------
 def split_cells(fixDict, n, m, vLayer):
@@ -284,8 +284,8 @@ def check_topo(featId, n, m, topoRules, allFeatures, vLayer, vLayerIndex):
     # Find neighbors
     neighbors = find_neighbors(feat, allFeatures, vLayerIndex)
 
-    print('len(neighbors[\'feature\'])')
-    print(len(neighbors['feature']))
+    #print('len(neighbors[\'feature\'])')
+    #print(len(neighbors['feature']))
 
     # Check the compatibility of inputFeature and neighbors with topoRules
     for direction, neighbor in zip(neighbors['direction'], neighbors['feature']):

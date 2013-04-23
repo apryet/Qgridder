@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- Gridder
+ Qgridder
                                  A QGIS plugin
- Build 2D grids for finite difference
+ Builds 2D grids for finite difference
                               -------------------
         begin                : 2013-04-08
         copyright            : (C) 2013 by Pryet
@@ -26,23 +26,23 @@ from qgis.core import *
 # Initialize Qt resources from file resources.py
 import resources
 # Import the code for the dialog
-from gridderdialog import GridderDialog
+from qgridderdialog import QGridderDialog
 
-class Gridder:
+class QGridder:
 
     def __init__(self, iface):
         # Save reference to the QGIS interface
         self.iface = iface
         # Create the dialog and keep reference
-        self.dlg = GridderDialog(self.iface)
+        self.dlg = QGridderDialog(self.iface)
         # initialize plugin directory
-        self.plugin_dir = QFileInfo(QgsApplication.qgisUserDbFilePath()).path() + "/python/plugins/gridder"
+        self.plugin_dir = QFileInfo(QgsApplication.qgisUserDbFilePath()).path() + "/python/plugins/Qgridder"
         # initialize locale
         localePath = ""
         locale = QSettings().value("locale/userLocale").toString()[0:2]
        
         if QFileInfo(self.plugin_dir).exists():
-            localePath = self.plugin_dir + "/i18n/gridder_" + locale + ".qm"
+            localePath = self.plugin_dir + "/i18n/Qgridder_" + locale + ".qm"
 
         if QFileInfo(localePath).exists():
             self.translator = QTranslator()
@@ -54,18 +54,18 @@ class Gridder:
 
     def initGui(self):
         # Create action that will start plugin configuration
-        self.action = QAction(QIcon(":/plugins/gridder/icon.png"), \
-            u"Gridder", self.iface.mainWindow())
+        self.action = QAction(QIcon(":/plugins/Qgridder/icon.png"), \
+            u"Qgridder", self.iface.mainWindow())
         # connect the action to the run method
         QObject.connect(self.action, SIGNAL("triggered()"), self.run)
 
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.action)
-        self.iface.addPluginToMenu(u"&Gridder", self.action)
+        self.iface.addPluginToMenu(u"&Qgridder", self.action)
 
     def unload(self):
         # Remove the plugin menu item and icon
-        self.iface.removePluginMenu(u"&Gridder",self.action)
+        self.iface.removePluginMenu(u"&Qgridder",self.action)
         self.iface.removeToolBarIcon(self.action)
 
     # run method that performs all the real work

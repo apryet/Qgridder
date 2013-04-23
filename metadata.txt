@@ -9,9 +9,9 @@
 
 
 [general]
-name=Build 2D grids
+name=Qgridder
 qgisMinimumVersion=1.0
-description=Build 2D grids for finite difference
+description=Builds 2D grids for finite difference
 version=0.1
 
 # end of mandatory metadata
@@ -26,7 +26,7 @@ tags=
 
 homepage=
 tracker=
-repository=
+repository= https://github.com/apryet/Qgridder
 icon=icon.png
 # experimental flag
 experimental=True

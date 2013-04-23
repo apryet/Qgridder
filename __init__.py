@@ -3,7 +3,7 @@
 /***************************************************************************
  Gridder
                                  A QGIS plugin
- Build 2D grids for finite difference
+ Builds 2D grids for finite difference
                              -------------------
         begin                : 2013-04-08
         copyright            : (C) 2013 by Pryet
@@ -21,9 +21,9 @@
  This script initializes the plugin, making it known to QGIS.
 """
 def name():
-    return "Build 2D grids"
+    return "Qgridder"
 def description():
-    return "Build 2D grids for finite difference"
+    return "Builds 2D grids for finite difference"
 def version():
     return "Version 0.1"
 def icon():
@@ -32,5 +32,5 @@ def qgisMinimumVersion():
     return "1.0"
 def classFactory(iface):
     # load Gridder class from file Gridder
-    from gridder import Gridder
-    return Gridder(iface)
+    from qgridder import QGridder
+    return QGridder(iface)

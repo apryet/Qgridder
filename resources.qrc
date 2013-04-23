@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/plugins/gridder" >
+    <qresource prefix="/plugins/Qgridder" >
         <file>icon.png</file>
     </qresource>
 </RCC>

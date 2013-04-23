@@ -3,7 +3,7 @@
 /***************************************************************************
  GridderDialog
                                  A QGIS plugin
- Build 2D grids for finite difference
+ BUILDS 2D grids for finite difference
                              -------------------
         begin                : 2013-04-08
         copyright            : (C) 2013 by Pryet
@@ -24,17 +24,17 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from qgis.core import *
 
-from ui_gridder import Ui_Gridder
+from ui_qgridder import Ui_QGridder
 
 import ftools_utils
-import gridder_utils
+import qgridder_utils
 
 import numpy as np
 
 
 
 # create the dialog for zoom to point
-class GridderDialog(QDialog, Ui_Gridder):
+class QGridderDialog(QDialog, Ui_QGridder):
     def __init__(self,iface):
 
 	# Set up the user interface from Designer.

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Gridder</class>
- <widget class="QDialog" name="Gridder">
+ <class>QGridder</class>
+ <widget class="QDialog" name="QGridder">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -251,8 +251,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>564</width>
-        <height>490</height>
+        <width>436</width>
+        <height>224</height>
        </rect>
       </property>
       <attribute name="label">
@@ -417,8 +417,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>564</width>
-        <height>490</height>
+        <width>511</width>
+        <height>218</height>
        </rect>
       </property>
       <attribute name="label">
@@ -588,8 +588,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>564</width>
-        <height>490</height>
+        <width>223</width>
+        <height>120</height>
        </rect>
       </property>
       <attribute name="label">

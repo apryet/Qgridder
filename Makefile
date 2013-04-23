@@ -1,7 +1,7 @@
 #/***************************************************************************
-# Gridder
+# QGridder
 # 
-# Build 2D grids for finite difference
+# Builds 2D grids for finite difference
 #                             -------------------
 #        begin                : 2013-04-08
 #        copyright            : (C) 2013 by Pryet
@@ -23,21 +23,21 @@ PLUGIN_UPLOAD = $(CURDIR)/plugin_upload.py
 # Makefile for a PyQGIS plugin 
 
 # translation
-SOURCES = gridder.py ui_gridder.py __init__.py gridderdialog.py gridder_utils.py fTools.py 
+SOURCES = qgridder.py ui_qgridder.py __init__.py qgridder_utils.py ftools_utils.py
 #TRANSLATIONS = i18n/gridder_en.ts
 TRANSLATIONS = 
 
 # global
 
-PLUGINNAME = gridder
+PLUGINNAME = Qgridder
 
-PY_FILES = gridder.py gridderdialog.py __init__.py gridder_utils.py fTools.py
+PY_FILES = qgridder.py qgridderdialog.py __init__.py qgridder_utils.py ftools_utils.py
 
 EXTRAS = icon.png 
 
-UI_FILES = ui_gridder.py ui_check_topology.py
+UI_FILES = ui_qgridder.py 
 
-RESOURCE_FILES = resources_rc.py
+RESOURCE_FILES = resources.py
 
 HELP = help/build/html
 
@@ -45,8 +45,8 @@ default: compile
 
 compile: $(UI_FILES) $(RESOURCE_FILES)
 
-%_rc.py : %.qrc
-	pyrcc4 -o $*_rc.py  $<
+%.py : %.qrc
+	pyrcc4 -o $*.py  $<
 
 %.py : %.ui
 	pyuic4 -o $@ $<
@@ -57,14 +57,14 @@ compile: $(UI_FILES) $(RESOURCE_FILES)
 # The deploy  target only works on unix like operating system where
 # the Python plugin directory is located at:
 # $HOME/.qgis/python/plugins
-deploy: compile doc transcompile
+deploy: compile # doc transcompile 
 	mkdir -p $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
 	cp -vf $(PY_FILES) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
 	cp -vf $(UI_FILES) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
 	cp -vf $(RESOURCE_FILES) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
 	cp -vf $(EXTRAS) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
-	cp -vfr i18n $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
-	cp -vfr $(HELP) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)/help
+	#cp -vfr i18n $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
+	#cp -vfr $(HELP) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)/help
 
 # The dclean target removes compiled python files from plugin directory
 # also delets any .svn entry
@@ -115,3 +115,4 @@ clean:
 # build documentation with sphinx
 doc: 
 	cd help; make html
+
