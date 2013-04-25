@@ -200,7 +200,7 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	    writer = QgsVectorFileWriter(self.OutFileName, self.encoding, fields, QGis.WKBPolygon, crs)
 	    
 	    # Call function to make grid
-	    gridder_utils.make_rgrid(rectFeat, n, m, writer, self.progressBarBuildGrid)
+	    qgridder_utils.make_rgrid(rectFeat, n, m, writer, self.progressBarBuildGrid)
 
 	    # Delete writer
 	    del writer
@@ -290,7 +290,7 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	self.labelIter.setText(unicode(1))
 
 	# Refine grid 
-	gridder_utils.refine_by_split(selected_fIds, n, m, topoRules, grid_layer, self.progressBarRegularRefine, self.labelIter)
+	qgridder_utils.refine_by_split(selected_fIds, n, m, topoRules, grid_layer, self.progressBarRegularRefine, self.labelIter)
 
 	# Post-operation information
 	QMessageBox.information(self, self.tr("Gridder"), 
