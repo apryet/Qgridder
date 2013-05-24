@@ -174,7 +174,7 @@ def refine_by_split(featIds, n, m, topoRules, vLayer, progressBar = QProgressDia
 	allAttrs = vLayer.pendingAllAttributesList()
 	vLayer.select(allAttrs)
 	# Get all the features to start
-	allFeatures = {feature.id(): feature for (feature) in vLayer}
+	allFeatures = {feature.id(): feature for feature in vLayer}
 	# Initialize spatial index 
 	vLayerIndex = QgsSpatialIndex()
 	# Fill spatial Index
@@ -211,8 +211,6 @@ def refine_by_split(featIds, n, m, topoRules, vLayer, progressBar = QProgressDia
 	itCount+=1
 	labelIter.setText(unicode(itCount))
     
-    #print('Number of iterations :' )
-    #print(itCount)
 
 # --------------------------------------------------------------------------------------------------------------
 def split_cells(fixDict, n, m, vLayer):
@@ -284,16 +282,9 @@ def check_topo(featId, n, m, topoRules, allFeatures, vLayer, vLayerIndex):
     # Find neighbors
     neighbors = find_neighbors(feat, allFeatures, vLayerIndex)
 
-    #print('len(neighbors[\'feature\'])')
-    #print(len(neighbors['feature']))
-
     # Check the compatibility of inputFeature and neighbors with topoRules
     for direction, neighbor in zip(neighbors['direction'], neighbors['feature']):
 	if direction in [1, 2, 3, 4]:
-	    #print('direction:')
-	    #print(direction)
-	    #print('is_valid_boundary:')
-	    #print(is_valid_boundary( feat, neighbor, direction, topoRules ))
 	    if not is_valid_boundary( feat, neighbor, direction, topoRules ) :
 		# Special case for newsam grid
 		if topoRules['model']=='newsam':
@@ -307,17 +298,13 @@ def check_topo(featId, n, m, topoRules, allFeatures, vLayer, vLayerIndex):
 		    elif direction in [1,3] : # vertically
 			N = 1
 		# Update fixDict
-		#print('n:')
-		#print(n)
-		#print('m:')
-		#print(m)
 		fixDict = update_fixDict( fixDict, { 'id':[neighbor.id()] , 'n':[N], 'm':[M] } )
 
     # return features that do not satisfy topoRules
     return fixDict
 
 # --------------------------------------------------------------------------------------------------------------
-# Finf the neighbors of inputFeature neighbor and identify the direction
+# Find the neighbors of inputFeature neighbor and identify the direction
 def find_neighbors(inputFeature, allFeatures, vLayerIndex):
 
     # Get neighbors Ids.
@@ -392,3 +379,228 @@ def find_neighbors(inputFeature, allFeatures, vLayerIndex):
     # Return dictionary with neighbors
     return neighbors
 
+
+# -----------------------------------------------------
+# get nrow and ncol or a regular (modflow) grid layer
+def get_rgrid_nrow_ncol(gridLayer):
+
+    # TODO : check if the grid is actually regular 
+    
+    # Load layer
+    allAttrs = gridLayer.pendingAllAttributesList()
+    gridLayer.select(allAttrs)
+    #gridLayer.dataProvider().select(allAttrs)
+
+    # Init variables 
+    allFeatures = {feat.id():feat for feat in gridLayer}
+    allCentroids = [feat.geometry().centroid().asPoint() \
+			for feat in allFeatures.values()]
+    centroids_ids = allFeatures.keys()
+    centroids_x = [centroid.x() for centroid in allCentroids]
+    centroids_y = [centroid.y() for centroid in allCentroids]
+    centroids = np.array( [centroids_ids , centroids_x, centroids_y] )
+    centroids = centroids.T
+
+    # get ncol :
+    # sort by decreasing y and increasing x
+    idx_row = np.lexsort([centroids[:,1],-centroids[:,2]])
+    yy = centroids[idx_row,2]
+    # iterate along first row and count number of items with same y
+    i=0
+    while is_equal(yy[i],yy[i+1]) and i < (yy.size - 1) :
+	i+=1
+    ncol = i+1
+
+    # get nrow :
+    # sort by increasing x and decreasing y
+    idx_col = np.lexsort([-centroids[:,2],centroids[:,1]])
+    xx=centroids[idx_col,1]
+    # iterate over first col and count number of items with same x
+    i=0
+    while is_equal(xx[i],xx[i+1]) and i < (xx.size - 1) :
+	i+=1
+    nrow = i+1
+
+    # return nrow, ncol
+    return(nrow, ncol)
+
+# -----------------------------------------------------
+# get delr delc of a regular (modflow) grid layer
+def get_rgrid_delr_delc(gridLayer):
+
+    # TODO : check if the grid is actually regular 
+    
+    # Load layer
+    allAttrs = gridLayer.pendingAllAttributesList()
+    gridLayer.select(allAttrs)
+    #gridLayer.dataProvider().select(allAttrs)
+
+    # Init variables 
+    allFeatures = {feat.id():feat for feat in gridLayer}
+    allCentroids = [feat.geometry().centroid().asPoint() \
+			for feat in allFeatures.values()]
+    centroids_ids = allFeatures.keys()
+    centroids_x = [centroid.x() for centroid in allCentroids]
+    centroids_y = [centroid.y() for centroid in allCentroids]
+    centroids = np.array( [centroids_ids , centroids_x, centroids_y] )
+    centroids = centroids.T
+
+    # get nrow, ncol
+    nrow, ncol =  get_rgrid_nrow_ncol(gridLayer)
+
+    # init list
+    delr = []
+    delc = []
+
+    # sort by decreasing y and increasing x
+    idx_row = np.lexsort([centroids[:,1],-centroids[:,2]])
+    # iterate along first row 
+    for featId in centroids[idx_row,0][:nrow]:
+	# Extract the four corners of feat
+	# Note : rectangle points are numbered from top-left to bottom-left, clockwise
+	p0, p1, p2, p3 = ftools_utils.extractPoints(allFeatures[featId].geometry())[:4]
+	delr.append( p1.x() - p0.x() )
+
+    # sort by increasing x and decreasing y    
+    idx_col = np.lexsort([-centroids[:,2],centroids[:,1]])
+    # iterate along first col
+    for featId in centroids[idx_col,0][:ncol]:
+	# Extract the four corners of feat
+	# Note : rectangle points are numbered from top-left to bottom-left, clockwise
+	p0, p1, p2, p3 = ftools_utils.extractPoints(allFeatures[featId].geometry())[:4]
+	delc.append( p0.y() - p3.y() )
+
+    # If all values are identical, return scalar
+    if delr.count(delr[0]) == len(delr):
+	delr = delr[0]
+
+    if delc.count(delc[0]) == len(delc):
+	delc = delc[0]
+
+    return(delr, delc)
+
+# -----------------------------------------------------
+# Add attributes NROW, NCOL to a regular (modflow) grid layer
+def rgrid_numbering(gridLayer):
+
+    # TODO : check if the grid is actually regular 
+    allAttrs = gridLayer.pendingAllAttributesList()
+    #gridLayer.dataProvider().select(allAttrs)
+    gridLayer.select(allAttrs)
+    caps = gridLayer.dataProvider().capabilities()
+
+        # Init variables 
+    allFeatures = {feat.id():feat for feat in gridLayer}
+    allCentroids = [feat.geometry().centroid().asPoint() \
+			for feat in allFeatures.values()]
+    centroids_ids = allFeatures.keys()
+    centroids_x = [centroid.x() for centroid in allCentroids]
+    centroids_y = [centroid.y() for centroid in allCentroids]
+    centroids = np.array( [centroids_ids , centroids_x, centroids_y] )
+    centroids = centroids.T
+    
+    # Fetch field name index of ROW and COL
+    # If columns don't exist, add them
+    row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
+    col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
+
+    if row_field_idx == -1:
+	if caps & QgsVectorDataProvider.AddAttributes:
+	  res = gridLayer.dataProvider().addAttributes(  [QgsField("ROW", QVariant.Int)] ) 
+	  row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
+      
+
+    if col_field_idx == -1:
+	if caps & QgsVectorDataProvider.AddAttributes:
+	  res = gridLayer.dataProvider().addAttributes( [QgsField("COL", QVariant.Int)] )
+	  col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
+
+    # get nrow, ncol
+    nrow, ncol =  get_rgrid_nrow_ncol(gridLayer)
+
+    # Iterate over grid row-wise and column wise 
+    # sort by decreasing y and increasing x
+    idx = np.lexsort( [centroids[:,1],-centroids[:,2]] )
+
+    row = 1
+    col = 1
+
+    for featId in centroids[idx,0]:
+	if col > ncol:
+	    col = 1
+	    row = row + 1
+	attr = {row_field_idx:QVariant(row),
+				col_field_idx:QVariant(col)
+			     }
+	res = gridLayer.dataProvider().changeAttributeValues({featId:attr})
+	col+=1
+
+    # trick to update fields in QgsInterface
+    gridLayer.startEditing()
+    gridLayer.commitChanges()
+
+# -----------------------------------------------------
+# return modflow-like list from selected features and fieldName 
+def get_param_list(gridLayer, layer = '', fieldName = ''):
+    
+    # Load data
+    allAttrs = gridLayer.pendingAllAttributesList()
+    gridLayer.select(allAttrs)
+    allFeatures = {feat.id():feat for feat in gridLayer}
+
+    # Fetch selected features from input grid_layer
+    selected_fIds = gridLayer.selectedFeaturesIds()
+
+    # Fetch required field index in layer attribute map
+    row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
+    col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
+
+    if fieldName !='' :
+	attr_field_idx = gridLayer.dataProvider().fieldNameIndex(fieldName)
+
+    if row_field_idx == -1 or col_field_idx ==-1 : 
+	QMessageBox.information(self, self.tr("QGridder"), 
+		self.tr("Fields ROW and COL not found")
+		)
+	return
+
+    if attr_field_idx == -1 :
+	QMessageBox.information(qgis.utils.iface, "QGridder", 
+		"Field " + fieldName + "  not found in grid attribute table.")
+		)
+	return
+
+    # init output list 
+    grid_list = []
+
+    # iterate over selected feature ids
+    for fId in selected_fIds:
+	attrMap = allFeatures[fId].attributeMap()
+	row = attrMap[row_field_idx].toInt()[0]
+	col = attrMap[col_field_idx].toInt()[0]
+
+	this_feat_list = []
+
+	# add layer number
+	if layer != '':
+	    this_feat_list.append(layer)
+
+	# add row and col number
+	this_feat_list.append(row)
+	this_feat_list.append(col)
+
+	# add attribute value
+	if fieldName != '' :
+	    field_value = attrMap[attr_field_idx]
+	    if field_value.toFloat()[1] == True:
+		this_feat_list.append(field_value.toFloat()[0])
+	    else : 
+		this_feat_list.append(str(field_value.toString()))
+
+	grid_list.append(this_feat_list)
+
+    return grid_list
+
+# ---------------------------------
+# return modflow-like parameter array
+def get_param_array(gridLayer, layer = '', fieldName = ''):

@@ -6,15 +6,60 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>588</width>
-    <height>650</height>
+    <width>621</width>
+    <height>844</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Qgridder</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="0">
+  <layout class="QVBoxLayout" name="verticalLayout_7">
+   <item>
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="title">
+      <string/>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_12">
+        <item>
+         <widget class="QLabel" name="label_22">
+          <property name="text">
+           <string>Model type :</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="listModelName">
+          <property name="editable">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_11">
+        <item>
+         <widget class="QLabel" name="labelGridLayer">
+          <property name="text">
+           <string>Grid layer :</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="listGridLayer">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QToolBox" name="toolBox">
      <property name="currentIndex">
       <number>0</number>
@@ -24,14 +69,14 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>564</width>
-        <height>490</height>
+        <width>597</width>
+        <height>542</height>
        </rect>
       </property>
       <attribute name="label">
        <string>Build new grid</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
+      <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
@@ -62,7 +107,11 @@
           <item row="3" column="0">
            <layout class="QGridLayout" name="gridLayout_2">
             <item row="0" column="1">
-             <widget class="QLineEdit" name="textXmin"/>
+             <widget class="QLineEdit" name="textXmin">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
             </item>
             <item row="0" column="2">
              <widget class="QLabel" name="label_2">
@@ -72,7 +121,11 @@
              </widget>
             </item>
             <item row="0" column="3">
-             <widget class="QLineEdit" name="textYmin"/>
+             <widget class="QLineEdit" name="textYmin">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
             </item>
             <item row="0" column="0">
              <widget class="QLabel" name="label_3">
@@ -82,7 +135,11 @@
              </widget>
             </item>
             <item row="1" column="3">
-             <widget class="QLineEdit" name="textYmax"/>
+             <widget class="QLineEdit" name="textYmax">
+              <property name="text">
+               <string>100</string>
+              </property>
+             </widget>
             </item>
             <item row="1" column="2">
              <widget class="QLabel" name="label_4">
@@ -99,7 +156,11 @@
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QLineEdit" name="textXmax"/>
+             <widget class="QLineEdit" name="textXmax">
+              <property name="text">
+               <string>100</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -116,10 +177,10 @@
        <item>
         <widget class="QGroupBox" name="groupBox_2">
          <property name="title">
-          <string>Grid resolution</string>
+          <string>Grid resolution (in map unit)</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout">
-          <item>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="0" column="0">
            <layout class="QGridLayout" name="gridLayout_5">
             <item row="0" column="4">
              <widget class="QDoubleSpinBox" name="sboxYres">
@@ -173,6 +234,24 @@
             </item>
            </layout>
           </item>
+          <item row="1" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_9">
+            <item>
+             <widget class="QLabel" name="label_13">
+              <property name="text">
+               <string>Estimated number of grid cells : </string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelNumberCells">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
          </layout>
         </widget>
        </item>
@@ -185,7 +264,11 @@
           <item row="0" column="0">
            <layout class="QGridLayout" name="gridLayout_7">
             <item row="3" column="1">
-             <widget class="QLineEdit" name="textOutFilename"/>
+             <widget class="QLineEdit" name="textOutFilename">
+              <property name="text">
+               <string>grid.shp</string>
+              </property>
+             </widget>
             </item>
             <item row="3" column="2">
              <widget class="QPushButton" name="buttonBrowse">
@@ -251,24 +334,14 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>436</width>
-        <height>224</height>
+        <width>597</width>
+        <height>542</height>
        </rect>
       </property>
       <attribute name="label">
        <string>Regular refinement</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
-       <item>
-        <widget class="QLabel" name="label_8">
-         <property name="text">
-          <string>Grid layer :</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="listGridLayer"/>
-       </item>
        <item>
         <widget class="QLabel" name="label_9">
          <property name="text">
@@ -279,14 +352,14 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
-          <widget class="QLabel" name="label_10">
+          <widget class="QLabel" name="label_11">
            <property name="text">
-            <string>vertically :</string>
+            <string>horizontally :</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="sboxDivideVert">
+          <widget class="QSpinBox" name="sboxDivideHoriz">
            <property name="minimum">
             <number>1</number>
            </property>
@@ -296,14 +369,14 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_11">
+          <widget class="QLabel" name="label_10">
            <property name="text">
-            <string>horizontally :</string>
+            <string>vertically :</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="sboxDivideHoriz">
+          <widget class="QSpinBox" name="sboxDivideVert">
            <property name="minimum">
             <number>1</number>
            </property>
@@ -326,14 +399,7 @@
          <item>
           <widget class="QCheckBox" name="checkTopo">
            <property name="text">
-            <string>Check topology  for : </string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="listModelName">
-           <property name="editable">
-            <bool>false</bool>
+            <string>Check topology  for selected model type</string>
            </property>
           </widget>
          </item>
@@ -417,8 +483,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>511</width>
-        <height>218</height>
+        <width>597</width>
+        <height>542</height>
        </rect>
       </property>
       <attribute name="label">
@@ -562,7 +628,7 @@
          <item>
           <widget class="QPushButton" name="buttonRefineGrid_2">
            <property name="text">
-            <string>Refine selected </string>
+            <string>Refine selection</string>
            </property>
           </widget>
          </item>
@@ -583,31 +649,80 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="page_3">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>597</width>
+        <height>542</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>Pre-processing</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_13">
+         <item>
+          <spacer name="horizontalSpacer_7">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonProceedNumbering">
+           <property name="text">
+            <string>Proceed to numbering</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>459</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="page_2">
       <property name="geometry">
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>223</width>
-        <height>120</height>
+        <width>597</width>
+        <height>542</height>
        </rect>
       </property>
       <attribute name="label">
-       <string>Numbering</string>
+       <string>Export</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_5">
        <item>
-        <widget class="QLabel" name="label_13">
-         <property name="text">
-          <string>Grid layer :</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="listGridLayer_3"/>
-       </item>
-       <item>
         <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <item>
+          <widget class="QProgressBar" name="progressBarExport">
+           <property name="value">
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
          <item>
           <spacer name="horizontalSpacer_4">
            <property name="orientation">
@@ -622,13 +737,26 @@
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_2">
+          <widget class="QPushButton" name="buttonExport">
            <property name="text">
-            <string>Update grid numbering</string>
+            <string>Export</string>
            </property>
           </widget>
          </item>
         </layout>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>598</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
        </item>
        <item>
         <spacer name="verticalSpacer_3">
@@ -649,6 +777,36 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>listModelName</tabstop>
+  <tabstop>listGridLayer</tabstop>
+  <tabstop>listSourceLayer</tabstop>
+  <tabstop>buttonUpdateFromLayer</tabstop>
+  <tabstop>buttonUpdateFromCanvas</tabstop>
+  <tabstop>textXmin</tabstop>
+  <tabstop>textYmin</tabstop>
+  <tabstop>textXmax</tabstop>
+  <tabstop>textYmax</tabstop>
+  <tabstop>sboxXres</tabstop>
+  <tabstop>sboxYres</tabstop>
+  <tabstop>checkRatio</tabstop>
+  <tabstop>textOutFilename</tabstop>
+  <tabstop>buttonBrowse</tabstop>
+  <tabstop>checkLoadLayer</tabstop>
+  <tabstop>buttonWriteGrid</tabstop>
+  <tabstop>sboxDivideVert</tabstop>
+  <tabstop>checkDivideRatio</tabstop>
+  <tabstop>checkTopo</tabstop>
+  <tabstop>buttonRegularRefile</tabstop>
+  <tabstop>listGridLayer_2</tabstop>
+  <tabstop>sboxXres_2</tabstop>
+  <tabstop>sboxXres_3</tabstop>
+  <tabstop>sboxXres_4</tabstop>
+  <tabstop>sboxXres_5</tabstop>
+  <tabstop>buttonRefineGrid_2</tabstop>
+  <tabstop>buttonProceedNumbering</tabstop>
+  <tabstop>buttonExport</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

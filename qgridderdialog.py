@@ -31,8 +31,6 @@ import qgridder_utils
 
 import numpy as np
 
-
-
 # create the dialog for zoom to point
 class QGridderDialog(QDialog, Ui_QGridder):
     def __init__(self,iface):
@@ -43,9 +41,6 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	self.setupUi(self)
 
 	# Set up widgets
-	QObject.connect(self.sboxXres, SIGNAL("valueChanged(double)"), self.set_Yres)
-	QObject.connect(self.sboxDivideVert, SIGNAL("valueChanged(double)"), self.set_divide_horiz)
-	
 	self.checkRatio.setCheckState(Qt.Checked)
 	self.checkLoadLayer.setCheckState(Qt.Checked)
 	self.checkDivideRatio.setCheckState(Qt.Checked)
@@ -57,11 +52,24 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	QObject.connect(self.buttonBrowse, SIGNAL("clicked()"), self.out_file)
 	QObject.connect(self.buttonWriteGrid, SIGNAL("clicked()"), self.run_write_grid)
 	QObject.connect(self.buttonRegularRefile, SIGNAL("clicked()"), self.run_regular_refine)
+	QObject.connect(self.buttonExport, SIGNAL("clicked()"), self.run_export)
+	QObject.connect(self.buttonProceedNumbering, SIGNAL("clicked()"), self.run_preprocessing)
+
+	# Connect actions
+	QObject.connect(self.sboxXres, SIGNAL("valueChanged(double)"), self.set_Yres)
+	QObject.connect(self.sboxDivideHoriz, SIGNAL("valueChanged(int)"), self.set_divide_vert)
 	
+	QObject.connect(self.textXmin, SIGNAL("textChanged(const QString &)"), self.estim_number_grid_cells)
+	QObject.connect(self.textXmax, SIGNAL("textChanged(const QString &)"), self.estim_number_grid_cells)
+	QObject.connect(self.textYmin, SIGNAL("textChanged(const QString &)"), self.estim_number_grid_cells)
+	QObject.connect(self.textYmax, SIGNAL("textChanged(const QString &)"), self.estim_number_grid_cells)
+	QObject.connect(self.sboxXres, SIGNAL("valueChanged(double)"), self.estim_number_grid_cells)
+	QObject.connect(self.sboxYres, SIGNAL("valueChanged(double)"), self.estim_number_grid_cells)
+
 	# Populate layer list
 	for modelName in ['Modflow','Newsam']:
 	    self.listModelName.addItem(unicode(modelName))
-	
+
 	# Populate model name list
 	self.populate_layers(self.listSourceLayer)
 	self.populate_layers(self.listGridLayer)
@@ -83,15 +91,19 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	self.labelIterations.hide()
 	self.labelIter.hide()
 
+	# Init variables 
+	self.OutFileName = 'grid.shp'
+	self.encoding = 'System'
+
 
     #  ======= Update automatically when 1:1 ratio is checked
     def set_Yres(self, value):
         if self.checkRatio.isChecked():
             self.sboxYres.setValue(value)
 
-    def set_divide_horiz(self, value):
-        if self.checkDivideRatio.isChecked():
-            self.sboxDivideHoriz.setValue(value)
+    def set_divide_vert(self, value):
+	if self.checkDivideRatio.isChecked():
+            self.sboxDivideVert.setValue(value)
 
     #  ======= Choose output shape file
     def out_file(self):
@@ -105,10 +117,19 @@ class QGridderDialog(QDialog, Ui_QGridder):
     def populate_layers( self,listOfLayers):
         listOfLayers.clear()
         layermap = QgsMapLayerRegistry.instance().mapLayers()
-        for name, layer in layermap.iteritems():
-            listOfLayers.addItem( unicode( layer.name() ) )
-            if layer == self.iface.activeLayer():
-                listOfLayers.setCurrentIndex( self.listSourceLayer.count() -1 )
+
+	if type(layermap)==dict :
+	    if len(layermap) > 0:
+		listOfLayers.setEnabled(True)
+		for name, layer in layermap.iteritems():
+		    listOfLayers.addItem( unicode( layer.name() ) )
+		    if layer == self.iface.activeLayer():
+			listOfLayers.setCurrentIndex( self.listSourceLayer.count() -1 )
+	    else :
+		listOfLayers.setEnabled(False)
+	else :
+	    listOfLayers.setEnabled(False)
+	    
 
     #  ======= Update extents from layer
     def update_from_layer( self ):
@@ -131,6 +152,27 @@ class QGridderDialog(QDialog, Ui_QGridder):
         self.textYmin.setText( unicode( boundBox.yMinimum() ) )
         self.textXmax.setText( unicode( boundBox.xMaximum() ) )
         self.textYmax.setText( unicode( boundBox.yMaximum() ) )
+
+    # ======= Estimate number of grid cells
+    def estim_number_grid_cells(self,value = ' '):
+	
+	try :
+	    Xmin = float( self.textXmin.text() ) 
+	    Xmax = float( self.textXmax.text() ) 
+	    Ymin = float( self.textYmin.text() ) 
+	    Ymax = float( self.textYmax.text() ) 
+	    Xres = float( self.sboxXres.value() ) 
+	    Yres = float( self.sboxYres.value() ) 
+	    if Xres != 0 and Yres !=0:
+		Nx = (Xmax - Xmin) / Xres
+		Ny = (Ymax - Ymin) / Yres
+		N = abs(int(Nx*Ny))
+	    else :
+		N = ' '
+	except :
+	    N = ' '
+	
+	self.labelNumberCells.setText( unicode(N) )
 
     # ======= Build grid ========================================
     def run_write_grid(self):
@@ -175,8 +217,13 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	    # ------------ Input data validated, build Grid
 
 
-	    crs = ftools_utils.getMapLayerByName(unicode(self.listSourceLayer.currentText())).crs()
-	    if not crs.isValid(): crs = None
+	    # If a source layer is defined, retrieve CRS
+	    if ftools_utils.getMapLayerByName(unicode(self.listSourceLayer.currentText())) != None :
+		crs = ftools_utils.getMapLayerByName(unicode(self.listSourceLayer.currentText())).crs()
+		if not crs.isValid(): 
+		    crs = None
+	    else :
+		crs = None
 
 	    # Initialize field for base feature
 	    # TO DO : add useful attributes
@@ -224,7 +271,6 @@ class QGridderDialog(QDialog, Ui_QGridder):
 		# update layer list in plugin
 		self.populate_layers(self.listSourceLayer)
 		self.populate_layers(self.listGridLayer)
-	    
 	# Enable Write Grid button
 	self.buttonWriteGrid.setEnabled( True )
 
@@ -304,4 +350,61 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	# Enable Write Grid button and reset cursor
 	self.buttonRegularRefile.setEnabled( True )
 	QApplication.restoreOverrideCursor()
+
+    # ======= Refine grid ========================================
+    def run_export(self):
+
+	# selected grid layer name 
+	gridLayerName = self.listGridLayer.currentText()
+	# selected export format
+	# exportFormat = self.listExportFormat.currentText()
+
+	# Grid numbering 
+	# call grid numbering
+	# 	1. compute element centroids with existing function from ftools
+	#       2. classify centroids from top left to bottom right
+	#       3. Numbering from this classification (with numpy sorting)
+
+	# If export format = gis2wacs
+
+	# call export_gis2wacs
+	#ID AUTO
+	# 	X1, Y1
+	# 	X2, Y2
+	# 	X3, Y3
+	# 	X4, Y4
+	# 	X1, Y1
+	# END
+	# ...
+	#END
+
+	# If export format = text 
+	# call export_txt:
+	# ID PT1 PT2 PT3 PT4 PARAM1 PARAM2 ... PARAMN
+
+    def run_preprocessing(self):
+
+	gridLayerName = self.listGridLayer.currentText()
+
+	gridLayer = ftools_utils.getMapLayerByName( unicode( gridLayerName ) )
+
+	modelName = self.listModelName.currentText()
+
+	if modelName == 'Modflow':
+	    # add fields NROW, NCOL to gridLayer
+	    qgridder_utils.rgrid_numbering(gridLayer)
+	    # get nrow and ncol
+	    gridLayer.nrow, gridLayer.ncol = qgridder_utils.get_rgrid_nrow_ncol(gridLayer)
+	    # get delr and delc
+	    gridLayer.delr, gridLayer.delc = qgridder_utils.get_rgrid_delr_delc(gridLayer)
+
+	# Output message
+	QMessageBox.information(self, self.tr("Qgridder"),
+			self.tr("Variables nrow, ncol, delr, delc have been added to the vector layer \n \
+				To get the data : \n \
+				>> vLayer = qgis.utils.iface.activeLayer() \n \
+				>> ncol, nrow = vLayer.ncol, vLayer.nrow \n \
+				\n \
+			         Attributes NROW, NCOL have been added to the vector layer")
+			)
 

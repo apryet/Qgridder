@@ -9,6 +9,10 @@
         copyright            : (C) 2013 by Pryet
         email                : alexandre.pryet@ensegid.fr
  ***************************************************************************/
+ This plugin uses functions from fTools
+     Copyright (C) 2008-2011  Carson Farmer
+     EMAIL: carson.farmer (at) gmail.com
+     WEB  : http://www.ftools.ca/fTools.html
 
 /***************************************************************************
  *                                                                         *

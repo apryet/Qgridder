@@ -1,130 +1,118 @@
-# Makefile for Sphinx documentation
-#
+#/***************************************************************************
+# Gridder
+# 
+# Build 2D grids for finite difference
+#                             -------------------
+#        begin                : 2013-04-08
+#        copyright            : (C) 2013 by Pryet
+#        email                : alexandre.pryet@ensegid.fr
+# ***************************************************************************/
+# 
+#/***************************************************************************
+# *                                                                         *
+# *   This program is free software; you can redistribute it and/or modify  *
+# *   it under the terms of the GNU General Public License as published by  *
+# *   the Free Software Foundation; either version 2 of the License, or     *
+# *   (at your option) any later version.                                   *
+# *                                                                         *
+# ***************************************************************************/
 
-# You can set these variables from the command line.
-SPHINXOPTS    =
-SPHINXBUILD   = sphinx-build
-PAPER         =
-BUILDDIR      = build
+# CONFIGURATION
+PLUGIN_UPLOAD = $(CURDIR)/plugin_upload.py
 
-# Internal variables.
-PAPEROPT_a4     = -D latex_paper_size=a4
-PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
+# Makefile for a PyQGIS plugin 
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest
+# translation
+SOURCES = gridder.py ui_gridder.py __init__.py gridderdialog.py gridder_utils.py ftools_utils.py resources.py
+#TRANSLATIONS = i18n/gridder_en.ts
+TRANSLATIONS = 
 
-help:
-	@echo "Please use \`make <target>' where <target> is one of"
-	@echo "  html       to make standalone HTML files"
-	@echo "  dirhtml    to make HTML files named index.html in directories"
-	@echo "  singlehtml to make a single large HTML file"
-	@echo "  pickle     to make pickle files"
-	@echo "  json       to make JSON files"
-	@echo "  htmlhelp   to make HTML files and a HTML help project"
-	@echo "  qthelp     to make HTML files and a qthelp project"
-	@echo "  devhelp    to make HTML files and a Devhelp project"
-	@echo "  epub       to make an epub"
-	@echo "  latex      to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
-	@echo "  latexpdf   to make LaTeX files and run them through pdflatex"
-	@echo "  text       to make text files"
-	@echo "  man        to make manual pages"
-	@echo "  changes    to make an overview of all changed/added/deprecated items"
-	@echo "  linkcheck  to check all external links for integrity"
-	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
+# global
+
+PLUGINNAME = Qgridder
+
+PY_FILES = gridder.py gridderdialog.py __init__.py gridder_utils.py ftools_utils.py resources.py
+
+EXTRAS = icon.png 
+
+UI_FILES = ui_gridder.py ui_check_topology.py
+
+RESOURCE_FILES = resources_rc.py
+
+HELP = help/build/html
+
+default: compile
+
+compile: $(UI_FILES) $(RESOURCE_FILES)
+
+%_rc.py : %.qrc
+	pyrcc4 -o $*_rc.py  $<
+
+%.py : %.ui
+	pyuic4 -o $@ $<
+
+%.qm : %.ts
+	lrelease $<
+
+# The deploy  target only works on unix like operating system where
+# the Python plugin directory is located at:
+# $HOME/.qgis/python/plugins
+deploy: compile # doc transcompile 
+	mkdir -p $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
+	cp -vf $(PY_FILES) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
+	cp -vf $(UI_FILES) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
+	cp -vf $(RESOURCE_FILES) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
+	cp -vf $(EXTRAS) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
+	#cp -vfr i18n $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
+	#cp -vfr $(HELP) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)/help
+
+# The dclean target removes compiled python files from plugin directory
+# also delets any .svn entry
+dclean:
+	find $(HOME)/.qgis/python/plugins/$(PLUGINNAME) -iname "*.pyc" -delete
+	find $(HOME)/.qgis/python/plugins/$(PLUGINNAME) -iname ".svn" -prune -exec rm -Rf {} \;
+
+# The derase deletes deployed plugin
+derase:
+	rm -Rf $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
+
+# The zip target deploys the plugin and creates a zip file with the deployed
+# content. You can then upload the zip file on http://plugins.qgis.org
+zip: deploy dclean 
+	rm -f $(PLUGINNAME).zip
+	cd $(HOME)/.qgis/python/plugins; zip -9r $(CURDIR)/$(PLUGINNAME).zip $(PLUGINNAME)
+
+# Create a zip package of the plugin named $(PLUGINNAME).zip. 
+# This requires use of git (your plugin development directory must be a 
+# git repository).
+# To use, pass a valid commit or tag as follows:
+#   make package VERSION=Version_0.3.2
+package: compile
+		rm -f $(PLUGINNAME).zip
+		git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
+		echo "Created package: $(PLUGINNAME).zip"
+
+upload: zip
+	$(PLUGIN_UPLOAD) $(PLUGINNAME).zip
+
+# transup
+# update .ts translation files
+transup:
+	pylupdate4 Makefile
+
+# transcompile
+# compile translation files into .qm binary format
+transcompile: $(TRANSLATIONS:.ts=.qm)
+
+# transclean
+# deletes all .qm files
+transclean:
+	rm -f i18n/*.qm
 
 clean:
-	-rm -rf $(BUILDDIR)/*
+	rm $(UI_FILES) $(RESOURCE_FILES)
 
-html:
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
-	@echo
-	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+# build documentation with sphinx
+doc: 
+	cd help; make html
 
-dirhtml:
-	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
-	@echo
-	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
-
-singlehtml:
-	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
-	@echo
-	@echo "Build finished. The HTML page is in $(BUILDDIR)/singlehtml."
-
-pickle:
-	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) $(BUILDDIR)/pickle
-	@echo
-	@echo "Build finished; now you can process the pickle files."
-
-json:
-	$(SPHINXBUILD) -b json $(ALLSPHINXOPTS) $(BUILDDIR)/json
-	@echo
-	@echo "Build finished; now you can process the JSON files."
-
-htmlhelp:
-	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) $(BUILDDIR)/htmlhelp
-	@echo
-	@echo "Build finished; now you can run HTML Help Workshop with the" \
-	      ".hhp project file in $(BUILDDIR)/htmlhelp."
-
-qthelp:
-	$(SPHINXBUILD) -b qthelp $(ALLSPHINXOPTS) $(BUILDDIR)/qthelp
-	@echo
-	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
-	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/templateclass.qhcp"
-	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/templateclass.qhc"
-
-devhelp:
-	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
-	@echo
-	@echo "Build finished."
-	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/templateclass"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/templateclass"
-	@echo "# devhelp"
-
-epub:
-	$(SPHINXBUILD) -b epub $(ALLSPHINXOPTS) $(BUILDDIR)/epub
-	@echo
-	@echo "Build finished. The epub file is in $(BUILDDIR)/epub."
-
-latex:
-	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
-	@echo
-	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
-	@echo "Run \`make' in that directory to run these through (pdf)latex" \
-	      "(use \`make latexpdf' here to do that automatically)."
-
-latexpdf:
-	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
-	@echo "Running LaTeX files through pdflatex..."
-	make -C $(BUILDDIR)/latex all-pdf
-	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
-
-text:
-	$(SPHINXBUILD) -b text $(ALLSPHINXOPTS) $(BUILDDIR)/text
-	@echo
-	@echo "Build finished. The text files are in $(BUILDDIR)/text."
-
-man:
-	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(BUILDDIR)/man
-	@echo
-	@echo "Build finished. The manual pages are in $(BUILDDIR)/man."
-
-changes:
-	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) $(BUILDDIR)/changes
-	@echo
-	@echo "The overview file is in $(BUILDDIR)/changes."
-
-linkcheck:
-	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
-	@echo
-	@echo "Link check complete; look for any errors in the above output " \
-	      "or in $(BUILDDIR)/linkcheck/output.txt."
-
-doctest:
-	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
-	@echo "Testing of doctests in the sources finished, look at the " \
-	      "results in $(BUILDDIR)/doctest/output.txt."
