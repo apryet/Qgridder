@@ -7,6 +7,11 @@ import time
 import ftools_utils
 
 # --------------------------------------------------------------------------------------------------------------
+
+TOLERANCE = 1e-3
+max_decimals = int( - np.log10 (TOLERANCE) )
+
+# --------------------------------------------------------------------------------------------------------------
 # Makes regular grid of n lines and m columns,
 # from QgsRectangle bbox. Resulting features are 
 # appended to  vprovider
@@ -133,8 +138,6 @@ def update_fixDict(fixDict, thisFixDict):
 
 # --------------------------------------------------------------------------------------------------------------
 
-TOLERANCE = 1e-6
-
 # isEqual (from Ftools, voronoi.py)
 # Check if two values are identical, given a tolerance interval
 def is_equal(a,b,relativeError=TOLERANCE):
@@ -239,8 +242,19 @@ def split_cells(fixDict, n, m, vLayer):
     return(newFeatIds)
 
 # --------------------------------------------------------------------------------------------------------------
-
+# Check the coherence of a boundary between 2 grid elements
 def is_valid_boundary( feat1, feat2, direction, topoRules ):
+    # feat1, feat2 (QgsFeature) : the features considered
+    # direction (Int)
+    	# Numbering rule for neighbors of feature 0 :
+	# | 8 | 1 | 5 |
+	# | 4 | 0 | 2 |
+	# | 7 | 3 | 6 |
+    # topo Rules (Dict) : 
+	# -- for Modflow
+	#topoRules = {'model':'modflow','nmax':1}
+	# -- for Newsam
+	# topoRules = {'model':'newsam', 'nmax':2}
 
     # get feat1 geometry
     dx1, dy1 = rect_size(feat1)['dx'], rect_size(feat1)['dy'] 
@@ -470,6 +484,10 @@ def get_rgrid_delr_delc(gridLayer):
 	p0, p1, p2, p3 = ftools_utils.extractPoints(allFeatures[featId].geometry())[:4]
 	delc.append( p0.y() - p3.y() )
 
+    # round 
+    delr = [round(val, max_decimals) for val in delr]
+    delc = [round(val, max_decimals) for val in delc]
+
     # If all values are identical, return scalar
     if delr.count(delr[0]) == len(delr):
 	delr = delr[0]
@@ -489,13 +507,14 @@ def rgrid_numbering(gridLayer):
     gridLayer.select(allAttrs)
     caps = gridLayer.dataProvider().capabilities()
 
-        # Init variables 
+    # Init variables
+    res = -1
     allFeatures = {feat.id():feat for feat in gridLayer}
     allCentroids = [feat.geometry().centroid().asPoint() \
 			for feat in allFeatures.values()]
     centroids_ids = allFeatures.keys()
-    centroids_x = [centroid.x() for centroid in allCentroids]
-    centroids_y = [centroid.y() for centroid in allCentroids]
+    centroids_x = np.around(np.array([centroid.x() for centroid in allCentroids]), max_decimals)
+    centroids_y = np.around(np.array([centroid.y() for centroid in allCentroids]), max_decimals)
     centroids = np.array( [centroids_ids , centroids_x, centroids_y] )
     centroids = centroids.T
     
@@ -512,7 +531,7 @@ def rgrid_numbering(gridLayer):
 
     if col_field_idx == -1:
 	if caps & QgsVectorDataProvider.AddAttributes:
-	  res = gridLayer.dataProvider().addAttributes( [QgsField("COL", QVariant.Int)] )
+	  res = res*gridLayer.dataProvider().addAttributes( [QgsField("COL", QVariant.Int)] )
 	  col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
 
     # get nrow, ncol
@@ -520,8 +539,8 @@ def rgrid_numbering(gridLayer):
 
     # Iterate over grid row-wise and column wise 
     # sort by decreasing y and increasing x
-    idx = np.lexsort( [centroids[:,1],-centroids[:,2]] )
-
+    #idx = np.lexsort( [centroids[:,1],-centroids[:,2]] )
+    idx = np.lexsort( [centroids_x,-1*centroids_y] )
     row = 1
     col = 1
 
@@ -529,46 +548,101 @@ def rgrid_numbering(gridLayer):
 	if col > ncol:
 	    col = 1
 	    row = row + 1
-	attr = {row_field_idx:QVariant(row),
-				col_field_idx:QVariant(col)
-			     }
-	res = gridLayer.dataProvider().changeAttributeValues({featId:attr})
+	attr = { row_field_idx:QVariant(row), col_field_idx:QVariant(col) }
+	res = res*gridLayer.dataProvider().changeAttributeValues({featId:attr})
 	col+=1
 
     # trick to update fields in QgsInterface
     gridLayer.startEditing()
     gridLayer.commitChanges()
 
-# -----------------------------------------------------
-# return modflow-like list from selected features and fieldName 
-def get_param_list(gridLayer, layer = '', fieldName = ''):
-    
+    # res should be True if the operation is successful 
+    #return(res) 
+    return(idx, centroids) 
+
+
+# ---------------------------------
+# return modflow-like parameter list or array
+# This function first checks all parameters. If successful, then
+# calls get_param_list or get_param_array
+def get_param(gridLayer, output_type = 'array', layer = '', fieldName = ''):
+    # QgsVectorLayer gridLayer :  containing the (regular) grid
+    # Int layer (optional) : corresponding to the (modflow) grid layer number
+    # String fieldName : name of the attribute to get in gridLayer 
+
     # Load data
     allAttrs = gridLayer.pendingAllAttributesList()
     gridLayer.select(allAttrs)
     allFeatures = {feat.id():feat for feat in gridLayer}
 
+    # init error flags for field indexes 
+    row_field_idx = col_field_idx = attr_field_idx = -1
+
     # Fetch selected features from input grid_layer
     selected_fIds = gridLayer.selectedFeaturesIds()
 
-    # Fetch required field index in layer attribute map
-    row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
-    col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
+    # Selection should not be empty if output_type 'list' is selected
+    if len(selected_fIds) == 0 and output_type == 'list':
+	print("Empty selection. To export all features, export as array.")
+	return(False)
 
+    # Selection will not be considered if output_type 'array' is selected
+    if len(selected_fIds) != 0 and output_type == 'array':
+	print("Export type is array. Feature selection is not considered. All features will be exported")
+
+    # If a field name is provided, get corresponding field index
     if fieldName !='' :
 	attr_field_idx = gridLayer.dataProvider().fieldNameIndex(fieldName)
 
-    if row_field_idx == -1 or col_field_idx ==-1 : 
-	QMessageBox.information(self, self.tr("QGridder"), 
-		self.tr("Fields ROW and COL not found")
-		)
-	return
+	# If the field is not found in attribute table
+	if attr_field_idx == -1 :
+	    print("Field " + fieldName + "  not found in grid attribute table.")
+	    # If output_type is array, return
+	    if output_type == 'array':
+		return(np.array([]))
+    else :
+	# Field name should not be '' if output type is 'array'
+	if output_type == 'array':
+		print("A valid field name must be provided for output_type \'array\' ")
+		return(np.array([]))
 
-    if attr_field_idx == -1 :
-	QMessageBox.information(qgis.utils.iface, "QGridder", 
-		"Field " + fieldName + "  not found in grid attribute table.")
-		)
-	return
+    # Update (or create ROW and COL fields)
+    rgrid_numbering(gridLayer) 
+    row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
+    col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
+
+    if output_type == 'list':
+	output = get_param_list(gridLayer, layer = layer, fieldName = fieldName)
+    elif output_type =='array' :
+	output = get_param_array(gridLayer, fieldName = fieldName)
+    else : 
+	print("Output type must be either \'list\' or \'array\'")
+	return([])
+
+    return(output)
+
+
+# -----------------------------------------------------
+# return modflow-like list from selected features and fieldName 
+def get_param_list(gridLayer,  layer = '', fieldName = ''):
+    # QgsVectorLayer gridLayer :  containing the (regular) grid
+    # Int layer (optional) : corresponding to the (modflow) grid layer number
+    # String fieldName : name of the attribute to get in gridLayer 
+
+    # Load data
+    allAttrs = gridLayer.pendingAllAttributesList()
+    gridLayer.select(allAttrs)
+    allFeatures = {feat.id():feat for feat in gridLayer}
+
+    # Get selected features from input grid_layer
+    selected_fIds = gridLayer.selectedFeaturesIds()
+
+    # Get fieldName attribute index 
+    attr_field_idx = gridLayer.dataProvider().fieldNameIndex(fieldName)
+
+    # Get ROW and COL fields attribute indexes
+    row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
+    col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
 
     # init output list 
     grid_list = []
@@ -601,6 +675,58 @@ def get_param_list(gridLayer, layer = '', fieldName = ''):
 
     return grid_list
 
-# ---------------------------------
-# return modflow-like parameter array
-def get_param_array(gridLayer, layer = '', fieldName = ''):
+# -----------------------------------------------------
+# return modflow-like list from selected features and fieldName 
+def get_param_array(gridLayer, fieldName = ''):
+    # QgsVectorLayer gridLayer :  containing the (regular) grid
+    # Int layer (optional) : corresponding to the (modflow) grid layer number
+    # String fieldName : name of the attribute to get in gridLayer 
+
+    # Get nrow, ncol
+    nrow, ncol =  get_rgrid_nrow_ncol(gridLayer)
+
+    # Get fieldName attribute index 
+    attr_field_idx = gridLayer.dataProvider().fieldNameIndex(fieldName)
+
+    # Get ROW and COL fields attribute indexes
+    row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
+    col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
+
+    # Load data
+    allAttrs = gridLayer.pendingAllAttributesList()
+    gridLayer.select(allAttrs)
+
+    # init lists
+    rows = []
+    cols = []
+    field_values = []
+
+    for feat in gridLayer:
+
+	# load row, col, field_value from current feature
+	attrMap = feat.attributeMap()
+	row = attrMap[row_field_idx].toInt()[0]
+	col = attrMap[col_field_idx].toInt()[0]
+	field_value = attrMap[attr_field_idx]
+
+	# append feat values to main lists
+	rows.append(attrMap[row_field_idx].toInt()[0])
+	cols.append(col)
+
+	# append feat field value to main list
+	if field_value.toFloat()[1] == True :
+		field_values.append(field_value.toFloat()[0])
+	else : 
+		field_values.append(str(field_value.toString())).append(field_value)
+
+    # sort output lists by rising rows and cols
+    rows = np.array(rows)
+    cols = np.array(cols)
+    field_values = np.array(field_values)
+
+    idx = np.lexsort( [cols,rows] )
+    field_values = field_values[idx]
+
+    field_values.shape = (nrow, ncol)
+
+    return(field_values)
