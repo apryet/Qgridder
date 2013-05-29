@@ -8,8 +8,9 @@ import ftools_utils
 
 # --------------------------------------------------------------------------------------------------------------
 
-TOLERANCE = 1e-3
-max_decimals = int( - np.log10 (TOLERANCE) )
+# Note : floating point values is an issue that deserves more attention in this script.
+TOLERANCE = 1e-6  # expressed relative to a value
+max_decimals = 2  # used to limit the effects of numerical noise
 
 # --------------------------------------------------------------------------------------------------------------
 # Makes regular grid of n lines and m columns,
@@ -403,7 +404,6 @@ def get_rgrid_nrow_ncol(gridLayer):
     # Load layer
     allAttrs = gridLayer.pendingAllAttributesList()
     gridLayer.select(allAttrs)
-    #gridLayer.dataProvider().select(allAttrs)
 
     # Init variables 
     allFeatures = {feat.id():feat for feat in gridLayer}
@@ -421,6 +421,7 @@ def get_rgrid_nrow_ncol(gridLayer):
     yy = centroids[idx_row,2]
     # iterate along first row and count number of items with same y
     i=0
+    #return yy
     while is_equal(yy[i],yy[i+1]) and i < (yy.size - 1) :
 	i+=1
     ncol = i+1
@@ -508,7 +509,7 @@ def rgrid_numbering(gridLayer):
     caps = gridLayer.dataProvider().capabilities()
 
     # Init variables
-    res = -1
+    res = 1
     allFeatures = {feat.id():feat for feat in gridLayer}
     allCentroids = [feat.geometry().centroid().asPoint() \
 			for feat in allFeatures.values()]
@@ -522,17 +523,28 @@ def rgrid_numbering(gridLayer):
     # If columns don't exist, add them
     row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
     col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
+    cx_field_idx = gridLayer.dataProvider().fieldNameIndex('CX')
+    cy_field_idx = gridLayer.dataProvider().fieldNameIndex('CY')
 
     if row_field_idx == -1:
 	if caps & QgsVectorDataProvider.AddAttributes:
 	  res = gridLayer.dataProvider().addAttributes(  [QgsField("ROW", QVariant.Int)] ) 
 	  row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
       
-
     if col_field_idx == -1:
 	if caps & QgsVectorDataProvider.AddAttributes:
 	  res = res*gridLayer.dataProvider().addAttributes( [QgsField("COL", QVariant.Int)] )
 	  col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
+
+    if cx_field_idx == -1:
+	if caps & QgsVectorDataProvider.AddAttributes:
+	  res = gridLayer.dataProvider().addAttributes(  [QgsField("CX", QVariant.Double)] ) 
+	  row_field_idx = gridLayer.dataProvider().fieldNameIndex('CX')
+      
+    if cy_field_idx == -1:
+	if caps & QgsVectorDataProvider.AddAttributes:
+	  res = res*gridLayer.dataProvider().addAttributes( [QgsField("CY", QVariant.Double)] )
+	  col_field_idx = gridLayer.dataProvider().fieldNameIndex('CY')
 
     # get nrow, ncol
     nrow, ncol =  get_rgrid_nrow_ncol(gridLayer)
@@ -541,14 +553,19 @@ def rgrid_numbering(gridLayer):
     # sort by decreasing y and increasing x
     #idx = np.lexsort( [centroids[:,1],-centroids[:,2]] )
     idx = np.lexsort( [centroids_x,-1*centroids_y] )
+    centroids = centroids[idx,:]
     row = 1
     col = 1
 
-    for featId in centroids[idx,0]:
+    for i in range(centroids.shape[0]):
 	if col > ncol:
 	    col = 1
 	    row = row + 1
-	attr = { row_field_idx:QVariant(row), col_field_idx:QVariant(col) }
+	featId = centroids[i, 0]
+	cx = float(centroids[i, 1])
+	cy = float(centroids[i, 2])
+	attr = { row_field_idx:QVariant(row), col_field_idx:QVariant(col),\
+		cx_field_idx:QVariant(cx), cy_field_idx:QVariant(cy)}
 	res = res*gridLayer.dataProvider().changeAttributeValues({featId:attr})
 	col+=1
 
@@ -557,9 +574,7 @@ def rgrid_numbering(gridLayer):
     gridLayer.commitChanges()
 
     # res should be True if the operation is successful 
-    #return(res) 
-    return(idx, centroids) 
-
+    return(res) 
 
 # ---------------------------------
 # return modflow-like parameter list or array
