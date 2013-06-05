@@ -692,7 +692,7 @@ def get_param_list(gridLayer,  layer = '', fieldName = ''):
 
 # -----------------------------------------------------
 # return modflow-like list from selected features and fieldName 
-def get_param_array(gridLayer, fieldName = ''):
+def get_param_array(gridLayer, fieldName = 'ID'):
     # QgsVectorLayer gridLayer :  containing the (regular) grid
     # Int layer (optional) : corresponding to the (modflow) grid layer number
     # String fieldName : name of the attribute to get in gridLayer 
@@ -745,3 +745,101 @@ def get_param_array(gridLayer, fieldName = ''):
     field_values.shape = (nrow, ncol)
 
     return(field_values)
+
+# -----------------------------------------------------
+# From a selection of points in vLayer, returns
+# a list of tuple (nrow, ncol) in gridLayer
+# returns {'ID1':(nrow1, ncol1), 'ID2':(nrow2, ncol2), ... ]
+def get_ptset_centroids(vLayer, gridLayer, FieldName = 'ID'):
+    # vLayer : vector layer of points with a selection of point
+    # gridLayer : the grid vector Layer
+    # FieldName : the attribute field of vLayer containing feature ID
+
+    # check that the selection in vLayer is not empty
+    selected_fIds = vLayer.selectedFeaturesIds()
+    if len(selected_fIds) == 0:
+	print("Empty selection")
+	return(False)
+
+    # check that gridLayer is a grid
+    try :
+	res = rgrid_numbering(gridLayer)
+	if res == False:
+	    print("The grid layer does not seem to be valid")
+	    return(False)
+    except :
+	return(False)
+
+    # -- load grid layer
+    allAttrs = gridLayer.pendingAllAttributesList()
+    gridLayer.select(allAttrs)
+    allCells = {feat.id():feat for feat in gridLayer}
+
+    # -- create temporary layer of cell centroids
+    # init layer type (point) and crs 
+    cLayerUri = 'Point?crs=' + gridLayer.dataProvider().crs().authid()
+    # create layer
+    cLayer = QgsVectorLayer(cLayerUri, "temp_centroids", "memory")
+    cProvider = cLayer.dataProvider()
+    fieldList = gridLayer.dataProvider().fields().values()
+    cProvider.addAttributes(fieldList)
+    # fill layer with centroids
+    for cell in allCells.values():
+	feat = QgsFeature()
+	geom = cell.geometry().centroid()
+	feat.setAttributeMap(cell.attributeMap())
+	feat.setGeometry( QgsGeometry(geom) )
+	cProvider.addFeatures( [feat] )
+    
+    # -- fetch field indexes
+    rowFieldIdx = cLayer.dataProvider().fieldNameIndex('ROW')
+    colFieldIdx = cLayer.dataProvider().fieldNameIndex('COL')
+    
+    # -- Create and fill spatial Index
+    cLayerIndex = QgsSpatialIndex()
+    cLayer.select()
+    for centroid in cLayer:
+	cLayerIndex.insertFeature(centroid)
+
+    idFieldName = 'ID'
+    nNeighbors = 3
+
+    # -- Get pointset from vLayer
+    selectedFeatIds = vLayer.selectedFeaturesIds()
+    pointIdFieldIdx = vLayer.dataProvider().fieldNameIndex(idFieldName)
+
+    # selectedPoints : {fieldIDValue:QgsPoint()}
+    selectedPoints = {}
+    # fill selectedPoints
+    for fId in selectedFeatIds:
+	feat = QgsFeature()
+	vLayer.featureAtId(fId, feat)
+	attrMap = feat.attributeMap()
+	pointIdValue = str(attrMap[pointIdFieldIdx].toString()[0])
+	selectedPoints[pointIdValue] = feat.geometry().asPoint()
+
+    # pointCentroids : { pointIDValue:[ (nrow, ncol, dist), ... ] }
+    PtsetCentroids = {}
+
+    # init distance tool
+    d = QgsDistanceArea()
+    d.setProjectionsEnabled(False)
+
+    # iterate over selected points, find neighbors, fill pointCentroids dictionary
+    for fieldIdValue, selectedPoint in zip(selectedPoints.keys(),selectedPoints.values()):
+	neighborsIds = cLayerIndex.nearestNeighbor(selectedPoint, nNeighbors)
+	neighborsData = []
+	for neighborId in neighborsIds:
+	    feat = QgsFeature()
+	    cLayer.featureAtId(neighborId, feat)
+	    attrMap  = feat.attributeMap()
+	    row = attrMap[rowFieldIdx].toInt()[0]
+	    col = attrMap[colFieldIdx].toInt()[0]
+	    dist = d.measureLine(  feat.geometry().asPoint(), selectedPoint  )
+	    neighborsData.append( (row, col, dist) )
+	PtsetCentroids[fieldIdValue] = neighborsData
+
+    return(PtsetCentroids)
+
+
+
