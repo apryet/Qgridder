@@ -715,6 +715,7 @@ def get_param_array(gridLayer, fieldName = 'ID'):
     rows = []
     cols = []
     field_values = []
+    rowColVal = []
 
     for feat in gridLayer:
 
@@ -725,35 +726,46 @@ def get_param_array(gridLayer, fieldName = 'ID'):
 	field_value = attrMap[attr_field_idx]
 
 	# append feat values to main lists
-	rows.append(attrMap[row_field_idx].toInt()[0])
-	cols.append(col)
+	#rows.append(row)
+	#cols.append(col)
 
 	# append feat field value to main list
 	if field_value.toFloat()[1] == True :
-		field_values.append(field_value.toFloat()[0])
+		field_value = field_value.toFloat()[0]
+	# TODO : impossible to handle string with array
 	else : 
-		field_values.append(str(field_value.toString())).append(field_value)
+		field_value = str(field_value.toString())
+	
+	rowColVal.append( [row, col, field_value] )
 
     # sort output lists by rising rows and cols
-    rows = np.array(rows)
-    cols = np.array(cols)
-    field_values = np.array(field_values)
+    #rows = np.array(rows)
+    #cols = np.array(cols)
+    #field_values = np.array(field_values)
 
-    idx = np.lexsort( [cols,rows] )
-    field_values = field_values[idx]
+    rowColVal = np.array(rowColVal)
 
-    field_values.shape = (nrow, ncol)
+    idx = np.lexsort( [rowColVal[:,1], rowColVal[:,0]] )
+    
+    val = rowColVal[idx,2]
+    val.shape = (nrow, ncol)
 
-    return(field_values)
+    #field_values = field_values[idx]
+
+    #field_values.shape = (nrow, ncol)
+
+    #return(field_values)
+    return(val)
 
 # -----------------------------------------------------
 # From a selection of points in vLayer, returns
 # a list of tuple (nrow, ncol) in gridLayer
 # returns {'ID1':(nrow1, ncol1), 'ID2':(nrow2, ncol2), ... ]
-def get_ptset_centroids(vLayer, gridLayer, FieldName = 'ID'):
+def get_ptset_centroids(vLayer, gridLayer, idFieldName = 'ID',nNeighbors = 3):
     # vLayer : vector layer of points with a selection of point
     # gridLayer : the grid vector Layer
-    # FieldName : the attribute field of vLayer containing feature ID
+    # FieldName : the attribute field of vLayer containing feature identificator
+    # nNeighbors : number of neighboring cells to fetch for each point
 
     # check that the selection in vLayer is not empty
     selected_fIds = vLayer.selectedFeaturesIds()
@@ -801,9 +813,6 @@ def get_ptset_centroids(vLayer, gridLayer, FieldName = 'ID'):
     for centroid in cLayer:
 	cLayerIndex.insertFeature(centroid)
 
-    idFieldName = 'ID'
-    nNeighbors = 3
-
     # -- Get pointset from vLayer
     selectedFeatIds = vLayer.selectedFeaturesIds()
     pointIdFieldIdx = vLayer.dataProvider().fieldNameIndex(idFieldName)
@@ -815,7 +824,7 @@ def get_ptset_centroids(vLayer, gridLayer, FieldName = 'ID'):
 	feat = QgsFeature()
 	vLayer.featureAtId(fId, feat)
 	attrMap = feat.attributeMap()
-	pointIdValue = str(attrMap[pointIdFieldIdx].toString()[0])
+	pointIdValue = str(attrMap[pointIdFieldIdx].toString())
 	selectedPoints[pointIdValue] = feat.geometry().asPoint()
 
     # pointCentroids : { pointIDValue:[ (nrow, ncol, dist), ... ] }
