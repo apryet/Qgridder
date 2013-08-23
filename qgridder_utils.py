@@ -422,8 +422,10 @@ def get_rgrid_nrow_ncol(gridLayer):
     # iterate along first row and count number of items with same y
     i=0
     #return yy
-    while is_equal(yy[i],yy[i+1]) and i < (yy.size - 1) :
+    while is_equal(yy[i],yy[i+1]):
 	i+=1
+	if i >= (yy.size - 1): 
+	    break # for one-row grids
     ncol = i+1
 
     # get nrow :
@@ -432,8 +434,10 @@ def get_rgrid_nrow_ncol(gridLayer):
     xx=centroids[idx_col,1]
     # iterate over first col and count number of items with same x
     i=0
-    while is_equal(xx[i],xx[i+1]) and i < (xx.size - 1) :
+    while is_equal(xx[i],xx[i+1]) :
 	i+=1
+	if i >= (xx.size-1):
+	    break # for one-column grids
     nrow = i+1
 
     # return nrow, ncol

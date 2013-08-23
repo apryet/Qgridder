@@ -297,15 +297,20 @@ class QGridderDialog(QDialog, Ui_QGridder):
 		    )
 	    return
 
-	# Load input grid layer
-	grid_layer = ftools_utils.getMapLayerByName( unicode( grid_layer_name ) )
-		
-	if (grid_layer.selectedFeatureCount() == 0):
-	    QMessageBox.information(self, self.tr("Gridder"),
-		    self.tr("No selected features in the chosen grid layer.")
+
+	if self.listModelName.currentText() == 'Newsam':
+	    if n != m :
+		QMessageBox.information(self, self.tr("Qgridder"),
+			self.tr("Only 1:1 ratio for Newsam")
 		    )
-	    return
-	
+		return
+
+	    if n not in (2, 4) :
+		QMessageBox.information(self, self.tr("Qgridder"),
+			self.tr("For Newsam, you can only divide cells by 2 or 4")
+		    )
+		return
+
 	# Set up topo Rules
 	if self.checkTopo.isChecked() :
 	    if self.listModelName.currentText() == 'Modflow':
@@ -319,6 +324,16 @@ class QGridderDialog(QDialog, Ui_QGridder):
 		return
 	else :
 	    topoRules = {'model': None, 'nmax': None}
+
+
+	# Load input grid layer
+	grid_layer = ftools_utils.getMapLayerByName( unicode( grid_layer_name ) )
+		
+	if (grid_layer.selectedFeatureCount() == 0):
+	    QMessageBox.information(self, self.tr("Gridder"),
+		    self.tr("No selected features in the chosen grid layer.")
+		    )
+	    return
 
 	# Set "wait" cursor and disable button
         QApplication.setOverrideCursor(Qt.WaitCursor)
