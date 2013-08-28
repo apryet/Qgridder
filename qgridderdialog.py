@@ -192,6 +192,11 @@ class QGridderDialog(QDialog, Ui_QGridder):
             QMessageBox.information(self, self.tr("Gridder"),
 		    self.tr("Please specify valid resolution")
 		    )
+	elif float( self.textXmin.text() ) >= float( self.textXmax.text() ) or \
+		float( self.textYmin.text() ) >= float( self.textYmax.text() ):
+		    QMessageBox.information(self, self.tr("Gridder"), 
+		    self.tr("Check extent coordinates")
+		    )
 	else:
             try:
                 boundBox = QgsRectangle(
@@ -207,9 +212,14 @@ class QGridderDialog(QDialog, Ui_QGridder):
             Yres = self.sboxYres.value()
 
 	    # Compute number of elements
-	    n = (boundBox.yMaximum() - boundBox.yMinimum()) / Yres
-	    m = (boundBox.xMaximum() - boundBox.xMinimum()) / Xres
-	    
+	    n = int( (boundBox.yMaximum() - boundBox.yMinimum()) / Yres )
+	    m = int( (boundBox.xMaximum() - boundBox.xMinimum()) / Xres )
+
+	    if n*m <= 0 :
+		QMessageBox.information(self, self.tr("Gridder"),
+			self.tr("Invalid extent or resolution entered")
+			)
+		return
 	    # TO DO : Here, you should check whether elements  is correct...
 	    # Or add it directly as information in the grid resolution frame
             QApplication.setOverrideCursor(Qt.WaitCursor)

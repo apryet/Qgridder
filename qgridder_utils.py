@@ -278,7 +278,7 @@ def is_valid_boundary( feat1, feat2, direction, topoRules ):
 	if ( dx2 / dx1 <  1 or is_equal(dx2 / dx1, 1 ) ) or \
 		(dx2 / dx1 < topoRules['nmax'] or is_equal(dx2 / dx1, topoRules['nmax']) ) :
 	    return(True)
-    # If the boundary doesn't satisfiy topoRules, or
+    # If the boundary doesn't satisfy topoRules, or
     # if the direction is not valid
     return(False)
 
@@ -300,20 +300,25 @@ def check_topo(featId, n, m, topoRules, allFeatures, vLayer, vLayerIndex):
     # Check the compatibility of inputFeature and neighbors with topoRules
     for direction, neighbor in zip(neighbors['direction'], neighbors['feature']):
 	if direction in [1, 2, 3, 4]:
+	    # Special case for newsam grid
+	    if topoRules['model']=='newsam':
+		N = M = 2
+	    else :
+		N = n
+		M = m
+		# Set refinement to 1 for orthogonal directions
+		if direction in [2,4] : # horizontally
+		    M = 1
+		elif direction in [1,3] : # vertically
+		    N = 1
+	    # check feat, neighbor boundary
 	    if not is_valid_boundary( feat, neighbor, direction, topoRules ) :
-		# Special case for newsam grid
-		if topoRules['model']=='newsam':
-		    N = M = 2
-		else :
-		    N = n
-		    M = m
-		    # Set refinement to 1 for orthogonal directions
-		    if direction in [2,4] : # horizontally
-			M = 1
-		    elif direction in [1,3] : # vertically
-			N = 1
-		# Update fixDict
+		# update fixDict : add neighbor
 		fixDict = update_fixDict( fixDict, { 'id':[neighbor.id()] , 'n':[N], 'm':[M] } )
+	    # check neighbor, feat boundary
+	    if not is_valid_boundary( neighbor, feat, direction, topoRules ) :
+		# update fixDict : add feat
+		fixDict = update_fixDict( fixDict, { 'id':[feat.id()] , 'n':[N], 'm':[M] } )
 
     # return features that do not satisfy topoRules
     return fixDict
