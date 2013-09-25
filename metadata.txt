@@ -10,7 +10,7 @@
 
 [general]
 name=Qgridder
-qgisMinimumVersion=1.0
+qgisMinimumVersion=2.0
 description=Builds 2D grids for finite difference
 version=0.1
 

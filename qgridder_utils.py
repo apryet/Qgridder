@@ -768,8 +768,8 @@ def get_param_array(gridLayer, fieldName = 'ID'):
 
 # -----------------------------------------------------
 # From a selection of points in vLayer, returns
-# a list of tuple (nrow, ncol) in gridLayer
-# returns {'ID1':(nrow1, ncol1), 'ID2':(nrow2, ncol2), ... ]
+# a dict of tuple (nrow, ncol) in gridLayer
+# returns {'ID1':(nrow1, ncol1), 'ID2':(nrow2, ncol2), ... }
 def get_ptset_centroids(vLayer, gridLayer, idFieldName = 'ID',nNeighbors = 3):
     # vLayer : vector layer of points with a selection of point
     # gridLayer : the grid vector Layer
