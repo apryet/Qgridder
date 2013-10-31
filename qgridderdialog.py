@@ -111,7 +111,7 @@ class QGridderDialog(QDialog, Ui_QGridder):
         ( self.OutFileName, self.encoding ) = ftools_utils.saveDialog( self )
         if self.OutFileName is None or self.encoding is None:
             return
-        self.textOutFilename.setText( QString( self.OutFileName ) )
+        self.textOutFilename.setText( self.OutFileName  )
 
     #  ======= Populate input layer list
     def populate_layers( self,listOfLayers):
@@ -237,15 +237,18 @@ class QGridderDialog(QDialog, Ui_QGridder):
 
 	    # Initialize field for base feature
 	    # TO DO : add useful attributes
-	    fields = {0:QgsField("ID", QVariant.Int)}
-
+	    #fields = {0:QgsField("ID", QVariant.Int)}
+	    fields = QgsFields()
+	    fields.append(QgsField("ID", QVariant.Int))
 	    # Initialize base rectangle feature
 	    rectFeat = QgsFeature()
 	    rectGeom = QgsGeometry()
 	    rectFeat.setGeometry(rectGeom.fromRect(boundBox))
-	    rectFeat.setAttributeMap(fields)
+	    #rectFeat.setAttributeMap(fields)
+	    rectFeat.initAttributes(1)
 	    idVar = 0
-	    rectFeat.addAttribute(0, QVariant(idVar))
+	    #rectFeat.addAttribute(0, QVariant(idVar))
+	    rectFeat.setAttribute(0, idVar)
 
 	    # if the file exits, remove it
 	    check = QFile(self.OutFileName)
@@ -254,7 +257,8 @@ class QGridderDialog(QDialog, Ui_QGridder):
 		    return
 
 	    # Load shape file writer
-	    writer = QgsVectorFileWriter(self.OutFileName, self.encoding, fields, QGis.WKBPolygon, crs)
+	    #writer = QgsVectorFileWriter(str(self.OutFileName), self.encoding, fields, QGis.WKBPolygon, crs)
+	    writer = QgsVectorFileWriter(unicode(self.OutFileName), self.encoding, fields, QGis.WKBPolygon, crs)
 	    
 	    # Call function to make grid
 	    qgridder_utils.make_rgrid(rectFeat, n, m, writer, self.progressBarBuildGrid)
@@ -265,7 +269,7 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	    # Post-operation information
 	    QApplication.restoreOverrideCursor()
 	    QMessageBox.information(self, self.tr("Generate Vector Grid"), 
-		    self.tr("Created output shapefile:\n%1\n").arg(unicode(self.OutFileName))
+		    "Created output shapefile:\n" + unicode(self.OutFileName) + "\n"
 		    )
 
 	    # Load output layer if it is not already loaded
@@ -274,7 +278,7 @@ class QGridderDialog(QDialog, Ui_QGridder):
 		for (name,layer) in	QgsMapLayerRegistry.instance().mapLayers().iteritems():
 		    # Note : reload() doesn't work.
 		    if layer.source()==self.OutFileName:
-			QgsMapLayerRegistry.instance().removeMapLayers( QStringList(layer.id()) )
+			QgsMapLayerRegistry.instance().removeMapLayers( layer.id() )
 			
 		# load layer
 		ftools_utils.addShapeToCanvas( self.OutFileName )

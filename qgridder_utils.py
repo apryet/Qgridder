@@ -20,7 +20,8 @@ def make_rgrid(inputFeat, n, m, vprovider, progressBar = QProgressDialog("Buildi
          
 	# Retrieve bbox and attributes from input feature
     	bbox = inputFeat.geometry().boundingBox()
-	attr = inputFeat.attributeMap()
+	#attr = inputFeat.attributeMap()
+	attr = inputFeat.attributes()
 
 	# Compute grid coordinates
 	x = np.linspace(bbox.xMinimum(), bbox.xMaximum(), m+1)
@@ -53,7 +54,8 @@ def make_rgrid(inputFeat, n, m, vprovider, progressBar = QProgressDialog("Buildi
 		polygon = [[pt1, pt2, pt3, pt4, pt5]]
 		# initialize new feature 
 		outFeat = QgsFeature()
-		outFeat.setAttributeMap(attr)
+		#outFeat.setAttributeMap(attr)
+		outFeat.setAttributes(attr)
 		outGeom = QgsGeometry()
 		outFeat.setGeometry(outGeom.fromPolygon(polygon))
 		# save features 
@@ -411,7 +413,7 @@ def get_rgrid_nrow_ncol(gridLayer):
     gridLayer.select(allAttrs)
 
     # Init variables 
-    allFeatures = {feat.id():feat for feat in gridLayer}
+    allFeatures = {feat.id():feat for feat in gridLayer.getFeatures()}
     allCentroids = [feat.geometry().centroid().asPoint() \
 			for feat in allFeatures.values()]
     centroids_ids = allFeatures.keys()
@@ -460,7 +462,7 @@ def get_rgrid_delr_delc(gridLayer):
     #gridLayer.dataProvider().select(allAttrs)
 
     # Init variables 
-    allFeatures = {feat.id():feat for feat in gridLayer}
+    allFeatures = {feat.id():feat for feat in gridLayer.getFeatures()}
     allCentroids = [feat.geometry().centroid().asPoint() \
 			for feat in allFeatures.values()]
     centroids_ids = allFeatures.keys()
@@ -519,7 +521,7 @@ def rgrid_numbering(gridLayer):
 
     # Init variables
     res = 1
-    allFeatures = {feat.id():feat for feat in gridLayer}
+    allFeatures = {feat.id():feat for feat in gridLayer.getFeatures()}
     allCentroids = [feat.geometry().centroid().asPoint() \
 			for feat in allFeatures.values()]
     centroids_ids = allFeatures.keys()
@@ -573,8 +575,8 @@ def rgrid_numbering(gridLayer):
 	featId = centroids[i, 0]
 	cx = float(centroids[i, 1])
 	cy = float(centroids[i, 2])
-	attr = { row_field_idx:QVariant(row), col_field_idx:QVariant(col),\
-		cx_field_idx:QVariant(cx), cy_field_idx:QVariant(cy)}
+	attr = { row_field_idx:row, col_field_idx:col,\
+		cx_field_idx:cx, cy_field_idx:cy}
 	res = res*gridLayer.dataProvider().changeAttributeValues({featId:attr})
 	col+=1
 
