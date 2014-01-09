@@ -180,7 +180,7 @@ def refine_by_split(featIds, n, m, topoRules, vLayer, progressBar = QProgressDia
 	allAttrs = vLayer.pendingAllAttributesList()
 	vLayer.select(allAttrs)
 	# Get all the features to start
-	allFeatures = {feature.id(): feature for feature in vLayer}
+	allFeatures = {feature.id(): feature for feature in vLayer.getFeatures()}
 	# Initialize spatial index 
 	vLayerIndex = QgsSpatialIndex()
 	# Fill spatial Index
@@ -226,7 +226,7 @@ def split_cells(fixDict, n, m, vLayer):
     vLayer.select(allAttrs)
 
     # Get all the features from vLayer
-    allFeatures = {feature.id(): feature for (feature) in vLayer}
+    allFeatures = {feature.id(): feature for (feature) in vLayer.getFeatures()}
 
     # remove features that must be split from vLayer
     # this operation must be done before any feature add
@@ -485,7 +485,7 @@ def get_rgrid_delr_delc(gridLayer):
 	# Extract the four corners of feat
 	# Note : rectangle points are numbered from top-left to bottom-left, clockwise
 	p0, p1, p2, p3 = ftools_utils.extractPoints(allFeatures[featId].geometry())[:4]
-	delr.append( p1.x() - p0.x() )
+	delc.append( p1.x() - p0.x() )
 
     # sort by increasing x and decreasing y    
     idx_col = np.lexsort([-centroids[:,2],centroids[:,1]])
@@ -494,7 +494,7 @@ def get_rgrid_delr_delc(gridLayer):
 	# Extract the four corners of feat
 	# Note : rectangle points are numbered from top-left to bottom-left, clockwise
 	p0, p1, p2, p3 = ftools_utils.extractPoints(allFeatures[featId].geometry())[:4]
-	delc.append( p0.y() - p3.y() )
+	delr.append( p0.y() - p3.y() )
 
     # round 
     delr = [round(val, max_decimals) for val in delr]
@@ -599,7 +599,7 @@ def get_param(gridLayer, output_type = 'array', layer = '', fieldName = ''):
     # Load data
     allAttrs = gridLayer.pendingAllAttributesList()
     gridLayer.select(allAttrs)
-    allFeatures = {feat.id():feat for feat in gridLayer}
+    allFeatures = {feat.id():feat for feat in gridLayer.getFeatures()}
 
     # init error flags for field indexes 
     row_field_idx = col_field_idx = attr_field_idx = -1
@@ -658,7 +658,7 @@ def get_param_list(gridLayer,  layer = '', fieldName = ''):
     # Load data
     allAttrs = gridLayer.pendingAllAttributesList()
     gridLayer.select(allAttrs)
-    allFeatures = {feat.id():feat for feat in gridLayer}
+    allFeatures = {feat.id():feat for feat in gridLayer.getFeatures()}
 
     # Get selected features from input grid_layer
     selected_fIds = gridLayer.selectedFeaturesIds()
@@ -715,8 +715,8 @@ def get_param_array(gridLayer, fieldName = 'ID'):
     attr_field_idx = gridLayer.dataProvider().fieldNameIndex(fieldName)
 
     # Get ROW and COL fields attribute indexes
-    row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
-    col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
+    #OBS row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
+    #OBS col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
 
     # Load data
     allAttrs = gridLayer.pendingAllAttributesList()
@@ -728,24 +728,24 @@ def get_param_array(gridLayer, fieldName = 'ID'):
     field_values = []
     rowColVal = []
 
-    for feat in gridLayer:
+    for feat in gridLayer.getFeatures():
 
 	# load row, col, field_value from current feature
-	attrMap = feat.attributeMap()
-	row = attrMap[row_field_idx].toInt()[0]
-	col = attrMap[col_field_idx].toInt()[0]
-	field_value = attrMap[attr_field_idx]
+	row = feat['ROW']
+	col = feat['COL']	
+	field_value = feat[fieldName]
 
 	# append feat values to main lists
 	#rows.append(row)
 	#cols.append(col)
 
 	# append feat field value to main list
-	if field_value.toFloat()[1] == True :
-		field_value = field_value.toFloat()[0]
+	#if field_value.toFloat()[1] == True :
+	#if field_value == True :
+#		field_value = field_value #.toFloat()[0]
 	# TODO : impossible to handle string with array
-	else : 
-		field_value = str(field_value.toString())
+#	else : 
+#		field_value = str(field_value.toString())
 	
 	rowColVal.append( [row, col, field_value] )
 
@@ -778,11 +778,77 @@ def get_ptset_centroids(vLayer, gridLayer, idFieldName = 'ID',nNeighbors = 3):
     # FieldName : the attribute field of vLayer containing feature identificator
     # nNeighbors : number of neighboring cells to fetch for each point
 
-    # check that the selection in vLayer is not empty
+    # check that gridLayer is a grid
+    try :
+	res = rgrid_numbering(gridLayer)
+	if res == False:
+	    print("The grid layer does not seem to be valid")
+	    return(False)
+    except :
+	return(False)
+
+    # -- create temporary layer of cell centroids
+    # init layer type (point) and crs 
+    cLayerCrs = gridLayer.crs().authid()
+    # create layer
+    cLayer = QgsVectorLayer("Point?crs=" + cLayerCrs, "temp_centroids", "memory")
+    cProvider = cLayer.dataProvider()
+    cProvider.addAttributes( gridLayer.dataProvider().fields().toList() )
+
+    # fill layer with centroids
+    for cell in gridLayer.dataProvider().getFeatures():
+	feat = QgsFeature()
+	geom = cell.geometry().centroid()
+	feat.setAttributes( cell.attributes() )
+	feat.setGeometry( QgsGeometry(geom) )
+	cProvider.addFeatures( [feat] )
+
+    # -- Create and fill spatial Index
+    cLayerIndex = QgsSpatialIndex()
+    for centroid in cLayer.getFeatures():
+	cLayerIndex.insertFeature(centroid)
+
+    # init distance tool
+    d = QgsDistanceArea()
+
+    # PtsetCentroids : { pointIDValue:[ (nrow, ncol, dist), ... ] }
+    PtsetCentroids = {}
+   
+   # check that the selection in vLayer is not empty
     selected_fIds = vLayer.selectedFeaturesIds()
     if len(selected_fIds) == 0:
-	print("Empty selection")
-	return(False)
+	print("Empty selection, all features considered")
+	features = vLayer.getFeatures()
+    else :
+	print("Only selected features will be considered")
+	features = vLayer.selectedFeatures()
+
+    # iterate over selected points, find neighbors, fill pointCentroids dictionary
+    for selectedPoint in features:
+	neighborsIds = cLayerIndex.nearestNeighbor(selectedPoint.geometry().asPoint(), nNeighbors)
+	neighborsData = []
+	# iterate over neighbors
+	for neighborId in neighborsIds:
+	    neighborFeat = QgsFeature()
+	    cProvider.getFeatures( QgsFeatureRequest().setFilterFid( neighborId ) ).nextFeature( neighborFeat )
+	    row = neighborFeat['ROW']
+	    col = neighborFeat['COL']
+	    dist = d.measureLine( neighborFeat.geometry().asPoint(), selectedPoint.geometry().asPoint() )
+	    neighborsData.append( (row, col, dist) )
+	PtsetCentroids[selectedPoint[idFieldName]] = neighborsData
+
+    return(PtsetCentroids)
+
+
+#
+## -----------------------------------------------------
+## From a selection of features in vLayer, returns
+## a dict of tuple (nrow, ncol) in gridLayer
+## returns {'ID1':(nrow1, ncol1), 'ID2':(nrow2, ncol2), ... }
+def get_pline_centroids(vLayer, gridLayer, idFieldName = 'ID'):
+#    # vLayer : vector layer of polylines with a selection
+#    # gridLayer : the grid vector Layer
+#    # idFieldName : the attribute field of vLayer containing feature identificator
 
     # check that gridLayer is a grid
     try :
@@ -793,73 +859,82 @@ def get_ptset_centroids(vLayer, gridLayer, idFieldName = 'ID',nNeighbors = 3):
     except :
 	return(False)
 
-    # -- load grid layer
-    allAttrs = gridLayer.pendingAllAttributesList()
-    gridLayer.select(allAttrs)
-    allCells = {feat.id():feat for feat in gridLayer}
 
-    # -- create temporary layer of cell centroids
-    # init layer type (point) and crs 
-    cLayerUri = 'Point?crs=' + gridLayer.dataProvider().crs().authid()
-    # create layer
-    cLayer = QgsVectorLayer(cLayerUri, "temp_centroids", "memory")
-    cProvider = cLayer.dataProvider()
-    fieldList = gridLayer.dataProvider().fields().values()
-    cProvider.addAttributes(fieldList)
-    # fill layer with centroids
-    for cell in allCells.values():
-	feat = QgsFeature()
-	geom = cell.geometry().centroid()
-	feat.setAttributeMap(cell.attributeMap())
-	feat.setGeometry( QgsGeometry(geom) )
-	cProvider.addFeatures( [feat] )
-    
-    # -- fetch field indexes
-    rowFieldIdx = cLayer.dataProvider().fieldNameIndex('ROW')
-    colFieldIdx = cLayer.dataProvider().fieldNameIndex('COL')
-    
+    # Init provider and variables
+    bboxCell = QgsFeature()
+    selectedSet = []
+    featCells = {}
+
+    # check that the selection in vLayer is not empty
+    selected_fIds = vLayer.selectedFeaturesIds()
+    if len(selected_fIds) == 0:
+	print("Empty selection, all features considered")
+	features = vLayer.getFeatures()
+    else :
+	print("Only selected features will be considered")
+	features = vLayer.selectedFeatures()
+	
     # -- Create and fill spatial Index
-    cLayerIndex = QgsSpatialIndex()
-    cLayer.select()
-    for centroid in cLayer:
-	cLayerIndex.insertFeature(centroid)
+    gridLayerIndex = QgsSpatialIndex()
+    for cell in gridLayer.getFeatures():
+	gridLayerIndex.insertFeature(cell)
 
-    # -- Get pointset from vLayer
-    selectedFeatIds = vLayer.selectedFeaturesIds()
-    pointIdFieldIdx = vLayer.dataProvider().fieldNameIndex(idFieldName)
+    # Iterate over features in vLayer
+    for feat in features:
+	thisFeatCells = []
+	geom = QgsGeometry(feat.geometry())
+	# Select grid cells in the bbox of feat
+	intersectsIds = gridLayerIndex.intersects(geom.boundingBox())
+	for id in intersectsIds:
+	    gridLayer.getFeatures( QgsFeatureRequest().setFilterFid( int(id) ) ).nextFeature( bboxCell )
+	    bboxCellGeom = QgsGeometry(bboxCell.geometry())
+	    # Within grid cells in the bbox of feat, select those intersecting feat
+	    if geom.intersects(bboxCellGeom):
+		thisFeatCells.append( [ bboxCell['ROW'], bboxCell['COL'] ] )
+		selectedSet.append(bboxCell.id())
+	featCells[ feat[idFieldName] ] =  thisFeatCells	
+			
+    selectedSet = list(set(gridLayer.selectedFeaturesIds()).union(selectedSet))
+    gridLayer.setSelectedFeatures(selectedSet)
 
-    # selectedPoints : {fieldIDValue:QgsPoint()}
-    selectedPoints = {}
-    # fill selectedPoints
-    for fId in selectedFeatIds:
-	feat = QgsFeature()
-	vLayer.featureAtId(fId, feat)
-	attrMap = feat.attributeMap()
-	pointIdValue = str(attrMap[pointIdFieldIdx].toString())
-	selectedPoints[pointIdValue] = feat.geometry().asPoint()
+    return(featCells)
+   
 
-    # pointCentroids : { pointIDValue:[ (nrow, ncol, dist), ... ] }
-    PtsetCentroids = {}
+# -----------------------------------------------------
+# From a selection of features in a vector layer 
+# returns PtsetFieldValues, a dictionary { 'ID1':fieldValue, 'ID2':FieldValue, ...}
+def get_feat_param(vLayer, idFieldName = 'ID', FieldName = 'PARAM',):
+    # vLayer : vector layer of points with a selection of point
+    # FieldName : the attribute field of vLayer containing feature identificator
+    
+   # check that the selection in vLayer is not empty
+    selected_fIds = vLayer.selectedFeaturesIds()
+    if len(selected_fIds) == 0:
+	print("Empty selection, all features considered")
+	features = vLayer.getFeatures()
+    else :
+	print("Only selected features will be considered")
+	features = vLayer.selectedFeatures()
 
-    # init distance tool
-    d = QgsDistanceArea()
-    d.setProjectionsEnabled(False)
+    # init output dictionary
+    PtsetFieldValues = {}
 
-    # iterate over selected points, find neighbors, fill pointCentroids dictionary
-    for fieldIdValue, selectedPoint in zip(selectedPoints.keys(),selectedPoints.values()):
-	neighborsIds = cLayerIndex.nearestNeighbor(selectedPoint, nNeighbors)
-	neighborsData = []
-	for neighborId in neighborsIds:
-	    feat = QgsFeature()
-	    cLayer.featureAtId(neighborId, feat)
-	    attrMap  = feat.attributeMap()
-	    row = attrMap[rowFieldIdx].toInt()[0]
-	    col = attrMap[colFieldIdx].toInt()[0]
-	    dist = d.measureLine(  feat.geometry().asPoint(), selectedPoint  )
-	    neighborsData.append( (row, col, dist) )
-	PtsetCentroids[fieldIdValue] = neighborsData
+    for feat in features:
+	thisFeatID = feat[ idFieldName ]
+	thisFeatFieldValue = feat[ FieldName ]
+	PtsetFieldValues[ thisFeatID  ] = thisFeatFieldValue
 
-    return(PtsetCentroids)
+    return(PtsetFieldValues)
 
+# -----------------------------------------------------
+# From 2D array, fills shape file attribute table 
+def import_field(data, gridLayer, idFieldName = 'ID', FieldName = 'PARAM'):
+    # check that data has same number of elements of gridLayer
 
+    # load {id : dataValue}
+
+    # If it does not exist, add FieldName to gridLayer attribute table
+
+    # iterate over features
+    # add attribute to each feature
 

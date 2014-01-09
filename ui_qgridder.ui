@@ -83,9 +83,6 @@
           <string>Grid extent</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_4">
-          <item row="1" column="0">
-           <widget class="QComboBox" name="listSourceLayer"/>
-          </item>
           <item row="2" column="0">
            <layout class="QGridLayout" name="gridLayout_3">
             <item row="0" column="0">
@@ -103,6 +100,9 @@
              </widget>
             </item>
            </layout>
+          </item>
+          <item row="1" column="0">
+           <widget class="QComboBox" name="listSourceLayer"/>
           </item>
           <item row="3" column="0">
            <layout class="QGridLayout" name="gridLayout_2">
@@ -168,6 +168,13 @@
            <widget class="QLabel" name="label_7">
             <property name="text">
              <string>Fectch extents from existing layer : </string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>Note : maximum values of X and Y will be adjusted to obtain exact resolution.</string>
             </property>
            </widget>
           </item>

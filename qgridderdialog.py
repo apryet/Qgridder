@@ -164,8 +164,8 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	    Xres = float( self.sboxXres.value() ) 
 	    Yres = float( self.sboxYres.value() ) 
 	    if Xres != 0 and Yres !=0:
-		Nx = (Xmax - Xmin) / Xres
-		Ny = (Ymax - Ymin) / Yres
+		Nx = round((Xmax - Xmin) / Xres)
+		Ny = round((Ymax - Ymin) / Yres)
 		N = abs(int(Nx*Ny))
 	    else :
 		N = ' '
@@ -212,8 +212,14 @@ class QGridderDialog(QDialog, Ui_QGridder):
             Yres = self.sboxYres.value()
 
 	    # Compute number of elements
-	    n = int( (boundBox.yMaximum() - boundBox.yMinimum()) / Yres )
-	    m = int( (boundBox.xMaximum() - boundBox.xMinimum()) / Xres )
+
+
+	    n = int( round( (boundBox.yMaximum() - boundBox.yMinimum()) / Yres ) )
+	    m = int( round( (boundBox.xMaximum() - boundBox.xMinimum()) / Xres ) )
+
+	    # Adjust bounding box to respect Yres and Xres with linspace
+	    boundBox.setXMaximum( boundBox.xMinimum() + m*Xres )
+	    boundBox.setYMaximum( boundBox.yMinimum() + n*Yres )
 
 	    if n*m <= 0 :
 		QMessageBox.information(self, self.tr("Gridder"),
