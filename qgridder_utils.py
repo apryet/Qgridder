@@ -557,16 +557,21 @@ def rgrid_numbering(gridLayer):
 	  res = res*gridLayer.dataProvider().addAttributes( [QgsField("CY", QVariant.Double)] )
 	  col_field_idx = gridLayer.dataProvider().fieldNameIndex('CY')
 
+    # update fields
+    gridLayer.updateFields()
+
     # get nrow, ncol
     nrow, ncol =  get_rgrid_nrow_ncol(gridLayer)
 
     # Iterate over grid row-wise and column wise 
     # sort by decreasing y and increasing x
-    #idx = np.lexsort( [centroids[:,1],-centroids[:,2]] )
     idx = np.lexsort( [centroids_x,-1*centroids_y] )
     centroids = centroids[idx,:]
     row = 1
     col = 1
+
+    # start editing
+    gridLayer.startEditing()
 
     for i in range(centroids.shape[0]):
 	if col > ncol:
@@ -579,9 +584,11 @@ def rgrid_numbering(gridLayer):
 		cx_field_idx:cx, cy_field_idx:cy}
 	res = res*gridLayer.dataProvider().changeAttributeValues({featId:attr})
 	col+=1
-
-    # trick to update fields in QgsInterface
-    gridLayer.startEditing()
+    print(col)
+    print(row)
+    print(row_field_idx)
+    print(col_field_idx)
+    # commit
     gridLayer.commitChanges()
 
     # res should be True if the operation is successful 
@@ -928,13 +935,53 @@ def get_feat_param(vLayer, idFieldName = 'ID', FieldName = 'PARAM',):
 
 # -----------------------------------------------------
 # From 2D array, fills shape file attribute table 
-def import_field(data, gridLayer, idFieldName = 'ID', FieldName = 'PARAM'):
-    # check that data has same number of elements of gridLayer
+def data_to_grid(data, gridLayer, fieldName = 'PARAM', fieldType = QVariant.Double ):
+    # Note : to date, only fieldType Double is applicable
+    # TODO check that data has same number of elements of gridLayer
+    # Select all features along with their attributes
+    allAttrs = gridLayer.pendingAllAttributesList()
+    gridLayer.select(allAttrs)
 
-    # load {id : dataValue}
+    # load dic of current layer attributes
+    fieldNameMap = gridLayer.dataProvider().fieldNameMap()
 
-    # If it does not exist, add FieldName to gridLayer attribute table
+    # if field "fieldName" does not exist in attribute map, add it
+    if fieldName not in fieldNameMap.keys():
+	gridLayer.dataProvider().addAttributes(  [QgsField( fieldName, fieldType)] )
+	gridLayer.updateFields()
+    
+    # reshape array to a 1D vector
+    # elements are sorted from top left to bottom right
+    data = np.reshape(data, -1)
 
-    # iterate over features
-    # add attribute to each feature
+    # Init variables
+    allFeatures = {feat.id():feat for feat in gridLayer.getFeatures()}
+    allCentroids = [feat.geometry().centroid().asPoint() \
+			for feat in allFeatures.values()]
+    centroids_ids = allFeatures.keys()
+    centroids_x = np.around(np.array([centroid.x() for centroid in allCentroids]), max_decimals)
+    centroids_y = np.around(np.array([centroid.y() for centroid in allCentroids]), max_decimals)
+    centroids = np.array( [centroids_ids , centroids_x, centroids_y] )
+    centroids = centroids.T
+    
+    # Iterate over grid  
+    # sort by decreasing y and increasing x (from top left to bottom right)
+    # for regular grids, this corresponds to row-wise and column wise
+    idx = np.lexsort( [centroids_x,-1*centroids_y] )
+    centroids = centroids[idx,:]
+
+    res = 1
+    
+    gridLayer.startEditing()
+
+    # iterate over grid cells and set fieldName values
+    for i in range(centroids.shape[0]):
+	featId = centroids[i, 0]
+	fieldIdx = gridLayer.fieldNameIndex(fieldName)
+	# Can't find a way to change type of data ... so convert to long.
+	res = res*gridLayer.changeAttributeValue(featId, fieldIdx, float(data[i]) ) 
+			
+    gridLayer.commitChanges()
+    
+    return res
 

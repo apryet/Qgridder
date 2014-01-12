@@ -263,8 +263,7 @@ class QGridderDialog(QDialog, Ui_QGridder):
 		    return
 
 	    # Load shape file writer
-	    #writer = QgsVectorFileWriter(str(self.OutFileName), self.encoding, fields, QGis.WKBPolygon, crs)
-	    writer = QgsVectorFileWriter(unicode(self.OutFileName), self.encoding, fields, QGis.WKBPolygon, crs)
+	    writer = QgsVectorFileWriter(unicode(self.textOutFilename.text()), self.encoding, fields, QGis.WKBPolygon, crs)
 	    
 	    # Call function to make grid
 	    qgridder_utils.make_rgrid(rectFeat, n, m, writer, self.progressBarBuildGrid)
