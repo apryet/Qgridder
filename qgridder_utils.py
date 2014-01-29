@@ -481,20 +481,20 @@ def get_rgrid_delr_delc(gridLayer):
     # sort by decreasing y and increasing x
     idx_row = np.lexsort([centroids[:,1],-centroids[:,2]])
     # iterate along first row 
-    for featId in centroids[idx_row,0][:nrow]:
+    for featId in centroids[idx_row,0][:ncol]:
 	# Extract the four corners of feat
 	# Note : rectangle points are numbered from top-left to bottom-left, clockwise
 	p0, p1, p2, p3 = ftools_utils.extractPoints(allFeatures[featId].geometry())[:4]
-	delc.append( p1.x() - p0.x() )
+	delr.append( p1.x() - p0.x() )
 
     # sort by increasing x and decreasing y    
     idx_col = np.lexsort([-centroids[:,2],centroids[:,1]])
     # iterate along first col
-    for featId in centroids[idx_col,0][:ncol]:
+    for featId in centroids[idx_col,0][:nrow]:
 	# Extract the four corners of feat
 	# Note : rectangle points are numbered from top-left to bottom-left, clockwise
 	p0, p1, p2, p3 = ftools_utils.extractPoints(allFeatures[featId].geometry())[:4]
-	delr.append( p0.y() - p3.y() )
+	delc.append( p0.y() - p3.y() )
 
     # round 
     delr = [round(val, max_decimals) for val in delr]
