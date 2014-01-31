@@ -177,8 +177,8 @@ def refine_by_split(featIds, n, m, topoRules, vLayer, progressBar = QProgressDia
 	# --  Initialize spatial index for faster lookup	
 	# Get all the features from vLayer
 	# Select all features along with their attributes
-	allAttrs = vLayer.pendingAllAttributesList()
-	vLayer.select(allAttrs)
+	#allAttrs = vLayer.pendingAllAttributesList()
+	#vLayer.select(allAttrs)
 	# Get all the features to start
 	allFeatures = {feature.id(): feature for feature in vLayer.getFeatures()}
 	# Initialize spatial index 
@@ -222,8 +222,8 @@ def refine_by_split(featIds, n, m, topoRules, vLayer, progressBar = QProgressDia
 def split_cells(fixDict, n, m, vLayer):
 
     # Select all features along with their attributes
-    allAttrs = vLayer.pendingAllAttributesList()
-    vLayer.select(allAttrs)
+    #allAttrs = vLayer.pendingAllAttributesList()
+    #vLayer.select(allAttrs)
 
     # Get all the features from vLayer
     allFeatures = {feature.id(): feature for (feature) in vLayer.getFeatures()}
@@ -409,8 +409,8 @@ def get_rgrid_nrow_ncol(gridLayer):
     # TODO : check if the grid is actually regular 
     
     # Load layer
-    allAttrs = gridLayer.pendingAllAttributesList()
-    gridLayer.select(allAttrs)
+    #allAttrs = gridLayer.pendingAllAttributesList()
+    #gridLayer.select(allAttrs)
 
     # Init variables 
     allFeatures = {feat.id():feat for feat in gridLayer.getFeatures()}
@@ -457,8 +457,8 @@ def get_rgrid_delr_delc(gridLayer):
     # TODO : check if the grid is actually regular 
     
     # Load layer
-    allAttrs = gridLayer.pendingAllAttributesList()
-    gridLayer.select(allAttrs)
+    #allAttrs = gridLayer.pendingAllAttributesList()
+    #gridLayer.select(allAttrs)
     #gridLayer.dataProvider().select(allAttrs)
 
     # Init variables 
@@ -514,9 +514,9 @@ def get_rgrid_delr_delc(gridLayer):
 def rgrid_numbering(gridLayer):
 
     # TODO : check if the grid is actually regular 
-    allAttrs = gridLayer.pendingAllAttributesList()
+    #allAttrs = gridLayer.pendingAllAttributesList()
     #gridLayer.dataProvider().select(allAttrs)
-    gridLayer.select(allAttrs)
+    #gridLayer.select(allAttrs)
     caps = gridLayer.dataProvider().capabilities()
 
     # Init variables
@@ -604,8 +604,8 @@ def get_param(gridLayer, output_type = 'array', layer = '', fieldName = ''):
     # String fieldName : name of the attribute to get in gridLayer 
 
     # Load data
-    allAttrs = gridLayer.pendingAllAttributesList()
-    gridLayer.select(allAttrs)
+    #allAttrs = gridLayer.pendingAllAttributesList()
+    #gridLayer.select(allAttrs)
     allFeatures = {feat.id():feat for feat in gridLayer.getFeatures()}
 
     # init error flags for field indexes 
@@ -645,7 +645,7 @@ def get_param(gridLayer, output_type = 'array', layer = '', fieldName = ''):
     col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
 
     if output_type == 'list':
-	output = get_param_list(gridLayer, layer = layer, fieldName = fieldName)
+	output = get_param_list(gridLayer, allFeatures, layer = layer, fieldName = fieldName)
     elif output_type =='array' :
 	output = get_param_array(gridLayer, fieldName = fieldName)
     else : 
@@ -657,15 +657,10 @@ def get_param(gridLayer, output_type = 'array', layer = '', fieldName = ''):
 
 # -----------------------------------------------------
 # return modflow-like list from selected features and fieldName 
-def get_param_list(gridLayer,  layer = '', fieldName = ''):
+def get_param_list(gridLayer, allFeatures,  layer = '', fieldName = ''):
     # QgsVectorLayer gridLayer :  containing the (regular) grid
     # Int layer (optional) : corresponding to the (modflow) grid layer number
     # String fieldName : name of the attribute to get in gridLayer 
-
-    # Load data
-    allAttrs = gridLayer.pendingAllAttributesList()
-    gridLayer.select(allAttrs)
-    allFeatures = {feat.id():feat for feat in gridLayer.getFeatures()}
 
     # Get selected features from input grid_layer
     selected_fIds = gridLayer.selectedFeaturesIds()
@@ -682,9 +677,9 @@ def get_param_list(gridLayer,  layer = '', fieldName = ''):
 
     # iterate over selected feature ids
     for fId in selected_fIds:
-	attrMap = allFeatures[fId].attributeMap()
-	row = attrMap[row_field_idx].toInt()[0]
-	col = attrMap[col_field_idx].toInt()[0]
+	feat = allFeatures[fId] 
+	row = feat[row_field_idx]
+	col = feat[col_field_idx]
 
 	this_feat_list = []
 
@@ -698,9 +693,9 @@ def get_param_list(gridLayer,  layer = '', fieldName = ''):
 
 	# add attribute value
 	if fieldName != '' :
-	    field_value = attrMap[attr_field_idx]
+	    field_value = feat[attr_field_idx]
 	    if field_value.toFloat()[1] == True:
-		this_feat_list.append(field_value.toFloat()[0])
+		this_feat_list.append(field_value)
 	    else : 
 		this_feat_list.append(str(field_value.toString()))
 
@@ -726,8 +721,8 @@ def get_param_array(gridLayer, fieldName = 'ID'):
     #OBS col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
 
     # Load data
-    allAttrs = gridLayer.pendingAllAttributesList()
-    gridLayer.select(allAttrs)
+    #allAttrs = gridLayer.pendingAllAttributesList()
+    #gridLayer.select(allAttrs)
 
     # init lists
     rows = []
@@ -939,8 +934,8 @@ def data_to_grid(data, gridLayer, fieldName = 'PARAM', fieldType = QVariant.Doub
     # Note : to date, only fieldType Double is applicable
     # TODO check that data has same number of elements of gridLayer
     # Select all features along with their attributes
-    allAttrs = gridLayer.pendingAllAttributesList()
-    gridLayer.select(allAttrs)
+    #allAttrs = gridLayer.pendingAllAttributesList()
+    #gridLayer.select(allAttrs)
 
     # load dic of current layer attributes
     fieldNameMap = gridLayer.dataProvider().fieldNameMap()
