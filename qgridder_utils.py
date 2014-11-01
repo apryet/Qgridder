@@ -168,19 +168,12 @@ def refine_by_split(featIds, n, m, topoRules, vLayer, progressBar = QProgressDia
     # Continue until inputFeatures is empty
     while len(fixDict['id']) > 0:
 
-	#print('len(fixDict[\'id\']):')
-	#print(len(fixDict['id']))
-
 	# Split inputFeatures
 	newFeatIds = split_cells(fixDict, n, m, vLayer)
 
-	# --  Initialize spatial index for faster lookup	
-	# Get all the features from vLayer
-	# Select all features along with their attributes
-	#allAttrs = vLayer.pendingAllAttributesList()
-	#vLayer.select(allAttrs)
-	# Get all the features to start
+	# Get all the features 	
 	allFeatures = {feature.id(): feature for feature in vLayer.getFeatures()}
+
 	# Initialize spatial index 
 	vLayerIndex = QgsSpatialIndex()
 	# Fill spatial Index
@@ -219,11 +212,8 @@ def refine_by_split(featIds, n, m, topoRules, vLayer, progressBar = QProgressDia
     
 
 # --------------------------------------------------------------------------------------------------------------
-def split_cells(fixDict, n, m, vLayer):
-
-    # Select all features along with their attributes
-    #allAttrs = vLayer.pendingAllAttributesList()
-    #vLayer.select(allAttrs)
+def split_cells(fixDict, n=2, m=2, vLayer = QgsVectorLayer()):
+    # note that n and m parameters are obsolete.
 
     # Get all the features from vLayer
     allFeatures = {feature.id(): feature for (feature) in vLayer.getFeatures()}
@@ -1026,4 +1016,84 @@ def cells_budget(ml, cbc, cells = [], tstep = 1 ):
     return(cellsBudget3D)
 
     
-   
+# ======================================================================
+def count_overlapping_cells(feat, spatialIndex) : 
+    # feat : QgsFeature (cell of a Qgridder mesh)
+    # spatialIndex : QgsSpatialIndex of an (overlying / underlying) grid vector layer
+    # get bbox of feat
+    featBbox = feat.geometry().boundingBox()
+    # shrink bbox of TOLERANCE
+    # doing so, we do not select neighbor cells
+    shrinkedBbox = QgsRectangle(featBbox.xMinimum()+TOLERANCE,
+	    featBbox.yMinimum()+TOLERANCE,
+	    featBbox.xMaximum()-TOLERANCE,
+	    featBbox.yMaximum()-TOLERANCE
+	    )
+    # fetch overlapping cells (list of features)
+    overlappingCells = spatialIndex.intersects( shrinkedBbox )
+    # return number of overlapping features
+    return(len(overlappingCells))
+
+
+
+# update spatial indexes
+def get_spatial_indexes(allLayers) : 
+    spatialIndexes = []
+    for vLayer in allLayers : 
+	vLayerIndex = QgsSpatialIndex()
+	for feat in vLayer.getFeatures() :
+	    vLayerIndex.insertFeature(feat)
+	spatialIndexes.append(vLayerIndex)
+    return(spatialIndexes)
+
+
+# ======================================================================
+def correct_pseudo3D_grid(allLayers, topoRules) :
+    nLayers = len(allLayers)
+    # init fixDict for while condition below
+    fixDict = { 'id':[NULL] , 'n':[NULL], 'm':[NULL] }
+    nfix = 1
+    while nfix > 0 :  
+	nfix = 0
+	# iterate over each layers of the pseudo-3D mesh
+	for layerNum in range(nLayers) : 
+	    # update spatial indexes
+	    spatialIndexes = get_spatial_indexes(allLayers)
+	    # update fix dictionary
+	    fixDict = { 'id':[] , 'n':[], 'm':[] }
+	    # iterate over each cells of layer layerNum
+	    for feat in allLayers[layerNum].getFeatures() :
+		# count overlapping cells in the overlying layer \
+		# note that layer layerNum is not necessarily overlain by layerNum + 1 \
+		# and underlain by layerNum - 1.
+		# go to layer below layer numLayer...
+		l = layerNum - 1
+		# ... and check downward for overlapping cells
+		while l >= 0 :
+		    # count number of features in spatialIndexes[l] overlapping feature "feat"
+		    p = count_overlapping_cells(feat,spatialIndexes[l])
+		    if p >= 0 :
+			if p > topoRules['pmax'] :
+			    fixDict = update_fixDict( fixDict, { 'id':[feat.id()] , 'n':[2], 'm':[2] } )	    
+			break # exit while loop as features have been found below
+		    # go to layer below
+		    l = l - 1
+		# go to layer below layer numLayer...
+		l = layerNum + 1
+		# ... and check upward for overlapping cells
+		while l < nLayers :
+		    # check downward for overlapping cells
+		    p = count_overlapping_cells(feat,spatialIndexes[l])
+		    print(p)
+		    if p >= 0 :
+			if p > topoRules['pmax'] :
+			    fixDict = update_fixDict( fixDict, { 'id':[neighbor.id()] , 'n':[2], 'm':[2] } )	    
+			break # exit while loop as features have been found above
+		    # go to layer above
+		    l = l + 1
+	    # split cells
+	    if len(fixDict['id']) > 0 : 
+		newFeatIds = split_cells(fixDict, vLayer = allLayers[layerNum])
+	    nfix += len(fixDict['id'])
+	    #print('nfix=' + str(nfix) + ' , layerNum =' + str(layerNum))
+

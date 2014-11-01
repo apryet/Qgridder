@@ -54,6 +54,12 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	QObject.connect(self.buttonRegularRefile, SIGNAL("clicked()"), self.run_regular_refine)
 	QObject.connect(self.buttonExport, SIGNAL("clicked()"), self.run_export)
 	QObject.connect(self.buttonProceedNumbering, SIGNAL("clicked()"), self.run_preprocessing)
+	QObject.connect(self.buttonLayer3DUp, SIGNAL("clicked()"), self.layer3D_up)
+	QObject.connect(self.buttonLayer3DDown, SIGNAL("clicked()"), self.layer3D_down)
+	QObject.connect(self.buttonLayer3DRemove, SIGNAL("clicked()"), self.remove_layer3D)
+	QObject.connect(self.buttonAddNewLayer3D, SIGNAL("clicked()"), self.add_new_layer3D)
+	QObject.connect(self.buttonAddExistingLayer3D, SIGNAL("clicked()"), self.add_existing_layer3D)
+	QObject.connect(self.buttonCheck3D, SIGNAL("clicked()"), self.run_check3D)
 
 	# Connect actions
 	QObject.connect(self.sboxXres, SIGNAL("valueChanged(double)"), self.set_Yres)
@@ -65,6 +71,7 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	QObject.connect(self.textYmax, SIGNAL("textChanged(const QString &)"), self.estim_number_grid_cells)
 	QObject.connect(self.sboxXres, SIGNAL("valueChanged(double)"), self.estim_number_grid_cells)
 	QObject.connect(self.sboxYres, SIGNAL("valueChanged(double)"), self.estim_number_grid_cells)
+	QObject.connect(self.toolBox, SIGNAL("currentChanged(int)"), self.update_toolBox)
 
 	# Populate layer list
 	for modelName in ['Modflow','Newsam']:
@@ -73,6 +80,8 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	# Populate model name list
 	self.populate_layers(self.listSourceLayer)
 	self.populate_layers(self.listGridLayer)
+	self.populate_layers(self.listReferenceGrid)
+	self.populate_layers(self.listExistingLayer)
 
 	# Get update extents from map canvas
 	self.update_from_canvas()
@@ -95,6 +104,8 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	self.OutFileName = 'grid.shp'
 	self.encoding = 'System'
 
+	# Hide QtoolBox items under development
+	self.toolBox.setItemEnabled(2,False)
 
     #  ======= Update automatically when 1:1 ratio is checked
     def set_Yres(self, value):
@@ -124,17 +135,46 @@ class QGridderDialog(QDialog, Ui_QGridder):
 		for name, layer in layermap.iteritems():
 		    listOfLayers.addItem( unicode( layer.name() ) )
 		    if layer == self.iface.activeLayer():
-			listOfLayers.setCurrentIndex( self.listSourceLayer.count() -1 )
+			listOfLayers.setCurrentIndex( listOfLayers.count() -1 )
 	    else :
 		listOfLayers.setEnabled(False)
 	else :
 	    listOfLayers.setEnabled(False)
-	    
+
+    #  ======= Populate all layer lists
+    def populate_all_layer_lists(self) :
+	self.populate_layers(self.listSourceLayer)
+	self.populate_layers(self.listGridLayer)
+	self.populate_layers(self.listReferenceGrid)
+	self.populate_layers(self.listExistingLayer)
+
+    #  ======= Update toolBox  
+    def update_toolBox(self) : 
+	self.populate_all_layer_lists()
+	self.update_listLayers3D()
+
+    # ========== update listLayers3D
+    def update_listLayers3D(self) :
+	NamesofLayersInMapCanvas =  []
+	# load list of every layers in map canvas
+	for layer in self.iface.mapCanvas().layers() :
+	    NamesofLayersInMapCanvas.append(layer.name())
+	# check whether each layer of the listLayers3D list is loaded
+	itemRemoved = True
+	while( itemRemoved == True ) : 
+	    itemRemoved = False
+	    for row in range(self.listLayers3D.count()) :
+		if self.listLayers3D.item(row) != None : 
+		    if self.listLayers3D.item(row).text() not in NamesofLayersInMapCanvas :
+			self.listLayers3D.takeItem(row)
+			itemRemoved = True
+			break
+
 
     #  ======= Update extents from layer
     def update_from_layer( self ):
         mLayerName = self.listSourceLayer.currentText()
-        if not mLayerName == "":
+        if not mLayerName == "" :
             mLayer = ftools_utils.getMapLayerByName( unicode( mLayerName ) )
             # get layer extents
             boundBox = mLayer.extent()
@@ -385,7 +425,7 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	self.buttonRegularRefile.setEnabled( True )
 	QApplication.restoreOverrideCursor()
 
-    # ======= Refine grid ========================================
+    # ---------- Export Grid --------------------------------
     def run_export(self):
 
 	# selected grid layer name 
@@ -416,6 +456,7 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	# call export_txt:
 	# ID PT1 PT2 PT3 PT4 PARAM1 PARAM2 ... PARAMN
 
+    # ---------- Pre-processing --------------------------------
     def run_preprocessing(self):
 
 	gridLayerName = self.listGridLayer.currentText()
@@ -441,4 +482,87 @@ class QGridderDialog(QDialog, Ui_QGridder):
 				\n \
 			         Attributes NROW, NCOL have been added to the vector layer")
 			)
+
+    # ---------- Pseudo 3D grid management --------------------------------
+
+    def layer3D_up(self):
+	itemRow = self.listLayers3D.currentRow()
+	if itemRow > 0 :
+	    item = self.listLayers3D.takeItem(itemRow)
+	    self.listLayers3D.insertItem(itemRow-1,item)
+	    self.listLayers3D.setCurrentRow(itemRow-1)
+
+    def layer3D_down(self):
+	itemRow = self.listLayers3D.currentRow()
+	if itemRow < self.listLayers3D.count() - 1 :
+	    item = self.listLayers3D.takeItem(itemRow)
+	    self.listLayers3D.insertItem(itemRow+1,item)
+	    self.listLayers3D.setCurrentRow(itemRow+1)
+
+    def remove_layer3D(self):
+	itemRow = self.listLayers3D.currentRow()
+	removedItem = self.listLayers3D.takeItem(itemRow)
+
+    def add_new_layer3D(self):
+	# fetch reference grid from listReferenceGrid
+	ReferenceGridLayerName = self.listReferenceGrid.currentText()
+        if not ReferenceGridLayerName == "":
+            ReferenceGridLayer = ftools_utils.getMapLayerByName( unicode( ReferenceGridLayerName ) )
+
+	# Copy reference grid to shapefile to user defined location
+	OutFileName, Encoding = ftools_utils.saveDialog( self )
+	if (OutFileName, OutFileName) == (None, None) :
+	    return()
+
+	# write new layer to shapefile
+	ftools_utils.writeVectorLayerToShape( ReferenceGridLayer, OutFileName, self.encoding )
+
+
+	# get new layer name
+	file_info = QFileInfo( OutFileName )
+	if file_info.exists():
+	    newLayerName = file_info.completeBaseName()
+
+	# check whether this layer name is already in the 3D list
+	if len(self.listLayers3D.findItems(newLayerName,Qt.MatchFixedString)) != 0 : 
+	    QMessageBox.information(self, self.tr("Gridder"), 
+		    self.tr("This layer is already in the list."))
+	    return()
+
+
+	# Load new layer into map canvas ...
+	for (name,layer) in	QgsMapLayerRegistry.instance().mapLayers().iteritems():
+	    # Note : reload() doesn't work.
+	    if layer.source()==self.OutFileName:
+		QgsMapLayerRegistry.instance().removeMapLayers( layer.id() )
+	ftools_utils.addShapeToCanvas( OutFileName )
+        
+	# add new layer to listLayers3D
+	self.listLayers3D.addItem(newLayerName)
+
+    def add_existing_layer3D(self):
+	# get layer name
+	existingGridLayerName = self.listExistingLayer.currentText()
+	# check whether current layer is not already in the list
+	if len(self.listLayers3D.findItems(existingGridLayerName,Qt.MatchFixedString)) == 0 : 
+	    # add new layer
+	    self.listLayers3D.addItem(existingGridLayerName)
+	else :
+	    QMessageBox.information(self, self.tr("Gridder"), 
+		    self.tr("This layer is already in the list.")
+		    )
+
+    def run_check3D(self):
+	allLayers = []
+	topoRules = {'model':'newsam', 'nmax':2,'pmax':4}
+	for row in range( self.listLayers3D.count() ) : 
+	    vLayerName = self.listLayers3D.item(row).text()
+	    vLayer  = ftools_utils.getMapLayerByName( unicode( vLayerName ) )
+	    allLayers.append(vLayer)
+	qgridder_utils.correct_pseudo3D_grid(allLayers, topoRules)
+	QMessageBox.information(self, self.tr("Qgridder"), 
+	    self.tr('pseudo-3D grid topology successfully checked and corrected')
+	)
+	return()
+
 
