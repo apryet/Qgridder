@@ -50,9 +50,10 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	QObject.connect(self.buttonUpdateFromLayer, SIGNAL("clicked()"), self.update_from_layer)
 	QObject.connect(self.buttonUpdateFromCanvas, SIGNAL("clicked()"), self.update_from_canvas)
 	QObject.connect(self.buttonBrowse, SIGNAL("clicked()"), self.out_file)
+	QObject.connect(self.buttonBrowseTextFile, SIGNAL("clicked()"), self.out_text_file)
 	QObject.connect(self.buttonWriteGrid, SIGNAL("clicked()"), self.run_write_grid)
 	QObject.connect(self.buttonRegularRefile, SIGNAL("clicked()"), self.run_regular_refine)
-	QObject.connect(self.buttonExport, SIGNAL("clicked()"), self.run_export)
+	QObject.connect(self.buttonExportTextFile, SIGNAL("clicked()"), self.export_geometry)
 	QObject.connect(self.buttonProceedNumbering, SIGNAL("clicked()"), self.run_preprocessing)
 	QObject.connect(self.buttonLayer3DUp, SIGNAL("clicked()"), self.layer3D_up)
 	QObject.connect(self.buttonLayer3DDown, SIGNAL("clicked()"), self.layer3D_down)
@@ -123,6 +124,14 @@ class QGridderDialog(QDialog, Ui_QGridder):
         if self.OutFileName is None or self.encoding is None:
             return
         self.textOutFilename.setText( self.OutFileName  )
+
+    #  ======= Choose output shape file
+    def out_text_file(self):
+        self.textOutTextFileName.clear()
+        fileName, self.encoding  = ftools_utils.saveDialog( self )
+        if fileName is None or self.encoding is None:
+            return
+        self.textOutTextFileName.setText( fileName  )
 
     #  ======= Populate input layer list
     def populate_layers( self,listOfLayers):
@@ -425,36 +434,6 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	self.buttonRegularRefile.setEnabled( True )
 	QApplication.restoreOverrideCursor()
 
-    # ---------- Export Grid --------------------------------
-    def run_export(self):
-
-	# selected grid layer name 
-	gridLayerName = self.listGridLayer.currentText()
-	# selected export format
-	# exportFormat = self.listExportFormat.currentText()
-
-	# Grid numbering 
-	# call grid numbering
-	# 	1. compute element centroids with existing function from ftools
-	#       2. classify centroids from top left to bottom right
-	#       3. Numbering from this classification (with numpy sorting)
-
-	# If export format = gis2wacs
-
-	# call export_gis2wacs
-	#ID AUTO
-	# 	X1, Y1
-	# 	X2, Y2
-	# 	X3, Y3
-	# 	X4, Y4
-	# 	X1, Y1
-	# END
-	# ...
-	#END
-
-	# If export format = text 
-	# call export_txt:
-	# ID PT1 PT2 PT3 PT4 PARAM1 PARAM2 ... PARAMN
 
     # ---------- Pre-processing --------------------------------
     def run_preprocessing(self):
@@ -565,4 +544,93 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	)
 	return()
 
+
+    # ----------------------------------------------------------
+
+    def export_geometry(self) :
+
+	    gridLayerName = self.listGridLayer.currentText()
+
+	    outTextFileName = self.textOutTextFileName.text()
+	    
+	    # settings	
+	    delimiter = ','
+	    lineterminator = '\r'
+	    max_decimals = 2
+
+	    # Error checks
+	    if len(outTextFileName) <= 0:
+		    return "No output file given"
+
+	    gridLayer = ftools_utils.getMapLayerByName( unicode( gridLayerName ) )
+
+	    if gridLayer == None:
+		    return "Layer " + gridLayerName + " not found"
+
+	    # Create the CSV file
+	    try:
+		    txtfile = open(outTextFileName, 'w')
+	    except ValueError:
+		print "Writing Error.  Try again..."
+
+	    # Iterate through each feature in the source layer
+	    feature_count = gridLayer.dataProvider().featureCount()
+
+	    # Initialize progress bar
+	    progress=QProgressDialog("Exporting attributes...", "Abort Export", 0, feature_count);
+	    progress.setWindowModality(Qt.WindowModal)
+
+	    # Select all features along with their attributes
+	    allAttrs = gridLayer.pendingAllAttributesList()
+	    gridLayer.select(allAttrs)
+
+	    # Iterate over grid cells
+	    for feat in gridLayer.getFeatures():
+		p0, p1, p2, p3 = ftools_utils.extractPoints(feat.geometry())[:4]
+		txtfile.write(str(feat.id()) + ' AUTO' + lineterminator)
+		for point in [p0,p1,p2,p3,p0]:
+		    xcoor = round(point.x(), max_decimals)
+		    ycoor = round(point.y(), max_decimals)
+		    txtfile.write('\t' + str(xcoor) + delimiter + str(ycoor) + lineterminator)
+		txtfile.write('END' + lineterminator)
+		progress.setValue(feat.id())
+		if (progress.wasCanceled()):
+		       return "Export canceled "
+
+	    txtfile.write('END' + lineterminator)
+	    
+	    progress.close()
+	    txtfile.close()
+
+
+    # ---------- Export Grid --------------------------------
+#   def run_export(self):
+
+	# selected grid layer name 
+#	gridLayerName = self.listGridLayer.currentText()
+	# selected export format
+	# exportFormat = self.listExportFormat.currentText()
+
+	# Grid numbering 
+	# call grid numbering
+	# 	1. compute element centroids with existing function from ftools
+	#       2. classify centroids from top left to bottom right
+	#       3. Numbering from this classification (with numpy sorting)
+
+	# If export format = gis2wacs
+
+	# call export_gis2wacs
+	#ID AUTO
+	# 	X1, Y1
+	# 	X2, Y2
+	# 	X3, Y3
+	# 	X4, Y4
+	# 	X1, Y1
+	# END
+	# ...
+	#END
+
+	# If export format = text 
+	# call export_txt:
+	# ID PT1 PT2 PT3 PT4 PARAM1 PARAM2 ... PARAMN
 

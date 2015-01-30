@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_qgridder.ui'
 #
-# Created: Sat Nov  1 08:35:03 2014
+# Created: Fri Jan 30 10:02:13 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -49,7 +49,7 @@ class Ui_QGridder(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName(_fromUtf8("toolBox"))
         self.page_grid = QtGui.QWidget()
-        self.page_grid.setGeometry(QtCore.QRect(0, -87, 546, 501))
+        self.page_grid.setGeometry(QtCore.QRect(0, 0, 546, 501))
         self.page_grid.setObjectName(_fromUtf8("page_grid"))
         self.verticalLayout = QtGui.QVBoxLayout(self.page_grid)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
@@ -410,17 +410,22 @@ class Ui_QGridder(object):
         self.page_2.setObjectName(_fromUtf8("page_2"))
         self.verticalLayout_5 = QtGui.QVBoxLayout(self.page_2)
         self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
+        self.horizontalLayout_17 = QtGui.QHBoxLayout()
+        self.horizontalLayout_17.setObjectName(_fromUtf8("horizontalLayout_17"))
+        self.textOutTextFileName = QtGui.QLineEdit(self.page_2)
+        self.textOutTextFileName.setObjectName(_fromUtf8("textOutTextFileName"))
+        self.horizontalLayout_17.addWidget(self.textOutTextFileName)
+        self.buttonBrowseTextFile = QtGui.QPushButton(self.page_2)
+        self.buttonBrowseTextFile.setObjectName(_fromUtf8("buttonBrowseTextFile"))
+        self.horizontalLayout_17.addWidget(self.buttonBrowseTextFile)
+        self.verticalLayout_5.addLayout(self.horizontalLayout_17)
         self.horizontalLayout_5 = QtGui.QHBoxLayout()
         self.horizontalLayout_5.setObjectName(_fromUtf8("horizontalLayout_5"))
-        self.progressBarExport = QtGui.QProgressBar(self.page_2)
-        self.progressBarExport.setProperty("value", 0)
-        self.progressBarExport.setObjectName(_fromUtf8("progressBarExport"))
-        self.horizontalLayout_5.addWidget(self.progressBarExport)
         spacerItem9 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem9)
-        self.buttonExport = QtGui.QPushButton(self.page_2)
-        self.buttonExport.setObjectName(_fromUtf8("buttonExport"))
-        self.horizontalLayout_5.addWidget(self.buttonExport)
+        self.buttonExportTextFile = QtGui.QPushButton(self.page_2)
+        self.buttonExportTextFile.setObjectName(_fromUtf8("buttonExportTextFile"))
+        self.horizontalLayout_5.addWidget(self.buttonExportTextFile)
         self.verticalLayout_5.addLayout(self.horizontalLayout_5)
         spacerItem10 = QtGui.QSpacerItem(598, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.verticalLayout_5.addItem(spacerItem10)
@@ -430,7 +435,7 @@ class Ui_QGridder(object):
         self.verticalLayout_7.addWidget(self.toolBox)
 
         self.retranslateUi(QGridder)
-        self.toolBox.setCurrentIndex(3)
+        self.toolBox.setCurrentIndex(5)
         QtCore.QMetaObject.connectSlotsByName(QGridder)
         QGridder.setTabOrder(self.listModelName, self.listSourceLayer)
         QGridder.setTabOrder(self.listSourceLayer, self.buttonUpdateFromLayer)
@@ -457,7 +462,7 @@ class Ui_QGridder(object):
         QGridder.setTabOrder(self.sboxXres_4, self.sboxXres_5)
         QGridder.setTabOrder(self.sboxXres_5, self.buttonRefineGrid_2)
         QGridder.setTabOrder(self.buttonRefineGrid_2, self.buttonProceedNumbering)
-        QGridder.setTabOrder(self.buttonProceedNumbering, self.buttonExport)
+        QGridder.setTabOrder(self.buttonProceedNumbering, self.buttonExportTextFile)
 
     def retranslateUi(self, QGridder):
         QGridder.setWindowTitle(_translate("QGridder", "Qgridder", None))
@@ -520,6 +525,7 @@ class Ui_QGridder(object):
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_4), _translate("QGridder", "Pseudo-3D Grid", None))
         self.buttonProceedNumbering.setText(_translate("QGridder", "Proceed to numbering", None))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_3), _translate("QGridder", "Pre-processing", None))
-        self.buttonExport.setText(_translate("QGridder", "Export", None))
+        self.buttonBrowseTextFile.setText(_translate("QGridder", "Browse ...", None))
+        self.buttonExportTextFile.setText(_translate("QGridder", "Export", None))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_2), _translate("QGridder", "Export grid to text", None))
 

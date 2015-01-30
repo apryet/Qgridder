@@ -47,13 +47,13 @@
       <bool>true</bool>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>5</number>
      </property>
      <widget class="QWidget" name="page_grid">
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-87</y>
+        <y>0</y>
         <width>546</width>
         <height>501</height>
        </rect>
@@ -895,14 +895,21 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_5">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <layout class="QHBoxLayout" name="horizontalLayout_17">
          <item>
-          <widget class="QProgressBar" name="progressBarExport">
-           <property name="value">
-            <number>0</number>
+          <widget class="QLineEdit" name="textOutTextFileName"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonBrowseTextFile">
+           <property name="text">
+            <string>Browse ...</string>
            </property>
           </widget>
          </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
          <item>
           <spacer name="horizontalSpacer_4">
            <property name="orientation">
@@ -917,7 +924,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="buttonExport">
+          <widget class="QPushButton" name="buttonExportTextFile">
            <property name="text">
             <string>Export</string>
            </property>
@@ -984,7 +991,7 @@
   <tabstop>sboxXres_5</tabstop>
   <tabstop>buttonRefineGrid_2</tabstop>
   <tabstop>buttonProceedNumbering</tabstop>
-  <tabstop>buttonExport</tabstop>
+  <tabstop>buttonExportTextFile</tabstop>
  </tabstops>
  <resources/>
  <connections/>
