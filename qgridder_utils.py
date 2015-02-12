@@ -563,6 +563,8 @@ def rgrid_numbering(gridLayer):
     # start editing
     gridLayer.startEditing()
 
+    attrValues = {}
+
     for i in range(centroids.shape[0]):
 	if col > ncol:
 	    col = 1
@@ -572,8 +574,10 @@ def rgrid_numbering(gridLayer):
 	cy = float(centroids[i, 2])
 	attr = { row_field_idx:row, col_field_idx:col,\
 		cx_field_idx:cx, cy_field_idx:cy}
-	res = res*gridLayer.dataProvider().changeAttributeValues({featId:attr})
+	attrValues[featId] = attr 
 	col+=1
+    # write attributes to shapefile 
+    res = gridLayer.dataProvider().changeAttributeValues(attrValues)
     print(col)
     print(row)
     print(row_field_idx)
