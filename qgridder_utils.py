@@ -1097,7 +1097,10 @@ def correct_pseudo3D_grid(allLayers, topoRules) :
 		    l = l - 1
 	    # split cells
 	    if len(fixDict['id']) > 0 : 
-		newFeatIds = split_cells(fixDict, vLayer = allLayers[layerNum])
+		# newFeatIds = split_cells(fixDict, vLayer = allLayers[layerNum])
+		refine_by_split(fixDict['id'], 2, 2, 
+			topoRules, allLayers[layerNum], 
+			)
 	    nfix += len(fixDict['id'])
 	    #print('nfix=' + str(nfix) + ' , layerNum =' + str(layerNum))
 
