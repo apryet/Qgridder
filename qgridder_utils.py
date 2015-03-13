@@ -1070,31 +1070,31 @@ def correct_pseudo3D_grid(allLayers, topoRules) :
 		# count overlapping cells in the overlying layer \
 		# note that layer layerNum is not necessarily overlain by layerNum + 1 \
 		# and underlain by layerNum - 1.
-		# go to layer below layer numLayer...
-		l = layerNum - 1
-		# ... and check downward for overlapping cells
-		while l >= 0 :
+		# go to layer JUST BELOW layer numLayer...
+		l = layerNum + 1
+		# ... and check DOWNWARD for overlapping cells
+		while l < nLayers :
 		    # count number of features in spatialIndexes[l] overlapping feature "feat"
 		    p = count_overlapping_cells(feat,spatialIndexes[l])
-		    if p >= 0 :
+		    if p > 0 :
 			if p > topoRules['pmax'] :
 			    fixDict = update_fixDict( fixDict, { 'id':[feat.id()] , 'n':[2], 'm':[2] } )	    
-			break # exit while loop as features have been found below
+			break # exit this while loop as features have been found below
 		    # go to layer below
-		    l = l - 1
-		# go to layer below layer numLayer...
-		l = layerNum + 1
+		    l = l + 1
+		# go to layer JUST OVER layer numLayer...
+		l = layerNum - 1
 		# ... and check upward for overlapping cells
-		while l < nLayers :
-		    # check downward for overlapping cells
+		while l >= 0 :
+		    # check upward for overlapping cells
 		    p = count_overlapping_cells(feat,spatialIndexes[l])
 		    print(p)
-		    if p >= 0 :
+		    if p > 0 :
 			if p > topoRules['pmax'] :
-			    fixDict = update_fixDict( fixDict, { 'id':[neighbor.id()] , 'n':[2], 'm':[2] } )	    
-			break # exit while loop as features have been found above
+			    fixDict = update_fixDict( fixDict, { 'id':[feat.id()] , 'n':[2], 'm':[2] } )	    
+			break # exit this while loop as features have been found above
 		    # go to layer above
-		    l = l + 1
+		    l = l - 1
 	    # split cells
 	    if len(fixDict['id']) > 0 : 
 		newFeatIds = split_cells(fixDict, vLayer = allLayers[layerNum])
