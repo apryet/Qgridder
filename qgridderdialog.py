@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- GridderDialog
-                                 A QGIS plugin
- BUILDS 2D grids for finite difference
-                             -------------------
+ qgridderdialog.py
+                                 Qgridder - A QGIS plugin
+
+ This file handles Qgridder graphical user interface                           
+
+ Qgridder Builds 2D regular and unstructured grids and comes together with 
+ pre- and post-processing capabilities for spatially distributed modeling.
+
+			     -------------------
         begin                : 2013-04-08
         copyright            : (C) 2013 by Pryet
         email                : alexandre.pryet@ensegid.fr
@@ -601,36 +606,4 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	    
 	    progress.close()
 	    txtfile.close()
-
-
-    # ---------- Export Grid --------------------------------
-#   def run_export(self):
-
-	# selected grid layer name 
-#	gridLayerName = self.listGridLayer.currentText()
-	# selected export format
-	# exportFormat = self.listExportFormat.currentText()
-
-	# Grid numbering 
-	# call grid numbering
-	# 	1. compute element centroids with existing function from ftools
-	#       2. classify centroids from top left to bottom right
-	#       3. Numbering from this classification (with numpy sorting)
-
-	# If export format = gis2wacs
-
-	# call export_gis2wacs
-	#ID AUTO
-	# 	X1, Y1
-	# 	X2, Y2
-	# 	X3, Y3
-	# 	X4, Y4
-	# 	X1, Y1
-	# END
-	# ...
-	#END
-
-	# If export format = text 
-	# call export_txt:
-	# ID PT1 PT2 PT3 PT4 PARAM1 PARAM2 ... PARAMN
 

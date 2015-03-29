@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- Qgridder
-                                 A QGIS plugin
- Builds 2D grids for finite difference
-                              -------------------
+ qgridder.py
+                                 Qgridder - A QGIS plugin
+
+ Plugin main file. 
+ 
+ Qgridder Builds 2D regular and unstructured grids and comes together with 
+ pre- and post-processing capabilities for spatially distributed modeling.
+
+			      -------------------
         begin                : 2013-04-08
         copyright            : (C) 2013 by Pryet
         email                : alexandre.pryet@ensegid.fr
@@ -23,7 +28,8 @@
  *                                                                         *
  ***************************************************************************/
 """
-# Import the PyQt and QGIS libraries
+
+# Import PyQt and QGIS modules
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from qgis.core import *
@@ -84,5 +90,4 @@ class QGridder:
         self.dlg.show()
         # Run the dialog event loop
         result = self.dlg.exec_()
-
 
