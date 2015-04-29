@@ -174,7 +174,7 @@ def interp_from_file(in_file_path, dates_out, date_string_format =  '%Y-%m-%d %H
 		)
 
     except :
-	print('Error while reading file ' + infile_path + '.\n'+
+	print('Error while reading file ' + in_file_path + '.\n'+
 		'Check file path and format (should be a 2 column CSV file).'
 		)
 

@@ -432,7 +432,6 @@ class QGridderDialog(QDialog, Ui_QGridder):
 		)	
 
 	# Refresh refined grid layer
-	#grid_layer.reload()
 	self.iface.mapCanvas().refresh()
 
 	# Enable Write Grid button and reset cursor
@@ -547,6 +546,8 @@ class QGridderDialog(QDialog, Ui_QGridder):
 	QMessageBox.information(self, self.tr("Qgridder"), 
 	    self.tr('pseudo-3D grid topology successfully checked and corrected')
 	)
+	# Refresh map canvas 
+	self.iface.mapCanvas().refresh()
 	return()
 
 

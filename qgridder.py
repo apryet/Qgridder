@@ -38,6 +38,7 @@ import resources
 # Import the code for the dialog
 from qgridderdialog import QGridderDialog
 
+#  ---------------------------------------------
 class QGridder:
 
     def __init__(self, iface):
@@ -66,8 +67,12 @@ class QGridder:
         # Create action that will start plugin configuration
         self.action = QAction(QIcon(":/plugins/Qgridder/icon.png"), \
             u"Qgridder", self.iface.mainWindow())
+	self.action_plot = QAction(QIcon(":/plugins/Qgridder/icon_plot.png"), \
+            "Plot", self.iface.mainWindow())
         # connect the action to the run method
         QObject.connect(self.action, SIGNAL("triggered()"), self.run)
+        QObject.connect(self.action_plot, SIGNAL("triggered()"), self.run_plot)
+	
 
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.action)
@@ -90,4 +95,46 @@ class QGridder:
         self.dlg.show()
         # Run the dialog event loop
         result = self.dlg.exec_()
+
+
+    # Plot data
+    def run_plot(self):
+
+	# identify selected layer
+	layer = self.iface.mapCanvas().currentLayer()
+
+	# check whether a layer is selected
+	if not layer:
+	    QMessageBox.warning(self.iface.mainWindow(),\
+		"Qgridder Plugin Warning", 'Please choose a valid layer and select a feature before plotting.')
+	    return
+
+	# check whether the selected layer is a valid vector layer
+	if  layer.type()!=0:
+	    QMessageBox.warning(self.iface.mainWindow(),\
+		"Qgridder Plugin Warning", 'Please choose a valid layer and select a feature before plotting.')
+	    return
+
+	# if only 1 feature selected, plot
+	if layer.selectedFeatureCount()==1:
+	    dlg_plot = QgridderPlot(self.iface,layer,self.param)
+	    dlg_plot.show()
+	    result = dlg_plot.exec_()
+
+	elif layer.selectedFeatureCount()==0:
+	    QMessageBox.warning(self.iface.mainWindow(),\
+		"Qgridder Plugin Warning", 'Please select one feature.')
+	    
+	elif layer.selectedFeatureCount()>1:
+	    QMessageBox.warning(self.iface.mainWindow(),\
+		"Qgridder Plugin Warning", 'Please select only one feature.')
+
+
+#---------------------------------------------
+class QgridderParam:
+    def __init__(self):
+	self.proj=QgsProject.instance()
+	self.path_to_records=self.proj.readEntry("Qgridder", "path_to_data_files", os.path.expanduser('~') + "/")[0]
+
+
 

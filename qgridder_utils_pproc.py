@@ -7,7 +7,7 @@
  This file gathers functions which facilitate pre- and post-processing of
  spatially distributed numerical models based on Qgridder grids.
 
- Qgridder Builds 2D regular and unstructured grids and comes together with 
+ Qgridder builds 2D regular and unstructured grids and comes together with 
  pre- and post-processing capabilities for spatially distributed modeling.
 
 			      -------------------
@@ -35,6 +35,7 @@ from PyQt4.QtGui import *
 from qgis.core import *
 import numpy as np
 
+from qgridder_utils_base import *
 import ftools_utils
 
 # ---------------------------------
@@ -513,8 +514,8 @@ def data_to_grid(data, gridLayer, fieldName = 'PARAM', fieldType = QVariant.Doub
     allCentroids = [feat.geometry().centroid().asPoint() \
 			for feat in allFeatures.values()]
     centroids_ids = allFeatures.keys()
-    centroids_x = np.around(np.array([centroid.x() for centroid in allCentroids]), max_decimals)
-    centroids_y = np.around(np.array([centroid.y() for centroid in allCentroids]), max_decimals)
+    centroids_x = np.around(np.array([centroid.x() for centroid in allCentroids]), MAX_DECIMALS)
+    centroids_y = np.around(np.array([centroid.y() for centroid in allCentroids]), MAX_DECIMALS)
     centroids = np.array( [centroids_ids , centroids_x, centroids_y] )
     centroids = centroids.T
     
