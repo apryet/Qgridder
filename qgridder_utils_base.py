@@ -33,7 +33,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from qgis.core import *
 import numpy as np
-
+import multiprocessing as mp
 import ftools_utils
 
 # ======================================================================================
@@ -871,7 +871,7 @@ def rgrid_numbering(gridLayer):
 
     
 # ======================================================================================
-def get_overlapping_features_areas(feat, spatialIndex, gridLayer) : 
+def get_overlapping_features_areas(feat, spatialIndex, gridLayerFeatures) : 
     """
     Description
 
@@ -879,7 +879,7 @@ def get_overlapping_features_areas(feat, spatialIndex, gridLayer) :
     ----------
     feat : QgsFeature (cell of a Qgridder mesh)
     spatialIndex : QgsSpatialIndex of the (overlying / underlying) grid vector layer
-    gridLayer : the (overlying / underlying) grid vector layer
+    gridLayerFeatures : dictionary of the features of the (overlying / underlying) grid vector layer
 
 
     Returns
@@ -900,14 +900,14 @@ def get_overlapping_features_areas(feat, spatialIndex, gridLayer) :
 	    featBbox.yMaximum()-TOLERANCE
 	    )
     # fetch overlapping cells (list of features)
-    overlapping_cells_ids = spatialIndex.intersects( shrinkedBbox )
+    overlapping_feat_ids = spatialIndex.intersects( shrinkedBbox )
 
     # init output list
     overlapping_cells_areas = []
-    
+
     # iterate over overlapping cells and get areas
-    for overlapping_feat in gridLayer.getFeatures( QgsFeatureRequest().setFilterFids( overlapping_cells_ids ) ):
-	overlapping_cells_areas.append(overlapping_feat.geometry().area())
+    for overlapping_feat_id in overlapping_feat_ids : 
+	overlapping_cells_areas.append(gridLayerFeatures[overlapping_feat_id].geometry().area())
 
     # return number of overlapping features
     return(overlapping_cells_areas)
@@ -944,81 +944,180 @@ def get_spatial_indexes(allLayers) :
 
 
 # ======================================================================================
-def correct_pseudo3D_grid(allLayers, topoRules) :
+def correct_pseudo3D_grid(allLayers, topoRules, nproc=1) :
     """
     Description
     ----------
     Given a list of grids (allLayers, from top to bottom), checks and
     refines grid so as to satisfy topoRules
-
     Parameters
     ----------
     allLayers : list of Qgis grid layers (from top to bottom)
-    topoRules : dictionary describing the rules : {'model':'modflow','nmax':1, 'pmax':4},
-
+    topoRules : dictionary describing the rules : {'model':'modflow','nmax':1, 'pmax':4}
+    nproc : number of processus to launch in parallel
     Returns
     -------
-
     Examples
     --------
     >>> 
     """
 
     nLayers = len(allLayers)
-    # init fixDict for while loop below
-    fixDict = { 'id':[NULL] , 'n':[NULL], 'm':[NULL] }
     nfix = 1
     while nfix > 0 :  
 	nfix = 0
 	# iterate over each layers of the pseudo-3D mesh
 	for layerNum in range(nLayers) : 
+	    # build list of dictionaries of all features for each layer
+	    allLayers_allFeatures = []
+	    for gridLayer in allLayers :
+		allLayers_allFeatures.append ( {feat.id():feat for feat in gridLayer.getFeatures() } )
 	    # update spatial indexes
 	    spatialIndexes = get_spatial_indexes(allLayers)
-	    # update fix dictionary
-	    fixDict = { 'id':[] , 'n':[], 'm':[] }
 	    # iterate over each cells of layer layerNum
-	    for feat in allLayers[layerNum].getFeatures() :
-		# count overlapping cells in the overlying layer \
-		# note that layer layerNum is not necessarily overlain by layerNum + 1 \
-		# and underlain by layerNum - 1.
-		# compute feature area
-		feat_area = feat.geometry().area()
-		# go to layer JUST BELOW layer numLayer...
-		l = layerNum + 1
-		# ... and check DOWNWARD for overlapping cells
-		while l < nLayers :
-		    # count number of features in spatialIndexes[l] overlapping feature "feat"
-		    # NOTE 
-		    overlapping_cells_areas = get_overlapping_features_areas(feat,spatialIndexes[l], allLayers[l] )
-		    p = len(overlapping_cells_areas)
-		    if p > 0 :
-			neighbors_tot_areas = np.sum( overlapping_cells_areas )
-			if p > topoRules['pmax'] or neighbors_tot_areas < feat_area - TOLERANCE :
-			    fixDict = update_fixDict( fixDict, { 'id':[feat.id()] , 'n':[2], 'm':[2] } )
-			break # exit this while loop as features have been found below
-		    # go to layer below
-		    l = l + 1
-		# go to layer JUST OVER layer numLayer...
-		l = layerNum - 1
-		# ... and check upward for overlapping cells
-		while l >= 0 :
-		    # check upward for overlapping cells
-		    # NOTE 		    
-		    overlapping_cells_areas = get_overlapping_features_areas(feat,spatialIndexes[l], allLayers[l])
-		    p = len(overlapping_cells_areas)
-		    if p > 0 :
-			neighbors_tot_areas = np.sum( overlapping_cells_areas )
-			if p > topoRules['pmax'] or neighbors_tot_areas < feat_area - TOLERANCE :
-			    fixDict = update_fixDict( fixDict, { 'id':[feat.id()] , 'n':[2], 'm':[2] } )
-			break # exit this while loop as features have been found above
-		    # go to layer above
-		    l = l - 1
-	    # split cells
+	    if nproc <= 1 : 
+		fixDict = check3D_features(allLayers_allFeatures[layerNum].values(), 
+			layerNum, allLayers_allFeatures, spatialIndexes, topoRules
+			)
+	    else :
+		# Split allFeatures into nproc elements
+		allFeatures_chunks = chunks(allFeatures, nproc)
+		# Define an output queue
+		output = mp.Queue()
+		# build processes
+		processes = []
+		for i in range(nproc) :
+		    processes.append(mp.Process(target=check3D_features_mp, 
+					args=(allFeatures_chunks[i], 
+					layerNum, allLayers, 
+					spatialIndexes, 
+					topoRules, 
+					queue) 
+					)
+				    )
+		# Run processes
+	        for p in processes:
+	            p.start()
+
+	        # Exit the completed processes
+	        for p in processes:
+	            p.join()
+
+	        # Get process results from the output queue
+	        fixDicts = [output.get() for p in processes]
+
+		# Build single FixDict
+		fixDict = { 'id':[NULL] , 'n':[NULL], 'm':[NULL] }	
+		for fixDict_partial in fixDicts :
+		    update_fixDict( fixDict_main, fixDict_partial )
+
+
+            # split cells
 	    if len(fixDict['id']) > 0 : 
 		refine_by_split(fixDict['id'], 2, 2, 
 			topoRules, allLayers[layerNum], 
 			)
 	    nfix += len(fixDict['id'])
 
+
+
+def check3D_features(features, layerNum, allLayers_allFeatures, spatialIndexes, topoRules)  :
+    """
+    Description
+    ----------
+    Check the 3D topology of features in layer layerNum
+
+    Parameters
+    ----------
+    features : list of cell features
+    layerNum : number of layer in the layer stack allLayers
+    allLayers : list of Qgis grid layers (from top to bottom)
+    spatialIndexes : list of spatial indexes of allLayers
+    topoRules : dictionary describing the rules : {'model':'modflow','nmax':1, 'pmax':4}
+    Returns
+    -------
+    Result is in fixDict
+    Examples
+    --------
+    >>> fixDict = check3D_features(features, layerNum, allLayers, spatialIndexes, topoRules)
+    """
+    # initialize fixDict, dictionary of features to fix 
+    fixDict = { 'id':[] , 'n':[], 'm':[] }
+    nLayers = len(allLayers_allFeatures)
+    # iterate over features
+    for feat in features : 
+	# count overlapping cells in the overlying layer \
+	# note that layer layerNum is not necessarily overlain by layerNum + 1 \
+	# and underlain by layerNum - 1.
+	# compute feature area
+	feat_area = feat.geometry().area()
+	# go to layer JUST BELOW layer numLayer...
+	l = layerNum + 1
+	# check DOWNWARD for overlapping cells
+	while l < nLayers :
+	    # count number of features in spatialIndexes[l] overlapping feature "feat"
+	    overlapping_cells_areas = get_overlapping_features_areas(feat,spatialIndexes[l], 
+					    allLayers_allFeatures[l] 
+					)
+	    p = len(overlapping_cells_areas)
+	    if p > 0 :
+		neighbors_tot_areas = np.sum( overlapping_cells_areas )
+		if p > topoRules['pmax'] or neighbors_tot_areas < feat_area - TOLERANCE :
+		    fixDict = update_fixDict( fixDict, { 'id':[feat.id()] , 'n':[2], 'm':[2] } )
+		break # exit this while loop as features have been found below
+	    # go to layer below
+	    l = l + 1
+	# go to layer JUST OVER layer numLayer...
+	l = layerNum - 1
+	# check UPWARD for overlapping cells
+	while l >= 0 :
+	    overlapping_cells_areas = get_overlapping_features_areas(feat,spatialIndexes[l],
+					    allLayers_allFeatures[l]
+					)
+	    p = len(overlapping_cells_areas)
+	    if p > 0 :
+		neighbors_tot_areas = np.sum( overlapping_cells_areas )
+		if p > topoRules['pmax'] or neighbors_tot_areas < feat_area - TOLERANCE :
+		    fixDict = update_fixDict( fixDict, { 'id':[feat.id()] , 'n':[2], 'm':[2] } )
+		break # exit this while loop as features have been found above
+	    # go to layer above
+	    l = l - 1
+    return(fixDict)
+
+
+def check3D_features_mp(features, layerNum, allLayers, spatialIndexes, topoRules, queue)  :
+    	"""
+	Description
+	----------
+	Equivalent to check3D_features with parallel computing
+
+	Parameters
+	----------
+
+	Returns
+	-------
+	list of n list
+
+	"""
+	fixDict = check3D_features(features, layerNum, allLayers, spatialIndexes, topoRules)
+	queue.put(fixDict)
+
+
+def chunks(seq, n) :
+	"""
+	Description
+	----------
+	Split list seq into n list
+	Parameters
+	----------
+	seq : input list 
+	n : number of elements to split seq into
+
+	Returns
+	-------
+	list of n list
+
+	"""
+	return [seq[i::n] for i in range(n)]
 
 
