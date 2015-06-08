@@ -266,21 +266,27 @@ def get_param_array(gridLayer, fieldName = 'ID'):
     return(val)
 
 # -----------------------------------------------------
-# From a selection of points in vLayer, returns
-# a dict of tuple (nrow, ncol) in gridLayer
-# returns {'ID1':(nrow1, ncol1), 'ID2':(nrow2, ncol2), ... }
 def get_ptset_centroids(vLayer, gridLayer, idFieldName = 'ID',nNeighbors = 3):
     """
     Description
+    ----------
+    From a selection of points in vLayer, returns
+    a dict of tuple (nrow, ncol) in gridLayer
+    returns 
 
     Parameters
     ----------
-    p1 : parameter 1
+    vLayer : Vector layer containing the observation points. 
+             Only selected points are considered
+    gridLayer : Qgridder grid layer
+    idFieldName : Column in vLayer containing points ID
+                  which will be used in the output dictionary
+    nNeighbors : number of neighboring grid cells to fetch 
 
     Returns
     -------
 
-    out1 : output1
+    {'ID1':(nrow1, ncol1), 'ID2':(nrow2, ncol2), ... }
 
     Examples
     --------
@@ -310,12 +316,15 @@ def get_ptset_centroids(vLayer, gridLayer, idFieldName = 'ID',nNeighbors = 3):
     cProvider.addAttributes( gridLayer.dataProvider().fields().toList() )
 
     # fill layer with centroids
-    for cell in gridLayer.dataProvider().getFeatures():
+    feat_centroids = []
+    for cell in gridLayer.getFeatures():
 	feat = QgsFeature()
 	geom = cell.geometry().centroid()
 	feat.setAttributes( cell.attributes() )
 	feat.setGeometry( QgsGeometry(geom) )
-	cProvider.addFeatures( [feat] )
+	feat_centroids.append(feat)
+	
+    cProvider.addFeatures( feat_centroids )
 
     # -- Create and fill spatial Index
     cLayerIndex = QgsSpatialIndex()

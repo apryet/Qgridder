@@ -623,6 +623,49 @@ def find_neighbors(inputFeature, allFeatures, vLayerIndex):
     return neighbors
 
 
+
+# -----------------------------------------------------
+# get centroids of a grid layer
+def get_centroid_layer(gridLayer) :
+    """
+    Description
+    -----------
+    return layer of centroids (cLayer) from layer of polygons (gridLayer)
+
+    Parameters
+    ----------
+    gridLayer : polygon layer (grid)
+
+    Returns
+    -------
+    cLayer : centroid layer (pointset)
+
+    Examples
+    --------
+    >>> cLayer = get_grid_centroids(gridLayer)
+    """
+
+    # build memory layer of centroids
+    cLayer = QgsVectorLayer("Point?crs=" + gridLayer.crs().authid(), 'cLayer', providerLib =  'memory')
+
+    # list of centroid features
+    feat_centroids = []
+
+    # build centroids features
+    for feat in gridLayer.getFeatures() :
+	feat_centroid = QgsFeature()
+	feat_centroid.setGeometry(QgsGeometry(feat.geometry().centroid()))
+	feat_centroids.append(feat_centroid)
+
+    # populate layer
+    success, feature = cLayer.dataProvider().addFeatures( feat_centroids )
+	
+    if success : 
+	return(cLayer)
+    else :
+	return(None)
+
+
 # -----------------------------------------------------
 # get nrow and ncol or a regular (modflow) grid layer
 def get_rgrid_nrow_ncol(gridLayer):

@@ -1,5 +1,12 @@
 <RCC>
     <qresource prefix="/plugins/Qgridder" >
-        <file>icon.png</file>
+        <file>icon_grid.png</file>
+        <file>icon_check3D.png</file>
+        <file>icon_export.png</file>
+        <file>icon_new.png</file>
+        <file>icon_plot.png</file>
+        <file>icon_pproc.png</file>
+        <file>icon_refinement.png</file>
+        <file>icon_settings.png</file>
     </qresource>
 </RCC>

@@ -23,7 +23,16 @@ PLUGIN_UPLOAD = $(CURDIR)/plugin_upload.py
 # Makefile for a PyQGIS plugin 
 
 # translation
-SOURCES = qgridder.py ui_qgridder.py __init__.py qgridder_utils.py ftools_utils.py 
+SOURCES = __init__.py qgridder.py ftools_utils.py \
+	  qgridder_utils_base.py qgridder_utils_flopy qgridder_utils_pproc \
+	  qgridder_utils_tseries \
+	  qgridder_dialog_check3D.py qgridder_dialog_export qgridder_dialog_new \
+	  qgridder_dialog_plot qgridder_dialog_preproc.py qgridder_dialog_refinement \
+	  qgridder_dialog_settings \
+	  ui_qgridder_check3D.py ui_qgridder_export.py ui_qgridder_new.py \
+	  ui_qgridder_plot.py ui_qgridder_preproc.py ui_qgridder_refinement.py \
+	  ui_qgridder_settings.py 
+
 #TRANSLATIONS = i18n/gridder_en.ts
 TRANSLATIONS = 
 
@@ -31,12 +40,22 @@ TRANSLATIONS =
 
 PLUGINNAME = Qgridder
 
-PY_FILES = qgridder.py qgridderdialog.py __init__.py qgridder_utils.py ftools_utils.py
+PY_FILES = __init__.py qgridder.py ftools_utils.py \
+	  qgridder_utils_base.py qgridder_utils_flopy qgridder_utils_pproc \
+	  qgridder_utils_tseries \
+	  qgridder_dialog_check3D.py qgridder_dialog_export qgridder_dialog_new \
+	  qgridder_dialog_plot qgridder_dialog_preproc.py qgridder_dialog_refinement \
+	  qgridder_dialog_settings \
 
-EXTRAS = icon.png 
 
-UI_FILES = ui_qgridder.py 
+EXTRAS = icon_check3D.png icon_export.png icon_new.png \
+	 icon_plot.png icon_pproc.png icon_refinement.png \
+	 icon_settings.png
 
+UI_FILES = ui_qgridder_check3D.py ui_qgridder_export.py ui_qgridder_new.py \
+	  ui_qgridder_plot.py ui_qgridder_preproc.py ui_qgridder_refinement.py \
+	  ui_qgridder_settings.py 
+ 
 RESOURCE_FILES = resources.py metadata.txt
 
 HELP = help/build/html

@@ -1,0 +1,150 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'ui_qgridder_settings.ui'
+#
+# Created: Mon Jun  8 12:29:21 2015
+#      by: PyQt4 UI code generator 4.11.3
+#
+# WARNING! All changes made in this file will be lost!
+
+from PyQt4 import QtCore, QtGui
+
+try:
+    _fromUtf8 = QtCore.QString.fromUtf8
+except AttributeError:
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
+
+class Ui_QGridderSettings(object):
+    def setupUi(self, QGridderSettings):
+        QGridderSettings.setObjectName(_fromUtf8("QGridderSettings"))
+        QGridderSettings.resize(394, 535)
+        self.gridLayout_2 = QtGui.QGridLayout(QGridderSettings)
+        self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
+        self.groupBox_4 = QtGui.QGroupBox(QGridderSettings)
+        self.groupBox_4.setTitle(_fromUtf8(""))
+        self.groupBox_4.setObjectName(_fromUtf8("groupBox_4"))
+        self.verticalLayout_3 = QtGui.QVBoxLayout(self.groupBox_4)
+        self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
+        self.horizontalLayout_12 = QtGui.QHBoxLayout()
+        self.horizontalLayout_12.setObjectName(_fromUtf8("horizontalLayout_12"))
+        self.label_22 = QtGui.QLabel(self.groupBox_4)
+        self.label_22.setObjectName(_fromUtf8("label_22"))
+        self.horizontalLayout_12.addWidget(self.label_22)
+        self.listModelTypes = QtGui.QComboBox(self.groupBox_4)
+        self.listModelTypes.setEditable(False)
+        self.listModelTypes.setObjectName(_fromUtf8("listModelTypes"))
+        self.horizontalLayout_12.addWidget(self.listModelTypes)
+        self.verticalLayout_3.addLayout(self.horizontalLayout_12)
+        self.gridLayout_2.addWidget(self.groupBox_4, 0, 0, 1, 1)
+        self.groupBox = QtGui.QGroupBox(QGridderSettings)
+        self.groupBox.setObjectName(_fromUtf8("groupBox"))
+        self.gridLayout = QtGui.QGridLayout(self.groupBox)
+        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        self.labe = QtGui.QLabel(self.groupBox)
+        self.labe.setObjectName(_fromUtf8("labe"))
+        self.gridLayout.addWidget(self.labe, 0, 0, 1, 1)
+        self.horizontalLayout_4 = QtGui.QHBoxLayout()
+        self.horizontalLayout_4.setObjectName(_fromUtf8("horizontalLayout_4"))
+        self.textModelDir = QtGui.QLineEdit(self.groupBox)
+        self.textModelDir.setReadOnly(False)
+        self.textModelDir.setObjectName(_fromUtf8("textModelDir"))
+        self.horizontalLayout_4.addWidget(self.textModelDir)
+        self.buttonBrowseModelSrcDir = QtGui.QPushButton(self.groupBox)
+        self.buttonBrowseModelSrcDir.setObjectName(_fromUtf8("buttonBrowseModelSrcDir"))
+        self.horizontalLayout_4.addWidget(self.buttonBrowseModelSrcDir)
+        self.gridLayout.addLayout(self.horizontalLayout_4, 1, 0, 1, 1)
+        self.labe_3 = QtGui.QLabel(self.groupBox)
+        self.labe_3.setObjectName(_fromUtf8("labe_3"))
+        self.gridLayout.addWidget(self.labe_3, 2, 0, 1, 1)
+        self.horizontalLayout_3 = QtGui.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
+        self.textSimulFile = QtGui.QLineEdit(self.groupBox)
+        self.textSimulFile.setReadOnly(False)
+        self.textSimulFile.setObjectName(_fromUtf8("textSimulFile"))
+        self.horizontalLayout_3.addWidget(self.textSimulFile)
+        self.buttonBrowseSimulFile = QtGui.QPushButton(self.groupBox)
+        self.buttonBrowseSimulFile.setObjectName(_fromUtf8("buttonBrowseSimulFile"))
+        self.horizontalLayout_3.addWidget(self.buttonBrowseSimulFile)
+        self.gridLayout.addLayout(self.horizontalLayout_3, 3, 0, 1, 1)
+        self.labelGridLayer = QtGui.QLabel(self.groupBox)
+        self.labelGridLayer.setObjectName(_fromUtf8("labelGridLayer"))
+        self.gridLayout.addWidget(self.labelGridLayer, 4, 0, 1, 1)
+        self.listGridLayer = QtGui.QComboBox(self.groupBox)
+        self.listGridLayer.setEnabled(True)
+        self.listGridLayer.setObjectName(_fromUtf8("listGridLayer"))
+        self.gridLayout.addWidget(self.listGridLayer, 5, 0, 1, 1)
+        self.labe_2 = QtGui.QLabel(self.groupBox)
+        self.labe_2.setObjectName(_fromUtf8("labe_2"))
+        self.gridLayout.addWidget(self.labe_2, 6, 0, 1, 1)
+        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.textObsDir = QtGui.QLineEdit(self.groupBox)
+        self.textObsDir.setReadOnly(False)
+        self.textObsDir.setObjectName(_fromUtf8("textObsDir"))
+        self.horizontalLayout.addWidget(self.textObsDir)
+        self.buttonBrowseObsDir = QtGui.QPushButton(self.groupBox)
+        self.buttonBrowseObsDir.setObjectName(_fromUtf8("buttonBrowseObsDir"))
+        self.horizontalLayout.addWidget(self.buttonBrowseObsDir)
+        self.gridLayout.addLayout(self.horizontalLayout, 7, 0, 1, 1)
+        self.label_2 = QtGui.QLabel(self.groupBox)
+        self.label_2.setObjectName(_fromUtf8("label_2"))
+        self.gridLayout.addWidget(self.label_2, 8, 0, 1, 1)
+        self.textSimulStartDate = QtGui.QLineEdit(self.groupBox)
+        self.textSimulStartDate.setObjectName(_fromUtf8("textSimulStartDate"))
+        self.gridLayout.addWidget(self.textSimulStartDate, 9, 0, 1, 1)
+        self.checkPlotSimul = QtGui.QCheckBox(self.groupBox)
+        self.checkPlotSimul.setChecked(True)
+        self.checkPlotSimul.setObjectName(_fromUtf8("checkPlotSimul"))
+        self.gridLayout.addWidget(self.checkPlotSimul, 10, 0, 1, 1)
+        self.checkPlotObs = QtGui.QCheckBox(self.groupBox)
+        self.checkPlotObs.setChecked(True)
+        self.checkPlotObs.setObjectName(_fromUtf8("checkPlotObs"))
+        self.gridLayout.addWidget(self.checkPlotObs, 11, 0, 1, 1)
+        self.gridLayout_2.addWidget(self.groupBox, 1, 0, 1, 2)
+        self.horizontalLayout_2 = QtGui.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
+        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_2.addItem(spacerItem)
+        self.buttonCancel = QtGui.QPushButton(QGridderSettings)
+        self.buttonCancel.setObjectName(_fromUtf8("buttonCancel"))
+        self.horizontalLayout_2.addWidget(self.buttonCancel)
+        self.buttonOK = QtGui.QPushButton(QGridderSettings)
+        self.buttonOK.setObjectName(_fromUtf8("buttonOK"))
+        self.horizontalLayout_2.addWidget(self.buttonOK)
+        self.gridLayout_2.addLayout(self.horizontalLayout_2, 3, 0, 1, 1)
+        spacerItem1 = QtGui.QSpacerItem(20, 158, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.gridLayout_2.addItem(spacerItem1, 2, 0, 1, 1)
+
+        self.retranslateUi(QGridderSettings)
+        QtCore.QMetaObject.connectSlotsByName(QGridderSettings)
+
+    def retranslateUi(self, QGridderSettings):
+        QGridderSettings.setWindowTitle(_translate("QGridderSettings", "Qgridder Settings", None))
+        self.label_22.setText(_translate("QGridderSettings", "Model type :", None))
+        self.groupBox.setTitle(_translate("QGridderSettings", "Post-processing", None))
+        self.labe.setText(_translate("QGridderSettings", "Path to model python module :", None))
+        self.textModelDir.setText(_translate("QGridderSettings", "model_src_dir", None))
+        self.buttonBrowseModelSrcDir.setText(_translate("QGridderSettings", "Browse...", None))
+        self.labe_3.setText(_translate("QGridderSettings", "Simulation file :", None))
+        self.textSimulFile.setText(_translate("QGridderSettings", "simul_file", None))
+        self.buttonBrowseSimulFile.setText(_translate("QGridderSettings", "Browse...", None))
+        self.labelGridLayer.setText(_translate("QGridderSettings", "Grid layer :", None))
+        self.labe_2.setText(_translate("QGridderSettings", "Path to CSV observation files :", None))
+        self.textObsDir.setText(_translate("QGridderSettings", "obs_dir", None))
+        self.buttonBrowseObsDir.setText(_translate("QGridderSettings", "Browse...", None))
+        self.label_2.setText(_translate("QGridderSettings", "Simulation start date (format %Y-%m-%d %H:%M) :", None))
+        self.textSimulStartDate.setText(_translate("QGridderSettings", "2015-01-01 00:00", None))
+        self.checkPlotSimul.setText(_translate("QGridderSettings", "Plot simulated  values", None))
+        self.checkPlotObs.setText(_translate("QGridderSettings", "Plot observed values", None))
+        self.buttonCancel.setText(_translate("QGridderSettings", "Cancel", None))
+        self.buttonOK.setText(_translate("QGridderSettings", "OK", None))
+
