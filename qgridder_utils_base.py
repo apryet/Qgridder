@@ -902,10 +902,7 @@ def rgrid_numbering(gridLayer):
 	col+=1
     # write attributes to shapefile 
     res = gridLayer.dataProvider().changeAttributeValues(attrValues)
-    print(col)
-    print(row)
-    print(row_field_idx)
-    print(col_field_idx)
+
     # commit
     gridLayer.commitChanges()
 

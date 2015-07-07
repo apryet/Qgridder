@@ -30,65 +30,91 @@
  ***************************************************************************/
 """
 
-# Compute budget for one or several cells
-# If several cells are considered, the budgets are aggregated
-# ml : Modflow class from flopy
-# cells : the cells of interest 
-#         format : [ [lay1,row1,col1], [lay2, row2, col2], ... ]
-# cbc : Budget array of dimensions (ntstep, nlay, nrow, ncol, n)
-#       where n=3 for 2d mesh (nlay=1) and n=3 for 3D mesh (nlay >1)  
-def cells_budget(ml, cbc, cells = [], tstep = 1 ):
+def cells_budget(ml, cbc, cells = [], tsteps = [], aggr = False ):
     """
     Description
+    ----------
+    Compute budget for one or several cells
+    If several cells are considered, the budgets are aggregated
 
     Parameters
     ----------
-    p1 : parameter 1
+    ml : Modflow class from flopy
+    cbc : cell budget file, instance of CellBudgetFile
+    cells :  list of tuple (lay, row, col)
+    tsteps : list of time steps
+    aggr : Boolean, whether to aggregate over tsteps.
 
-    Returns
+    
+    Returns : 
     -------
 
     out1 : output1
 
     Examples
     --------
-    >>> 
+    >>> cbc = bf.CellBudgetFile(name + '.cbc')
+    >>> cells_budget(ml,cbc, cells=[(0, 0, 0)],[0,1],aggr=False)
+
     """
 
     # Get model dimensions from Flopy class
     nrow, ncol, nlay, nper = ml.nrow_ncol_nlay_nper
 
+    # Load data
+    frf_array = cbc.get_data(text='FLOW RIGHT FACE')
+    fff_array = cbc.get_data(text='FLOW FRONT FACE')
+
+    # for 3D models only
+    if nlay > 1 : 
+	flf_array = cbc.get_data(text='FLOW LOWER FACE')
+
+    # for transient models only
+    if nper > 1 :
+	str_array = cbc.get_data(text='STORAGE')
+
     # init output variable
-    cellsBudget3D = 0
+    budget = []
 
-    # iterate over considered cells
-    for cell in cells : 
-	lay, row, col = cell
+    # iterate over time steps
 
-	left = right = front = back = above = below = 0
+    for tstep in tsteps :
 
-	# for any cell flow through right and front face are available
-	# note : front face between cell i,j,k and i+1,j,l
-	# note : right face between cell i, j, k and i, j+1, k
-	right = cbc[tstep - 1, lay-1,row-1,col-1,1]
-	front = cbc[tstep-1,lay-1,row-1,col-1,2]
+	cells_3d_budget = 0
 
-	# if the model has multiple layers, consider the neighbor below
-	if nlay > 1 :
-	    below = cbc[tstep-1,lay-1,row-1,col-1,3]
-	# if the cell considered is not at the grid left border, consider the left neighbor
-	if col - 2 >= 0 :
-	    left  = cbc[tstep-1,lay-1,row-1,col-2,1]
-	# if the cell considered is not at the grid right border, consider the right neighbor
-	if row -2 >= 0 :
-	    back  = cbc[tstep-1,lay-1,row-2,col-1,2]
-	# if the cell considered is not in the first layer, consider the layer above
-	if lay -2 >= 0 : 
-	    above = cbc[tstep-1,lay-2,row-1,col-1,3]
+	# iterate over considered cells
+	for cell in cells : 
+	    lay, row, col = cell
 
-	# compute budget
-	cellsBudget3D += left + back + above - right - front - below 	
+	    left = right = front = back = above = below = 0
 
-    return(cellsBudget3D)
+	    # for any cell flow through right and front face are available
+	    # note : front face between cell i,j,k and i+1,j,l
+	    # note : right face between cell i, j, k and i, j+1, k
+	    right = frf_array[tstep][lay,row,col]
+	    front = fff_array[tstep][lay,row,col] 
+
+	    # if the model has multiple layers, consider the neighbor below
+	    if nlay > 1 :
+		below = flf_array[tstep][lay,row,col]
+	    # if the cell considered is not at the grid left border, consider the left neighbor
+	    if col - 1 >= 0 :
+		left = frf_array[tstep][lay,row,col-1]
+	    # if the cell considered is not at the grid back border, consider the back neighbor
+	    if row -1 >= 0 :
+		back  = frf_array[tstep][lay,row-1,col]
+	    # if the cell considered is not in the first layer, consider the layer above
+	    if lay -1 >= 0 : 
+		above = flf_array[tstep][lay-1,row,col]
+
+	    # compute budget
+	    cells_3d_budget += left + back + above - right - front - below 
+
+	budget.append(cells_3d_budget)
+
+	if aggr == True:
+	    return( np.sum(budget) )
+	else :
+	    return(budget)
 
 

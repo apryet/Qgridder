@@ -265,6 +265,46 @@ def get_param_array(gridLayer, fieldName = 'ID'):
     #return(field_values)
     return(val)
 
+
+# -----------------------------------------------------
+def get_ptset_xy(vLayer, idFieldName = 'ID'):
+    """
+    Description
+    ----------
+    Usefull for pilot points.
+    From a selection of points in vLayer, returns
+    a dict of tuple containing points coordinates (x,y)
+    returns 
+
+    Parameters
+    ----------
+    vLayer : Vector layer containing the observation points. 
+             Only selected points are considered
+    gridLayer : Qgridder grid layer
+    idFieldName : Column in vLayer containing points ID
+                  which will be used in the output dictionary
+    nNeighbors : number of neighboring grid cells to fetch 
+
+    Returns
+    -------
+
+    {'ID1':(x, y), 'ID2':(x, y), ... }
+
+    Examples
+    --------
+    >>> 
+    """
+    dic_ptset = {}
+
+    # iterate over vLayer features 
+    for feat in vLayer.getFeatures() :
+	feat_id = feat[idFieldName]
+	feat_point = feat.geometry().asPoint()
+	dic_ptset[feat_id] = ( feat_point.x(), feat_point.y() )
+
+    return(dic_ptset)
+
+
 # -----------------------------------------------------
 def get_ptset_centroids(vLayer, gridLayer, idFieldName = 'ID',nNeighbors = 3):
     """
