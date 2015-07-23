@@ -34,6 +34,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from qgis.core import *
 import numpy as np
+from math import *
 
 from qgridder_utils_base import *
 import ftools_utils
@@ -405,80 +406,207 @@ def get_ptset_centroids(vLayer, gridLayer, idFieldName = 'ID',nNeighbors = 3):
 
 #
 ## -----------------------------------------------------
-## From a selection of features in vLayer, returns
-## a dict of tuple (nrow, ncol) in gridLayer
-## returns {'ID1':(nrow1, ncol1), 'ID2':(nrow2, ncol2), ... }
-def get_pline_centroids(vLayer, gridLayer, idFieldName = 'ID'):
+
+
+def get_pline_data(pline, pline_layer) : 
     """
     Description
+    -----------
+    Fetch necessary data to compute the curvilinear abscissa of the 
+    projection of a grid cell centroid over a polyline.
 
     Parameters
     ----------
-    p1 : parameter 1
+    pline : the polyline
+    pline_layer : the vector layer 
 
     Returns
     -------
-
-    out1 : output1
+    A tuple : 
+    pline_feat_dic, pline_point_layer_index, pline_cumdist_dic
 
     Examples
     --------
-    >>> 
+    >>> pline_feat_dic, pline_point_layer_index, pline_cumdist_dic = get_pline_data(pline, pline_layer)
     """
-#    # vLayer : vector layer of polylines with a selection
-#    # gridLayer : the grid vector Layer
-#    # idFieldName : the attribute field of vLayer containing feature identificator
 
-    # check that gridLayer is a grid
-    try :
-	res = rgrid_numbering(gridLayer)
-	if res == False:
-	    print("The grid layer does not seem to be valid")
-	    return(False)
-    except :
-	return(False)
+    # get points from polyline 
+    pline_point_list = pline.geometry().asPolyline()
+
+    # build list of features constituting the polyline
+    pline_feat_list = []
+
+    for point in pline_point_list : 
+	feat = QgsFeature()
+	geom = QgsGeometry.fromPoint(point)
+	feat.setGeometry(geom)
+	pline_feat_list.append(feat)
+
+    # init and populate memory layer with polyline features
+    pline_point_layer = QgsVectorLayer("Point?crs=" + pline_layer.crs().authid(), 'pline_point_layer', providerLib =  'memory')
+    pline_point_layer.dataProvider().addFeatures(pline_feat_list)
+
+    # build spatial index from pline features
+    pline_point_layer_index = get_spatial_indexes([pline_point_layer])[0]
+
+    # build dic of keys
+    pline_feat_dic = {feat.id():feat for feat in pline_point_layer.getFeatures()}
+
+    # build list of distances of polyline segments
+    pline_dist_list = []
+
+    for i in range(len(pline_point_list) - 1) : 
+	dist = pline_feat_list[i].geometry().distance( pline_feat_list[i+1].geometry() )
+	pline_dist_list.append(dist)
+
+    # build list of cumulated distances along polyline
+    pline_cumdist_list = list(np.cumsum(pline_dist_list))
+    pline_cumdist_list = [0] + pline_cumdist_list
+
+    # build dictionary of cumulated distances for each layer id
+
+    pline_cumdist_dic = {}
+
+    for i, key in zip( range(len(pline_cumdist_list)), sorted(pline_feat_dic.keys()) ):
+	pline_cumdist_dic[key] = pline_cumdist_list[i]
 
 
-    # Init provider and variables
-    bboxCell = QgsFeature()
-    selectedSet = []
-    featCells = {}
+    # return variables of interest for get_dist_pline_centroid
+    return(pline_feat_dic, pline_point_layer_index, pline_cumdist_dic)
 
-    # check that the selection in vLayer is not empty
-    selected_fIds = vLayer.selectedFeaturesIds()
-    if len(selected_fIds) == 0:
+
+def get_dist_pline_centroid(centroid, pline, pline_feat_dic, pline_point_layer_index, pline_cumdist_dic) : 
+    """
+    Description
+    -----------
+    Returns the distance between the origin of a polyline (pline) and the projection
+    of a point (centroid) onto the polyline.
+
+    Parameters
+    ----------
+    pline : the polyline
+    pline_feat_dic : dictionary of polyline point features from QgsGeometry().asPolyline()
+    pline_point_layer_index : QgsSpatialIndex of polyline memory vector layer
+
+    Returns
+    -------
+    dist_centroid_origin (float)
+
+    Examples
+    --------
+    >>> dist_centroid_origin = get_dist_pline_centroid(centroid, pline, pline_feat_dic, pline_point_layer_index, pline_cumdist_dic)
+    """
+
+    # for a given centroid, find the two nearest neighbors in the polyline
+    neighbor_ids = pline_point_layer_index.nearestNeighbor(centroid.asPoint(),2)
+
+    # first neighbor along the polyline, this is not necessarily the closest to the centroid.
+    first_neighbor_id = sorted(neighbor_ids)[0]
+    first_neighbor_feat = pline_feat_dic[first_neighbor_id]
+
+    # get shortest distance to the polyline 
+    dist_centroid_pline = centroid.distance( pline.geometry() )
+
+    # get distance of centroid to the first neighbor (along polyline)
+    dist_centroid_point = centroid.distance( first_neighbor_feat.geometry() )
+
+    # get projection of the centroid over the polyline segment (Pythagore theorem)
+    dist_centroid_projected = sqrt( dist_centroid_point**2 - dist_centroid_pline**2)
+
+    # compute cumulated distance from polyline origin
+    dist_centroid_origin = pline_cumdist_dic[first_neighbor_id] + dist_centroid_projected
+
+    # compute normalized distance ( curvilinear distance from pline origin / total pline length )
+    norm_dist_centroid_origin = dist_centroid_origin / np.max(pline_cumdist_dic.values())
+
+    return(norm_dist_centroid_origin)
+
+
+def get_pline_centroids(pline_layer, grid_layer, id_field_name = 'ID', get_ndist = False) :
+    """
+    Description
+    -----------
+    Returns, for each (selected) polyline in pline_layer the row and column
+    of intersected grid cells from grid_layer. 
+    If get_ndsit is True, the normalized distance between each centroid
+    of selected cells is added (see Returns). 
+    The normalized distance, ndist, is the distance from the polyline origin to 
+    the curvilinear abscissa of the cell centroid projected onto the polyline.
+    When edited with Qgis, the polyline origin is the first point of the polyline
+    at the time of polyline creation.
+
+    Parameters
+    ----------
+    pline_layer : polyline layer (vector)
+    grid_layer : grid layer (vector)
+    id_field_name : field name in polyline layer with unique feature id
+    get_ndist : whether to add or not the normalized distance
+    
+    Returns
+    -------
+    if get_ndist is False :
+	{ pline_feat_id : [ (row, col), ... ] , ... }
+    if get_ndist is True :
+	{ pline_feat_id : [ (row, col, ndist), ... ] , ... }
+
+    Examples
+    --------
+    >>> rivRowCol = get_pline_centroids(rivers, grid, id_field_name = 'ID', get_ndist = True) 
+    """
+    # -- iterate over polylines
+
+    # Init output dictionary
+    pline_cells_dic = {}
+
+    # check that the selection in pline_layer is not empty
+    selected_feat_ids = pline_layer.selectedFeaturesIds()
+    if len(selected_feat_ids) == 0:
 	print("Empty selection, all features considered")
-	features = vLayer.getFeatures()
+	plines = pline_layer.getFeatures()
     else :
 	print("Only selected features will be considered")
-	features = vLayer.selectedFeatures()
+	plines = pline_layer.selectedFeatures()
 	
-    # -- Create and fill spatial Index
-    gridLayerIndex = QgsSpatialIndex()
-    for cell in gridLayer.getFeatures():
-	gridLayerIndex.insertFeature(cell)
+    # create and fill spatial Index
+    grid_layer_index = get_spatial_indexes([grid_layer])[0] 
 
-    # Iterate over features in vLayer
-    for feat in features:
-	thisFeatCells = []
-	geom = QgsGeometry(feat.geometry())
-	# Select grid cells in the bbox of feat
-	intersectsIds = gridLayerIndex.intersects(geom.boundingBox())
-	for id in intersectsIds:
-	    gridLayer.getFeatures( QgsFeatureRequest().setFilterFid( int(id) ) ).nextFeature( bboxCell )
-	    bboxCellGeom = QgsGeometry(bboxCell.geometry())
+    # build grid feature dictionary
+    grid_feat_dic = { feat.id():feat for feat in grid_layer.getFeatures()}
+
+    # Iterate over plines in pline_layer
+    for pline in plines:
+
+	# list of grid cells intersected by pline
+	intersected_cells_list = []
+	
+	# get additional pline data
+	if get_ndist == True : 
+	    pline_feat_dic, pline_point_layer_index, pline_cumdist_dic = get_pline_data(pline, pline_layer)
+
+	# get grid cells in the bbox of the pline
+	pline_geom = QgsGeometry(pline.geometry())
+	grid_feat_intersect_ids = grid_layer_index.intersects(pline_geom.boundingBox())
+
+	# shorten selection to grid cells intersected by the pline
+	for id in grid_feat_intersect_ids:
+	    grid_cell = grid_feat_dic[id]
+	    grid_cell_geom = QgsGeometry(grid_cell.geometry())
 	    # Within grid cells in the bbox of feat, select those intersecting feat
-	    if geom.intersects(bboxCellGeom):
-		thisFeatCells.append( [ bboxCell['ROW'], bboxCell['COL'] ] )
-		selectedSet.append(bboxCell.id())
-	featCells[ feat[idFieldName] ] =  thisFeatCells	
-			
-    selectedSet = list(set(gridLayer.selectedFeaturesIds()).union(selectedSet))
-    gridLayer.setSelectedFeatures(selectedSet)
+	    if pline_geom.intersects(grid_cell_geom):
+		if get_ndist == True : 
+		    grid_cell_centroid = grid_cell_geom.centroid()
+		    ndist = get_dist_pline_centroid(grid_cell_centroid, pline, pline_feat_dic, pline_point_layer_index, pline_cumdist_dic)
+		    # add grid_cell ROW and COL and ndist attributes
+		    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'], ndist ] )
+		else : 
+		    # add grid_cell ROW and COL attributes
+		    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'] ] )
 
-    return(featCells)
+	# add pline entry into output dictionary
+	pline_cells_dic[ pline[id_field_name] ] =  intersected_cells_list
+
+    return(pline_cells_dic)
    
-
 # -----------------------------------------------------
 # From a selection of features in a vector layer 
 # returns PtsetFieldValues, a dictionary { 'ID1':fieldValue, 'ID2':FieldValue, ...}
