@@ -81,7 +81,6 @@ def lin_time_interp(dates_in, vals_in, dates_out) :
     -------
     vals_out : a numpy array with interpolates values at t_out
 
-
     Examples
     --------
     >>> vals_out = lin_time_interp(dates_in, vals_in, dates_out)
@@ -103,7 +102,8 @@ def lin_time_interp(dates_in, vals_in, dates_out) :
     is_outside[ idx_after == 0 ] = -1 # value for dates before first input value
     is_outside[ idx_after == n_tstep ] = 1 # value for dates after last input value
     idx_after[ idx_after == 0 ] = 1 # correct idx_after to avoid index value out of bound 
-    idx_after[ idx_after == n_tstep ] = n_tstep - 1 # correct idx_after to avoid index value out of bound
+    idx_after[ idx_after == len(datenums_in) ] = len(datenums_in) - 1 # correct idx_after to avoid index value out of bound
+
 
     # timestamp before/after resample
     times_before = datenums_in[idx_after - 1]
