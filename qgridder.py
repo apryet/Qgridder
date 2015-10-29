@@ -289,7 +289,7 @@ class QgridderSettings :
 		'plot_simul':'False'
 		}
 	# support model types (grid topology)
-	self.model_types = ['Modflow','Newsam']
+	self.model_types = ['Modflow','Nested']
 	# load settings from Qgis project
 	self.load_settings(self.proj)
     

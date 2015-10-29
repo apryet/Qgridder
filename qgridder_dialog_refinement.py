@@ -55,6 +55,10 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
 	# Populate model name list
 	self.populate_layer_list(self.listGridLayer)
 
+	# check boxes
+	self.checkTopo.setChecked(True)
+	self.checkDivideRatio.setChecked(True)
+
 	# Init labels
 	self.labelIterations.hide()
 	self.labelIter.hide()
@@ -88,16 +92,16 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
 	    return
 
 
-	if self.settings.dic_settings['model_type'] == 'Newsam':
+	if self.settings.dic_settings['model_type'] == 'Nested':
 	    if n != m :
 		QMessageBox.information(self, self.tr("Qgridder"),
-			self.tr("Only 1:1 ratio for Newsam")
+			self.tr("Only 1:1 ratio for Nested")
 		    )
 		return
 
 	    if n not in (2, 4) :
 		QMessageBox.information(self, self.tr("Qgridder"),
-			self.tr("For Newsam, you can only divide cells by 2 or 4")
+			self.tr("For Nested, you can only divide cells by 2 or 4")
 		    )
 		return
 
@@ -105,8 +109,8 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
 	if self.checkTopo.isChecked() :
 	    if self.settings.dic_settings['model_type'] == 'Modflow':
 		topoRules = {'model':'modflow','nmax':1}
-	    elif self.settings.dic_settings['model_type'] == 'Newsam': 
-		 topoRules = {'model':'newsam', 'nmax':2}
+	    elif self.settings.dic_settings['model_type'] == 'Nested': 
+		 topoRules = {'model':'nested', 'nmax':2}
 	    else :
 		QMessageBox.information(self, self.tr("Gridder"),
 		    self.tr("Unknown model name for topology check")

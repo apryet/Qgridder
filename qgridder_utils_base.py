@@ -35,6 +35,7 @@ from qgis.core import *
 import numpy as np
 import multiprocessing as mp
 import ftools_utils
+import time
 
 # ======================================================================================
 
@@ -139,8 +140,8 @@ def make_rgrid(inputFeat, n, m, vprovider, progressBar = QProgressDialog("Buildi
 # Format of topoRules dictionary
 # -- for Modflow
 #topoRules = {'model':'modflow','nmax':1}
-# -- for Newsam
-# topoRules = {'model':'newsam', 'nmax':2}
+# -- for Nested
+# topoRules = {'model':'nested', 'nmax':2}
 # -- no check
 # topoRules = {'model':None, 'nmax':None}
 
@@ -312,35 +313,110 @@ def is_over(geomA,geomB,relativeError=TOLERANCE):
 	    )
 
 # ======================================================================================
-def refine_by_split(featIds, n, m, topoRules, vLayer, progressBar = QProgressDialog("Building grid...", "Abort",0,100), labelIter = QLabel() ) :
+def refine_by_split(featIds, n, m, topoRules, gridLayer, progressBar = QProgressDialog("Building grid...", "Abort",0,100), labelIter = QLabel() ) :
     """
     Description
     ----------
-    Split inputFeatures in vLayer and check their topology
-    
+    Split inputFeatures in gridLayer and check their topology
 
+    Parameters
+    ----------
+    featIds : ids of features from gridLayer to be refined
+    n : number of split for selected cells in the horizontal direction
+    m : number of split for selected cells in the vertical direction
+    topoRules : topological rules for the propagation of refinement
+    gridLayer : grid layer to be refined
+    progressBar : progress bar in dialog
+    labelIter : iteration label in dialog
+
+    Returns
+    -------
+    Nothing, just gridLayer is updated
+
+    Examples
+    --------
+    >>> 
     """
+    start_time = time.time()
 
-    # init dictionary
-    fixDict = { 'id':featIds , 'n':[n]*len(featIds), 'm':[m]*len(featIds) }
+    # --  Procedure for regular structured grids (MODFLOW , n_max = 1)
+    if topoRules['nmax'] == 1 :
+        # build feature dictionary
+	allFeatures = {feature.id(): feature for feature in gridLayer.getFeatures()}
+    
+	# init fix dictionary
+	fixDict = { 'id': [] , 'n':[], 'm':[] }
+
+	# Initialize spatial index 
+	gridLayerIndex = QgsSpatialIndex()
+	# Fill spatial Index
+	for feat in allFeatures.values():
+	    gridLayerIndex.insertFeature(feat)
+	    
+	# get bbox of grid layer
+	gridLayer.selectAll()
+	grid_bbox = gridLayer.boundingBoxOfSelected()
+	gridLayer.setSelectedFeatures([])
+
+	# iterate over initial feature set
+	# -- cells that have to be split horizontally 
+	if n > 1 : 
+	    for featId in featIds :
+		# build bounding box over row	
+		bbox = allFeatures[featId].geometry().boundingBox()
+		bbox.setXMinimum( grid_bbox.xMinimum() )
+		bbox.setXMaximum( grid_bbox.xMaximum()  )
+		bbox.setYMinimum( bbox.yMinimum() + TOLERANCE )
+		bbox.setYMaximum( bbox.yMaximum() - TOLERANCE )
+		# get features in current row 
+		rowFeatIds = gridLayerIndex.intersects( bbox )
+		# update fixDict with features in current row
+		thisFixDict = { 'id':rowFeatIds , 'n':[n]*len(rowFeatIds), 'm':[1]*len(rowFeatIds) } 
+		fixtDict = update_fixDict(fixDict,thisFixDict)
+	
+	# --  cells that have to be split along columns
+	if m > 1 : 
+	    for featId in featIds :
+		# build bounding box over column	
+		bbox = allFeatures[featId].geometry().boundingBox()
+		bbox.setXMinimum( bbox.xMinimum() + TOLERANCE )
+		bbox.setXMaximum( bbox.xMaximum() - TOLERANCE )
+		bbox.setYMinimum( grid_bbox.yMinimum() )
+		bbox.setYMaximum( grid_bbox.yMaximum() )
+		# get features in current column
+		colFeatIds = gridLayerIndex.intersects( bbox )
+		# update fixDict with features in current column
+		thisFixDict = { 'id':colFeatIds , 'n':[1]*len(colFeatIds), 'm':[m]*len(colFeatIds) } 
+		fixtDict = update_fixDict(fixDict,thisFixDict)
+
+	userFixDict = { 'id': featIds , 'n':[n]*len(featIds), 'm':[m]*len(featIds) }
+	fixtDict = update_fixDict(fixDict,userFixDict)
+	newFeatIds = split_cells(fixDict, gridLayer)
+	print("OPTIM OVER %s sec" % (time.time() - start_time))	
+	return()
+    
+    # -- Refinement procedure for nested grids
     
     # init iteration counter
     itCount = 0
+
+    # init fix dict
+    fixDict = { 'id': featIds , 'n':[n]*len(featIds), 'm':[m]*len(featIds) }
     
     # Continue until inputFeatures is empty
     while len(fixDict['id']) > 0:
 
 	# Split inputFeatures
-	newFeatIds = split_cells(fixDict, n, m, vLayer)
+	newFeatIds = split_cells(fixDict, gridLayer)
 
 	# Get all the features 	
-	allFeatures = {feature.id(): feature for feature in vLayer.getFeatures()}
+	allFeatures = {feature.id(): feature for feature in gridLayer.getFeatures()}
 
 	# Initialize spatial index 
-	vLayerIndex = QgsSpatialIndex()
+	gridLayerIndex = QgsSpatialIndex()
 	# Fill spatial Index
 	for feat in allFeatures.values():
-	    vLayerIndex.insertFeature(feat)
+	    gridLayerIndex.insertFeature(feat)
 
 	# re-initialize the list of features to be fixed
 	fixDict = { 'id':[] , 'n':[], 'm':[] }
@@ -355,9 +431,9 @@ def refine_by_split(featIds, n, m, topoRules, vLayer, progressBar = QProgressDia
 	# Iterate over newFeatures to check topology
 	for newFeatId in newFeatIds:
 	    # Get the neighbors of newFeatId that must be fixed
-	    thisFixDict = check_topo( newFeatId, n, m, topoRules, allFeatures, vLayer, vLayerIndex)
+	    thisFixDict = check_topo( newFeatId, n, m, topoRules, allFeatures, gridLayer, gridLayerIndex)
 	    # Update fixDict with thisFixDict
-	    fixtDict = update_fixDict(fixDict,thisFixDict)
+	    fixDict = update_fixDict(fixDict,thisFixDict)
 	    # update counter
 	    count += 1
 	   # update progressBar
@@ -371,10 +447,11 @@ def refine_by_split(featIds, n, m, topoRules, vLayer, progressBar = QProgressDia
 	# Update iteration counter
 	itCount+=1
 	labelIter.setText(unicode(itCount))
+	print("BASE OVER %s sec" % (time.time() - start_time))
     
 
 # ======================================================================================
-def split_cells(fixDict, n=2, m=2, vLayer = QgsVectorLayer()):
+def split_cells(fixDict, vLayer = QgsVectorLayer()):
     """
     Description
     ----------
@@ -445,8 +522,8 @@ def is_valid_boundary( feat1, feat2, direction, topoRules ):
     # topo Rules (Dict) : 
 	# -- for Modflow
 	#topoRules = {'model':'modflow','nmax':1}
-	# -- for Newsam
-	# topoRules = {'model':'newsam', 'nmax':2}
+	# -- for Nested
+	# topoRules = {'model':'nested', 'nmax':2}
 
     # get feat1 geometry
     dx1, dy1 = rect_size(feat1)['dx'], rect_size(feat1)['dy'] 
@@ -507,8 +584,8 @@ def check_topo(featId, n, m, topoRules, allFeatures, vLayer, vLayerIndex):
     # Check the compatibility of inputFeature and neighbors with topoRules
     for direction, neighbor in zip(neighbors['direction'], neighbors['feature']):
 	if direction in [1, 2, 3, 4]:
-	    # Special case for newsam grid
-	    if topoRules['model']=='newsam':
+	    # Special case for nested grid
+	    if topoRules['model']=='nested':
 		N = M = 2
 	    else :
 		N = n
