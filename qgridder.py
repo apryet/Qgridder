@@ -277,19 +277,14 @@ class QgridderSettings :
     Qgridder settings
     """
     def __init__(self) :
+	# link to project instance
 	self.proj = QgsProject.instance()
-	# default settings
-	self.dic_settings = { 'model_type':'Modflow',
-		'obs_dir':'./', 
-		'simul_file':'simul.file',
-		'model_src_dir':'./',
-		'simul_start_date':'2015-01-01 00:00',
-		'support_grid_layer_name' : 'gridLayer',
-		'plot_obs':'True',
-		'plot_simul':'False'
-		}
+	# initialize settings dictionary
+	self.dic_settings  = {}
 	# support model types (grid topology)
 	self.model_types = ['Modflow','Nested']
+	# initialize list of grid backups
+	self.list_grid_bckup = []
 	# load settings from Qgis project
 	self.load_settings(self.proj)
     
@@ -299,20 +294,32 @@ class QgridderSettings :
 	-----------
 	Load settings from Qgis project
 	"""
-	# make a copy of current settings
-	dic_settings = self.dic_settings.copy()
+
+	# default settings
+	dic_default_settings = { 'model_type':'Modflow',
+		'obs_dir':'./', 
+		'simul_file':'simul.file',
+		'model_src_dir':'./',
+		'simul_start_date':'2015-01-01 00:00',
+		'support_grid_layer_name' : 'grid',
+		'plot_obs':'True',
+		'plot_simul':'False',
+		'grid_backup':'True',
+		'max_grid_backup':'5'
+		}
+
 
 	# load settings from Qgis project
-	success = True
-	for key in dic_settings.keys() :
-	    dic_settings[key], valid_entry = self.proj.readEntry('qgridder', str(key))
-	    success = success * valid_entry
+	for key in dic_default_settings.keys() :
+	    entry_value, valid_entry = self.proj.readEntry('qgridder', str(key))
+	    print(str(entry_value) + str(valid_entry) )
+	    
+	    if entry_value == '' : 
+		self.dic_settings[key] = dic_default_settings[key] 
+	    else :
+		self.dic_settings[key] = entry_value
 
-	# if successful, update dic_settings
-	if success : 
-	    self.dic_settings = dic_settings
-		    
-	return(success)
+	return()
 
 	
     def save_settings(self, proj) : 

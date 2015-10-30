@@ -75,6 +75,9 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
     	# Populate model name list
 	self.populate_layer_list(self.listGridLayer)
 
+	# (re)load settings 
+	# self.settings.load_settings(self.proj)
+
 	# load settings
 	model_type = self.settings.dic_settings['model_type']
 	obs_dir = self.settings.dic_settings['obs_dir']
@@ -82,6 +85,9 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
 	model_src_dir = self.settings.dic_settings['model_src_dir']
 	simul_start_date = self.settings.dic_settings['simul_start_date']
 	support_grid_layer_name = self.settings.dic_settings['support_grid_layer_name']
+	plot_obs =  self.settings.dic_settings['plot_obs']
+	plot_simul =  self.settings.dic_settings['plot_simul']
+	grid_backup =  self.settings.dic_settings['grid_backup']
 
 	self.listModelTypes.setCurrentIndex(self.listModelTypes.findText(model_type))
 	self.listGridLayer.setCurrentIndex(self.listGridLayer.findText(support_grid_layer_name))
@@ -89,6 +95,21 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
 	self.textModelDir.setText(str(model_src_dir))
 	self.textSimulStartDate.setText(str(simul_start_date))
 	self.textSimulFile.setText(str(simul_file))
+
+	if plot_obs == 'True' : 
+	    self.checkPlotObs.setChecked( True )
+	else :
+	    self.checkPlotObs.setChecked( False )
+
+	if plot_simul == 'True' : 
+	    self.checkPlotSimul.setChecked( True )
+	else :
+	    self.checkPlotSimul.setChecked( False )
+
+	if grid_backup == 'True' : 
+	    self.checkGridBackup.setChecked( True )
+	else : 
+	    self.checkGridBackup.setChecked( False )
 
 
     def browse_simul_file(self):
@@ -155,12 +176,27 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
 	dic_settings['support_grid_layer_name'] = str(self.listGridLayer.currentText())
 	dic_settings['plot_obs'] = str(self.checkPlotObs.isChecked())
 	dic_settings['plot_simul'] = str(self.checkPlotSimul.isChecked())
+	dic_settings['grid_backup'] = str(self.checkGridBackup.isChecked())
 
-	self.settings.update_settings(dic_settings)
+	QMessageBox.information(self, self.tr("Gridder"), 
+		    self.tr(" dic_settings grid_backup" +  str(dic_settings['grid_backup']) )
+		    )
+
+	# update self.settings.dic_settings
+	self.settings.update_settings(dic_settings)	
+
+	QMessageBox.information(self, self.tr("Gridder"), 
+		    self.tr(" self. dic_settings grid_backup" +  str(self.settings.dic_settings['grid_backup']) )
+		    )
+
+	# save settings to project
 	self.settings.save_settings(self.proj)
 
-	self.reject()
+	QMessageBox.information(self, self.tr("Gridder"), 
+	    self.tr("reloaded self. dic_settings grid_backup" +  str(self.settings.dic_settings['grid_backup']) )
+	)
 
+	self.reject()
 
     def exit(self):
 	"""

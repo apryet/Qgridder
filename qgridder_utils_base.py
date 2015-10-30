@@ -345,7 +345,8 @@ def refine_by_split(featIds, n, m, topoRules, gridLayer, progressBar = QProgress
 	allFeatures = {feature.id(): feature for feature in gridLayer.getFeatures()}
     
 	# init fix dictionary
-	fixDict = { 'id': [] , 'n':[], 'm':[] }
+	rowFixDict = { 'id': [] , 'n':[], 'm':[] }
+	colFixDict = { 'id': [] , 'n':[], 'm':[] }
 
 	# Initialize spatial index 
 	gridLayerIndex = QgsSpatialIndex()
@@ -354,43 +355,45 @@ def refine_by_split(featIds, n, m, topoRules, gridLayer, progressBar = QProgress
 	    gridLayerIndex.insertFeature(feat)
 	    
 	# get bbox of grid layer
-	gridLayer.selectAll()
-	grid_bbox = gridLayer.boundingBoxOfSelected()
-	gridLayer.setSelectedFeatures([])
+	grid_bbox = gridLayer.extent()
 
 	# iterate over initial feature set
 	# -- cells that have to be split horizontally 
 	if n > 1 : 
 	    for featId in featIds :
-		# build bounding box over row	
-		bbox = allFeatures[featId].geometry().boundingBox()
-		bbox.setXMinimum( grid_bbox.xMinimum() )
-		bbox.setXMaximum( grid_bbox.xMaximum()  )
-		bbox.setYMinimum( bbox.yMinimum() + TOLERANCE )
-		bbox.setYMaximum( bbox.yMaximum() - TOLERANCE )
-		# get features in current row 
-		rowFeatIds = gridLayerIndex.intersects( bbox )
-		# update fixDict with features in current row
-		thisFixDict = { 'id':rowFeatIds , 'n':[n]*len(rowFeatIds), 'm':[1]*len(rowFeatIds) } 
-		fixtDict = update_fixDict(fixDict,thisFixDict)
+		# only consider featId if current row has not been considered before
+		if featId not in rowFixDict['id'] : 
+		    # build bounding box over row	
+		    bbox = allFeatures[featId].geometry().boundingBox()
+		    bbox.setXMinimum( grid_bbox.xMinimum() )
+		    bbox.setXMaximum( grid_bbox.xMaximum()  )
+		    bbox.setYMinimum( bbox.yMinimum() + TOLERANCE )
+		    bbox.setYMaximum( bbox.yMaximum() - TOLERANCE )
+		    # get features in current row 
+		    rowFeatIds = gridLayerIndex.intersects( bbox )
+		    # update fixDict with features in current row
+		    thisFixDict = { 'id':rowFeatIds , 'n':[n]*len(rowFeatIds), 'm':[1]*len(rowFeatIds) } 
+		    rowFixtDict = update_fixDict(rowFixDict,thisFixDict)
 	
 	# --  cells that have to be split along columns
 	if m > 1 : 
 	    for featId in featIds :
-		# build bounding box over column	
-		bbox = allFeatures[featId].geometry().boundingBox()
-		bbox.setXMinimum( bbox.xMinimum() + TOLERANCE )
-		bbox.setXMaximum( bbox.xMaximum() - TOLERANCE )
-		bbox.setYMinimum( grid_bbox.yMinimum() )
-		bbox.setYMaximum( grid_bbox.yMaximum() )
-		# get features in current column
-		colFeatIds = gridLayerIndex.intersects( bbox )
-		# update fixDict with features in current column
-		thisFixDict = { 'id':colFeatIds , 'n':[1]*len(colFeatIds), 'm':[m]*len(colFeatIds) } 
-		fixtDict = update_fixDict(fixDict,thisFixDict)
+		# only consider featId if current row has not been considered before
+		if featId not in colFixDict['id'] : 
+		    # build bounding box over column	
+		    bbox = allFeatures[featId].geometry().boundingBox()
+		    bbox.setXMinimum( bbox.xMinimum() + TOLERANCE )
+		    bbox.setXMaximum( bbox.xMaximum() - TOLERANCE )
+		    bbox.setYMinimum( grid_bbox.yMinimum() )
+		    bbox.setYMaximum( grid_bbox.yMaximum() )
+		    # get features in current column
+		    colFeatIds = gridLayerIndex.intersects( bbox )
+		    # update fixDict with features in current column
+		    thisFixDict = { 'id':colFeatIds , 'n':[1]*len(colFeatIds), 'm':[m]*len(colFeatIds) } 
+		    colFixtDict = update_fixDict(colFixDict,thisFixDict)
 
-	userFixDict = { 'id': featIds , 'n':[n]*len(featIds), 'm':[m]*len(featIds) }
-	fixtDict = update_fixDict(fixDict,userFixDict)
+	fixDict = rowFixDict.copy()
+	fixDict = update_fixDict(fixDict,colFixDict)
 	newFeatIds = split_cells(fixDict, gridLayer)
 	print("OPTIM OVER %s sec" % (time.time() - start_time))	
 	return()
@@ -931,22 +934,23 @@ def rgrid_numbering(gridLayer):
     if row_field_idx == -1:
 	if caps & QgsVectorDataProvider.AddAttributes:
 	  res = gridLayer.dataProvider().addAttributes(  [QgsField("ROW", QVariant.Int)] ) 
-	  row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
       
     if col_field_idx == -1:
 	if caps & QgsVectorDataProvider.AddAttributes:
 	  res = res*gridLayer.dataProvider().addAttributes( [QgsField("COL", QVariant.Int)] )
-	  col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
 
     if cx_field_idx == -1:
 	if caps & QgsVectorDataProvider.AddAttributes:
 	  res = gridLayer.dataProvider().addAttributes(  [QgsField("CX", QVariant.Double)] ) 
-	  row_field_idx = gridLayer.dataProvider().fieldNameIndex('CX')
       
     if cy_field_idx == -1:
 	if caps & QgsVectorDataProvider.AddAttributes:
 	  res = res*gridLayer.dataProvider().addAttributes( [QgsField("CY", QVariant.Double)] )
-	  col_field_idx = gridLayer.dataProvider().fieldNameIndex('CY')
+
+    row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
+    col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
+    cx_field_idx = gridLayer.dataProvider().fieldNameIndex('CX')
+    cy_field_idx = gridLayer.dataProvider().fieldNameIndex('CY')
 
     # update fields
     gridLayer.updateFields()
@@ -958,8 +962,8 @@ def rgrid_numbering(gridLayer):
     # sort by decreasing y and increasing x
     idx = np.lexsort( [centroids_x,-1*centroids_y] )
     centroids = centroids[idx,:]
-    row = 1
-    col = 1
+    row = 0 # 0-based
+    col = 0 # 0-based
 
     # start editing
     gridLayer.startEditing()
@@ -971,12 +975,13 @@ def rgrid_numbering(gridLayer):
 	    col = 1
 	    row = row + 1
 	featId = centroids[i, 0]
-	cx = float(centroids[i, 1])
-	cy = float(centroids[i, 2])
-	attr = { row_field_idx:row, col_field_idx:col,\
-		cx_field_idx:cx, cy_field_idx:cy}
+	cx = centroids[i, 1]
+	cy = centroids[i, 2]
+	attr = { row_field_idx : int(row), col_field_idx : int(col),\
+		cx_field_idx : float(cx), cy_field_idx : float(cy)}
 	attrValues[featId] = attr 
 	col+=1
+
     # write attributes to shapefile 
     res = gridLayer.dataProvider().changeAttributeValues(attrValues)
 
@@ -984,7 +989,7 @@ def rgrid_numbering(gridLayer):
     gridLayer.commitChanges()
 
     # res should be True if the operation is successful 
-    return(res) 
+    return(attrValues) 
 
     
 # ======================================================================================

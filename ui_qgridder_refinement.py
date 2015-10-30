@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_qgridder_refinement.ui'
 #
-# Created: Fri May 15 23:22:25 2015
-#      by: PyQt4 UI code generator 4.10.4
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -50,6 +49,7 @@ class Ui_QGridderRefinement(object):
         self.sboxDivideHoriz = QtGui.QSpinBox(QGridderRefinement)
         self.sboxDivideHoriz.setMinimum(1)
         self.sboxDivideHoriz.setMaximum(100)
+        self.sboxDivideHoriz.setProperty("value", 2)
         self.sboxDivideHoriz.setObjectName(_fromUtf8("sboxDivideHoriz"))
         self.horizontalLayout.addWidget(self.sboxDivideHoriz)
         self.label_10 = QtGui.QLabel(QGridderRefinement)
@@ -58,15 +58,18 @@ class Ui_QGridderRefinement(object):
         self.sboxDivideVert = QtGui.QSpinBox(QGridderRefinement)
         self.sboxDivideVert.setMinimum(1)
         self.sboxDivideVert.setMaximum(100)
+        self.sboxDivideVert.setProperty("value", 2)
         self.sboxDivideVert.setObjectName(_fromUtf8("sboxDivideVert"))
         self.horizontalLayout.addWidget(self.sboxDivideVert)
         self.checkDivideRatio = QtGui.QCheckBox(QGridderRefinement)
+        self.checkDivideRatio.setChecked(True)
         self.checkDivideRatio.setObjectName(_fromUtf8("checkDivideRatio"))
         self.horizontalLayout.addWidget(self.checkDivideRatio)
         self.verticalLayout_7.addLayout(self.horizontalLayout)
         self.horizontalLayout_8 = QtGui.QHBoxLayout()
         self.horizontalLayout_8.setObjectName(_fromUtf8("horizontalLayout_8"))
         self.checkTopo = QtGui.QCheckBox(QGridderRefinement)
+        self.checkTopo.setChecked(True)
         self.checkTopo.setObjectName(_fromUtf8("checkTopo"))
         self.horizontalLayout_8.addWidget(self.checkTopo)
         spacerItem = QtGui.QSpacerItem(128, 21, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
@@ -86,6 +89,10 @@ class Ui_QGridderRefinement(object):
         self.horizontalLayout_2.addWidget(self.labelIter)
         spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem1)
+        self.buttonUndoRefine = QtGui.QPushButton(QGridderRefinement)
+        self.buttonUndoRefine.setEnabled(False)
+        self.buttonUndoRefine.setObjectName(_fromUtf8("buttonUndoRefine"))
+        self.horizontalLayout_2.addWidget(self.buttonUndoRefine)
         self.buttonRefine = QtGui.QPushButton(QGridderRefinement)
         self.buttonRefine.setObjectName(_fromUtf8("buttonRefine"))
         self.horizontalLayout_2.addWidget(self.buttonRefine)
@@ -106,5 +113,6 @@ class Ui_QGridderRefinement(object):
         self.checkTopo.setText(_translate("QGridderRefinement", "Check topology  for selected model type", None))
         self.labelIterations.setText(_translate("QGridderRefinement", "Iterations : ", None))
         self.labelIter.setText(_translate("QGridderRefinement", "0", None))
+        self.buttonUndoRefine.setText(_translate("QGridderRefinement", "Undo", None))
         self.buttonRefine.setText(_translate("QGridderRefinement", "Refine selection ", None))
 

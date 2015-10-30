@@ -49,8 +49,15 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
 	self.settings = settings		
 	self.setupUi(self)
 
+	# init undo button
+	if len(self.settings.list_grid_bckup) > 0 :
+	    self.buttonUndoRefine.setEnabled(True)
+	else : 
+	    self.buttonUndoRefine.setEnabled(False)
+
 	# Connect buttons
 	QObject.connect(self.buttonRefine, SIGNAL("clicked()"), self.run_regular_refine)
+	QObject.connect(self.buttonUndoRefine, SIGNAL("clicked()"), self.run_undo_refine)
 
 	# Populate model name list
 	self.populate_layer_list(self.listGridLayer)
@@ -74,6 +81,7 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
 
 	# selected grid layer name 
 	grid_layer_name = self.listGridLayer.currentText()
+
 	# number of elements, horizontally
 	n =  self.sboxDivideHoriz.value()
 	# number of elements, vertically
@@ -122,7 +130,7 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
 
 	# Load input grid layer
 	grid_layer = ftools_utils.getMapLayerByName( unicode( grid_layer_name ) )
-		
+
 	if (grid_layer.selectedFeatureCount() == 0):
 	    QMessageBox.information(self, self.tr("Gridder"),
 		    self.tr("No selected features in the chosen grid layer.")
@@ -132,6 +140,13 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
 	# Set "wait" cursor and disable button
         QApplication.setOverrideCursor(Qt.WaitCursor)
 	self.buttonRefine.setEnabled( False )
+
+	# Backup input grid layer
+	if self.settings.dic_settings['grid_backup'] == 'True' : 
+	    if len( self.settings.list_grid_bckup ) < int( self.settings.dic_settings['max_grid_backup'] ) : 
+		backup_grid_layer = QgsVectorLayer("Point?crs=" + grid_layer.crs().authid(), 'backupLayer', providerLib =  'memory')	
+		success, feature = backup_grid_layer.dataProvider().addFeatures( [feat for feat in grid_layer.getFeatures()] )
+		self.settings.list_grid_bckup.append( backup_grid_layer )
 
 	# Fetch selected features from input grid_layer
 	selected_fIds = grid_layer.selectedFeaturesIds()
@@ -147,17 +162,42 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
 	# Refine grid 
 	qgridder_utils.refine_by_split(selected_fIds, n, m, topoRules, grid_layer, self.progressBarRegularRefine, self.labelIter)
 
+	# Refresh refined grid layer
+	self.iface.mapCanvas().refresh()
+
 	# Post-operation information
 	QMessageBox.information(self, self.tr("Gridder"), 
 		self.tr("Vector Grid Refined")
 		)	
 
-	# Refresh refined grid layer
-	self.iface.mapCanvas().refresh()
+
 
 	# Enable Write Grid button and reset cursor
 	self.buttonRefine.setEnabled( True )
 	QApplication.restoreOverrideCursor()
 
+	# Enable undo button
+	if self.settings.dic_settings['grid_backup'] == 'True' : 
+	    self.buttonUndoRefine.setEnabled(True)
 
-  
+
+    # ======= Undo Refine grid ========================================
+    def run_undo_refine(self) :
+	if len(self.settings.list_grid_bckup) > 0 :
+	    # selected grid layer name 
+	    grid_layer_name = self.listGridLayer.currentText()
+	    # Load input grid layer
+	    grid_layer = ftools_utils.getMapLayerByName( unicode( grid_layer_name ) )
+	    # retrieve last backup layer
+	    backup_grid_layer = self.settings.list_grid_bckup[-1]
+	    # remove all elements in grid layer
+	    grid_layer.dataProvider().deleteFeatures( [feat.id() for feat in grid_layer.getFeatures()] )
+	    # populate grid layer with backup layer features
+	    grid_layer.dataProvider().addFeatures( [feat for feat in backup_grid_layer.getFeatures()] )
+	    # remove last backup
+	    self.settings.list_grid_bckup.pop()
+
+	    
+
+
+

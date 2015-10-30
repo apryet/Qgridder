@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_qgridder_settings.ui'
 #
-# Created: Mon Jun  8 12:29:21 2015
-#      by: PyQt4 UI code generator 4.11.3
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -26,25 +25,9 @@ except AttributeError:
 class Ui_QGridderSettings(object):
     def setupUi(self, QGridderSettings):
         QGridderSettings.setObjectName(_fromUtf8("QGridderSettings"))
-        QGridderSettings.resize(394, 535)
+        QGridderSettings.resize(401, 641)
         self.gridLayout_2 = QtGui.QGridLayout(QGridderSettings)
         self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
-        self.groupBox_4 = QtGui.QGroupBox(QGridderSettings)
-        self.groupBox_4.setTitle(_fromUtf8(""))
-        self.groupBox_4.setObjectName(_fromUtf8("groupBox_4"))
-        self.verticalLayout_3 = QtGui.QVBoxLayout(self.groupBox_4)
-        self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
-        self.horizontalLayout_12 = QtGui.QHBoxLayout()
-        self.horizontalLayout_12.setObjectName(_fromUtf8("horizontalLayout_12"))
-        self.label_22 = QtGui.QLabel(self.groupBox_4)
-        self.label_22.setObjectName(_fromUtf8("label_22"))
-        self.horizontalLayout_12.addWidget(self.label_22)
-        self.listModelTypes = QtGui.QComboBox(self.groupBox_4)
-        self.listModelTypes.setEditable(False)
-        self.listModelTypes.setObjectName(_fromUtf8("listModelTypes"))
-        self.horizontalLayout_12.addWidget(self.listModelTypes)
-        self.verticalLayout_3.addLayout(self.horizontalLayout_12)
-        self.gridLayout_2.addWidget(self.groupBox_4, 0, 0, 1, 1)
         self.groupBox = QtGui.QGroupBox(QGridderSettings)
         self.groupBox.setObjectName(_fromUtf8("groupBox"))
         self.gridLayout = QtGui.QGridLayout(self.groupBox)
@@ -109,6 +92,15 @@ class Ui_QGridderSettings(object):
         self.checkPlotObs.setChecked(True)
         self.checkPlotObs.setObjectName(_fromUtf8("checkPlotObs"))
         self.gridLayout.addWidget(self.checkPlotObs, 11, 0, 1, 1)
+        self.textSimulStartDate.raise_()
+        self.label_2.raise_()
+        self.labe.raise_()
+        self.labe_2.raise_()
+        self.labe_3.raise_()
+        self.checkPlotSimul.raise_()
+        self.checkPlotObs.raise_()
+        self.listGridLayer.raise_()
+        self.labelGridLayer.raise_()
         self.gridLayout_2.addWidget(self.groupBox, 1, 0, 1, 2)
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
@@ -123,13 +115,35 @@ class Ui_QGridderSettings(object):
         self.gridLayout_2.addLayout(self.horizontalLayout_2, 3, 0, 1, 1)
         spacerItem1 = QtGui.QSpacerItem(20, 158, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.gridLayout_2.addItem(spacerItem1, 2, 0, 1, 1)
+        self.groupBox_4 = QtGui.QGroupBox(QGridderSettings)
+        self.groupBox_4.setTitle(_fromUtf8(""))
+        self.groupBox_4.setObjectName(_fromUtf8("groupBox_4"))
+        self.verticalLayout_3 = QtGui.QVBoxLayout(self.groupBox_4)
+        self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
+        self.horizontalLayout_12 = QtGui.QHBoxLayout()
+        self.horizontalLayout_12.setObjectName(_fromUtf8("horizontalLayout_12"))
+        self.label_22 = QtGui.QLabel(self.groupBox_4)
+        self.label_22.setObjectName(_fromUtf8("label_22"))
+        self.horizontalLayout_12.addWidget(self.label_22)
+        self.listModelTypes = QtGui.QComboBox(self.groupBox_4)
+        self.listModelTypes.setEditable(False)
+        self.listModelTypes.setObjectName(_fromUtf8("listModelTypes"))
+        self.horizontalLayout_12.addWidget(self.listModelTypes)
+        self.verticalLayout_3.addLayout(self.horizontalLayout_12)
+        self.horizontalLayout_5 = QtGui.QHBoxLayout()
+        self.horizontalLayout_5.setObjectName(_fromUtf8("horizontalLayout_5"))
+        self.checkGridBackup = QtGui.QCheckBox(self.groupBox_4)
+        self.checkGridBackup.setChecked(False)
+        self.checkGridBackup.setObjectName(_fromUtf8("checkGridBackup"))
+        self.horizontalLayout_5.addWidget(self.checkGridBackup)
+        self.verticalLayout_3.addLayout(self.horizontalLayout_5)
+        self.gridLayout_2.addWidget(self.groupBox_4, 0, 0, 1, 1)
 
         self.retranslateUi(QGridderSettings)
         QtCore.QMetaObject.connectSlotsByName(QGridderSettings)
 
     def retranslateUi(self, QGridderSettings):
         QGridderSettings.setWindowTitle(_translate("QGridderSettings", "Qgridder Settings", None))
-        self.label_22.setText(_translate("QGridderSettings", "Model type :", None))
         self.groupBox.setTitle(_translate("QGridderSettings", "Post-processing", None))
         self.labe.setText(_translate("QGridderSettings", "Path to model python module :", None))
         self.textModelDir.setText(_translate("QGridderSettings", "model_src_dir", None))
@@ -147,4 +161,6 @@ class Ui_QGridderSettings(object):
         self.checkPlotObs.setText(_translate("QGridderSettings", "Plot observed values", None))
         self.buttonCancel.setText(_translate("QGridderSettings", "Cancel", None))
         self.buttonOK.setText(_translate("QGridderSettings", "OK", None))
+        self.label_22.setText(_translate("QGridderSettings", "Model type :", None))
+        self.checkGridBackup.setText(_translate("QGridderSettings", "Backup grids when refining ", None))
 
