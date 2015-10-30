@@ -170,8 +170,6 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
 		self.tr("Vector Grid Refined")
 		)	
 
-
-
 	# Enable Write Grid button and reset cursor
 	self.buttonRefine.setEnabled( True )
 	QApplication.restoreOverrideCursor()

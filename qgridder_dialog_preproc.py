@@ -30,12 +30,12 @@ from PyQt4.QtGui import *
 from qgis.core import *
 
 from qgridder_dialog_base import QGridderDialog
-from ui_qgridder_preproc import Ui_QGridderPreproc
+from ui_qgridder_preproc import Ui_QGridderPreProc
 
 import ftools_utils
 import qgridder_utils
 
-class QGridderDialogPreproc(QGridderDialog, Ui_QGridderPreproc):
+class QGridderDialogPreProc(QGridderDialog, Ui_QGridderPreProc):
     """
     Qgridder settings dialog class
     """
@@ -51,93 +51,39 @@ class QGridderDialogPreproc(QGridderDialog, Ui_QGridderPreproc):
 	self.iface = iface
 	self.settings = settings		
 	self.setupUi(self)
-	self.proj = QgsProject.instance()
+
+	# Populate model name list
+	self.populate_layer_list(self.listGridLayer)
 
 	# Connect buttons
-	QObject.connect(self.buttonBrowseObsDir, SIGNAL("clicked()"), self.browse_obs_directory)
-	QObject.connect(self.buttonBrowseSimulFile, SIGNAL("clicked()"), self.browse_simul_file)
-	QObject.connect(self.buttonOK, SIGNAL("clicked()"), self.commit_changes)
-	QObject.connect(self.buttonCancel, SIGNAL("clicked()"), self.exit)
-
-	# Populate model type list
-	model_types = ['Modflow','Newsam']
-	for model_type in model_types :
-	    self.listModelTypes.addItem(unicode(model_type))
+	QObject.connect(self.buttonProceedNumbering, SIGNAL("clicked()"), self.run_numbering)
 
 
-	# if available, load settings from qgis project qgridder entries
-	model_type = self.proj.readEntry('qgridder','model_type')
-	obs_dir = self.proj.readEntry('qgridder','obs_dir')
-	simul_file = self.proj.readEntry('qgridder','simul_file')
-
-	if model_type[0] in model_types : 
-	    self.listModelTypes.setCurrentIndex(listModelTypes.findText(model_type[0]))
-
-	if obs_dir[1] : 
-	    self.textObsDir.setText(str(obs_dir[0]))
-
-	if simul_file[1] :
-	    self.textSimulFile.setText(str(obs_file[0]))
-
-
-    def browse_simul_file(self):
+    def run_numbering(self):
 	"""
 	Description
 	----------
-	Select simulation file. This file will be used to load simulation results.
-	Note that this is model-dependent.
 
 	"""
-	    
-        self.textSimulFile.clear()
-        ( simul_file, encoding ) = ftools_utils.saveDialog( self )
-        if simul_file is None or encoding is None:
-            return
-        self.textSimulFile.setText( self.OutFileName  )
+	# selected grid layer name 
+	grid_layer_name = self.listGridLayer.currentText()
+	# Load input grid layer
+	grid_layer = ftools_utils.getMapLayerByName( unicode( grid_layer_name ) )
 
-    def browse_obs_directory(self):
-	"""
-	Description
-	----------
-	Select observation directory which contains CSV observations files
- 
-	"""
-	    
-        self.textObsDir.clear()
-        ( simul_file, encoding ) = ftools_utils.dirDialog( self )
-        if simul_file is None or encoding is None :
-            return
-        self.textObsDir.setText( self.simul_file  )
+	res = qgridder_utils.rgrid_numbering(grid_layer)
 
+	if res == True : 
+	    QMessageBox.information(self, self.tr("Gridder"),
+		    self.tr("Numbering successful, refer to layer attribute table.")
+		    )
 
-    def commit_changes(self):
-	"""
-	Description
-	----------
-	Save changes to project instance and close settings
+	else :
 
-	"""
-	model_type = str(self.listModelTypes.currentText())
-	obs_dir = str(self.textObsDir.text())
-	simul_file = str(self.textSimulFile.text())
-
-	success = True
-
-	success = success*self.proj.writeEntry('qgridder','model_type', model_type)
-	success = success*self.proj.writeEntry('qgridder','obs_dir', obs_dir)
-	success = success*self.proj.writeEntry('qgridder','simul_file', simul_file)
+	    QMessageBox.information(self, self.tr("Gridder"),
+		    self.tr("Fail to number, your grid is probably not regular.")
+		    )
 
 	self.reject()
 
-
-    def exit(self):
-	"""
-	Description
-	----------
-	Close settings without saving
-
-	"""
 	    
-        self.reject()
-
-		
+       

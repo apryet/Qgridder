@@ -41,7 +41,7 @@ import resources
 from qgridder_dialog_new import QGridderDialogNew
 from qgridder_dialog_refinement import QGridderDialogRefinement
 from qgridder_dialog_check3D import QGridderDialogCheck3D
-from qgridder_dialog_preproc import QGridderDialogPreproc
+from qgridder_dialog_preproc import QGridderDialogPreProc
 from qgridder_dialog_plot import QGridderDialogPlot
 from qgridder_dialog_export import QGridderDialogExport
 from qgridder_dialog_settings import QGridderDialogSettings
@@ -74,6 +74,7 @@ class QGridder:
         self.dlg_plot = QGridderDialogPlot(self.iface,  self.settings)
         self.dlg_export = QGridderDialogExport(self.iface,  self.settings)
         self.dlg_settings = QGridderDialogSettings(self.iface,  self.settings)
+        self.dlg_preproc = QGridderDialogPreProc(self.iface,  self.settings)
 	# Initialize menu
 	self.qgridder_menu = None
         # initialize plugin directory
@@ -111,6 +112,8 @@ class QGridder:
             "Export", self.iface.mainWindow())
 	self.action_settings = QAction(QIcon(":/plugins/Qgridder/icon_settings.png"), \
             "Settings", self.iface.mainWindow())
+	self.action_preproc = QAction(QIcon(":/plugins/Qgridder/icon_pproc.png"), \
+            "Settings", self.iface.mainWindow())
 
         # connect the action to the run method
         QObject.connect(self.action_new, SIGNAL("activated()"), self.run_new)
@@ -119,6 +122,8 @@ class QGridder:
         QObject.connect(self.action_plot, SIGNAL("activated()"), self.run_plot)
         QObject.connect(self.action_export, SIGNAL("activated()"), self.run_export)
         QObject.connect(self.action_settings, SIGNAL("activated()"), self.run_settings)
+        QObject.connect(self.action_preproc, SIGNAL("activated()"), self.run_preproc)
+	
 
         # Add toolbar buttons 
         self.iface.addToolBarIcon(self.action_new)
@@ -127,6 +132,8 @@ class QGridder:
         self.iface.addToolBarIcon(self.action_plot)
         self.iface.addToolBarIcon(self.action_export)
         self.iface.addToolBarIcon(self.action_settings)
+        self.iface.addToolBarIcon(self.action_preproc)
+	
 
 	# Add menu items
         self.iface.addPluginToMenu("Qgridder", self.action_new)
@@ -135,6 +142,8 @@ class QGridder:
         self.iface.addPluginToMenu("Qgridder", self.action_plot)
         self.iface.addPluginToMenu("Qgridder", self.action_export)
         self.iface.addPluginToMenu("Qgridder", self.action_settings)
+        self.iface.addPluginToMenu("Qgridder", self.action_preproc)
+	
 
     def unload(self):
 	"""
@@ -148,6 +157,7 @@ class QGridder:
         self.iface.removeToolBarIcon(self.action_plot)
         self.iface.removeToolBarIcon(self.action_export)
         self.iface.removeToolBarIcon(self.action_settings)
+        self.iface.removeToolBarIcon(self.action_preproc)
 
 	self.iface.removePluginMenu("Qgridder", self.action_new)
         self.iface.removePluginMenu("Qgridder", self.action_refinement)
@@ -155,6 +165,7 @@ class QGridder:
         self.iface.removePluginMenu("Qgridder", self.action_plot)
         self.iface.removePluginMenu("Qgridder", self.action_export)
         self.iface.removePluginMenu("Qgridder", self.action_settings)
+        self.iface.removePluginMenu("Qgridder", self.action_preproc)
 
 
 
@@ -231,6 +242,8 @@ class QGridder:
 	"""
 	# update settings
 	self.settings.load_settings( QgsProject.instance() )
+	# update layer list
+	self.dlg_preproc.populate_layer_list(self.dlg_preproc.listGridLayer)
 	# show the dialog
 	self.dlg_preproc.show()
 	# Run the dialog event loop

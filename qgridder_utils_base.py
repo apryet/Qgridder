@@ -989,7 +989,7 @@ def rgrid_numbering(gridLayer):
     gridLayer.commitChanges()
 
     # res should be True if the operation is successful 
-    return(attrValues) 
+    return(res) 
 
     
 # ======================================================================================
