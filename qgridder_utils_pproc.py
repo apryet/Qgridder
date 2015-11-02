@@ -606,7 +606,91 @@ def get_pline_centroids(pline_layer, grid_layer, id_field_name = 'ID', get_ndist
 	pline_cells_dic[ pline[id_field_name] ] =  intersected_cells_list
 
     return(pline_cells_dic)
-   
+  
+
+
+def get_pline_polygon_centroids(polygon_layer, grid_layer, pline_layer = None, id_field_name = 'ID') :
+    """
+    Description
+    -----------
+    Extension of get_pline_centroids with different cell selection strategy.
+    Returns, for each (selected) polygon in polygon_layer the row and column
+    of intersected grid cells from grid_layer. 
+    If pline_layer is not None, the normalized distance between each centroid
+    of selected cells is added (see Returns). 
+
+    Parameters
+    ----------
+    polygon_layer : polygon layer for the selection 
+    grid_layer : grid layer (vector)    
+    pline_layer : polyline layer (vector)
+    id_field_name : field name in polyline layer with unique feature id 
+    Returns
+    -------
+    if get_ndist is False :
+	{ polygon_feat_id : [ (row, col), ... ] , ... }
+    if pline_layer is not None :
+	{ polygon_feat_id : [ (row, col, ndist), ... ] , ... }
+
+    Examples
+    --------
+    >>> rivRowCol = get_polygon_centroids(sim_rivers_poly, grid, id_field_name = 'ID', pline = sim_rivers) 
+    """
+    # -- iterate over polygons
+
+    # Init output dictionary
+    polygon_cells_dic = {}
+
+    # check that the selection in pline_layer is not empty
+    selected_feat_ids = pline_layer.selectedFeaturesIds()
+    if len(selected_feat_ids) == 0:
+	print("Empty selection, all features considered")
+	plines = pline_layer.getFeatures()
+    else :
+	print("Only selected features will be considered")
+	plines = pline_layer.selectedFeatures()
+	
+    # create and fill spatial Index
+    grid_layer_index = get_spatial_indexes([grid_layer])[0] 
+
+    # build grid feature dictionary
+    grid_feat_dic = { feat.id():feat for feat in grid_layer.getFeatures()}
+
+    # Iterate over plines in pline_layer
+    for pline in plines:
+
+	# list of grid cells intersected by pline
+	intersected_cells_list = []
+	
+	# get additional pline data
+	if get_ndist == True : 
+	    pline_feat_dic, pline_point_layer_index, pline_cumdist_dic = get_pline_data(pline, pline_layer)
+
+	# get grid cells in the bbox of the pline
+	pline_geom = QgsGeometry(pline.geometry())
+	grid_feat_intersect_ids = grid_layer_index.intersects(pline_geom.boundingBox())
+
+	# shorten selection to grid cells intersected by the pline
+	for id in grid_feat_intersect_ids:
+	    grid_cell = grid_feat_dic[id]
+	    grid_cell_geom = QgsGeometry(grid_cell.geometry())
+	    # Within grid cells in the bbox of feat, select those intersecting feat
+	    if pline_geom.intersects(grid_cell_geom):
+		if get_ndist == True : 
+		    grid_cell_centroid = grid_cell_geom.centroid()
+		    ndist = get_dist_pline_centroid(grid_cell_centroid, pline, pline_feat_dic, pline_point_layer_index, pline_cumdist_dic)
+		    # add grid_cell ROW and COL and ndist attributes
+		    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'], ndist ] )
+		else : 
+		    # add grid_cell ROW and COL attributes
+		    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'] ] )
+
+	# add pline entry into output dictionary
+	pline_cells_dic[ pline[id_field_name] ] =  intersected_cells_list
+
+    return(pline_cells_dic)
+
+
 # -----------------------------------------------------
 # From a selection of features in a vector layer 
 # returns PtsetFieldValues, a dictionary { 'ID1':fieldValue, 'ID2':FieldValue, ...}
