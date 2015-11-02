@@ -971,7 +971,7 @@ def rgrid_numbering(gridLayer):
     attrValues = {}
 
     for i in range(centroids.shape[0]):
-	if col > ncol:
+	if col > ncol - 1:
 	    col = 0
 	    row = row + 1
 	featId = centroids[i, 0]
