@@ -41,7 +41,7 @@ import time
 
 # Global constants
 
-TOLERANCE = 1e-6  # expressed relative to a value
+TOLERANCE = 1e-12  # expressed relative to a value
 MAX_DECIMALS = 2  # used to limit the effects of numerical noise
 
 # ======================================================================================
