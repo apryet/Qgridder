@@ -42,7 +42,7 @@ import time
 # Global constants
 
 TOLERANCE = 1e-12  # expressed relative to a value
-MAX_DECIMALS = 2  # used to limit the effects of numerical noise
+MAX_DECIMALS = 6  # used to limit the effects of numerical noise
 
 # ======================================================================================
 def make_rgrid(inputFeat, n, m, vprovider, progressBar = QProgressDialog("Building grid...", "Abort",0,100) ):
