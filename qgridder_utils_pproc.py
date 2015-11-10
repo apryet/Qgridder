@@ -40,49 +40,47 @@ from qgridder_utils_base import *
 import ftools_utils
 
 # ---------------------------------
-# return modflow-like parameter list or array
-# This function first checks all parameters. If successful, then
-# calls get_param_list or get_param_array
+
 def get_param(gridLayer, output_type = 'array', layer = '', fieldName = ''):
     """
     Description
+    ----------
+    Returns modflow-like parameter list or array
+    This function first checks all parameters. If successful, then
+    calls get_param_list or get_param_array
 
     Parameters
     ----------
-    p1 : parameter 1
+    gridLayer : QgsVectorLayer, grid from which to fetch attributes
+    output_type : string, either 'array' or 'list'
+    layer (optional) : integer, the (modflow) grid layer number
+    fieldName : string, name of the attribute to get in gridLayer
+
 
     Returns
     -------
-
-    out1 : output1
+    parameter list or array
 
     Examples
     --------
-    >>> 
+    >>> get_param(gridLayer, output_type = 'array', fieldName = 'IBOUND')
+    
     """
-
-    # QgsVectorLayer gridLayer :  containing the (regular) grid
-    # Int layer (optional) : corresponding to the (modflow) grid layer number
-    # String fieldName : name of the attribute to get in gridLayer 
-
-    # Load data
-    #allAttrs = gridLayer.pendingAllAttributesList()
-    #gridLayer.select(allAttrs)
     allFeatures = {feat.id():feat for feat in gridLayer.getFeatures()}
 
     # init error flags for field indexes 
     row_field_idx = col_field_idx = attr_field_idx = -1
 
     # Fetch selected features from input grid_layer
-    selected_fIds = gridLayer.selectedFeaturesIds()
+    selected_feature_ids = gridLayer.selectedFeaturesIds()
 
     # Selection should not be empty if output_type 'list' is selected
-    if len(selected_fIds) == 0 and output_type == 'list':
+    if len(selected_feature_ids) == 0 and output_type == 'list':
 	print("Empty selection. To export all features, export as array.")
 	return(False)
 
     # Selection will not be considered if output_type 'array' is selected
-    if len(selected_fIds) != 0 and output_type == 'array':
+    if len(selected_feature_ids) != 0 and output_type == 'array':
 	print("Export type is array. Feature selection is not considered. All features will be exported")
 
     # If a field name is provided, get corresponding field index
@@ -101,10 +99,15 @@ def get_param(gridLayer, output_type = 'array', layer = '', fieldName = ''):
 		print("A valid field name must be provided for output_type \'array\' ")
 		return(np.array([]))
 
-    # Update (or create ROW and COL fields)
-    rgrid_numbering(gridLayer) 
+    # Get row and col field indexes 
     row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
     col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
+    
+    # If row and col fields are not found, call rgrid_numbering  
+    if row_field_idx == -1 | col_field_idx == -1 : 
+	rgrid_numbering(gridLayer) 
+	row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
+	col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
 
     if output_type == 'list':
 	output = get_param_list(gridLayer, allFeatures, layer = layer, fieldName = fieldName)
@@ -125,24 +128,22 @@ def get_param_list(gridLayer, allFeatures,  layer = '', fieldName = ''):
 
     Parameters
     ----------
-    p1 : parameter 1
+    gridLayer :  QgsVectorLayer, containing the (regular) grid
+    layer (optional) : Integer corresponding to the (modflow) grid layer number
+    fieldName : String, name of the attribute to get in gridLayer 
 
     Returns
     -------
 
-    out1 : output1
+    List of selected features with selected attribute (fieldName)
 
     Examples
     --------
-    >>> 
+    >>> output = get_param_list(gridLayer, allFeatures, layer = layer, fieldName = fieldName)
     """
 
-    # QgsVectorLayer gridLayer :  containing the (regular) grid
-    # Int layer (optional) : corresponding to the (modflow) grid layer number
-    # String fieldName : name of the attribute to get in gridLayer 
-
     # Get selected features from input grid_layer
-    selected_fIds = gridLayer.selectedFeaturesIds()
+    selected_feature_ids = gridLayer.selectedFeaturesIds()
 
     # Get fieldName attribute index 
     attr_field_idx = gridLayer.dataProvider().fieldNameIndex(fieldName)
@@ -155,7 +156,7 @@ def get_param_list(gridLayer, allFeatures,  layer = '', fieldName = ''):
     grid_list = []
 
     # iterate over selected feature ids
-    for fId in selected_fIds:
+    for fId in selected_feature_ids:
 	feat = allFeatures[fId] 
 	row = feat[row_field_idx]
 	col = feat[col_field_idx]
@@ -189,22 +190,18 @@ def get_param_array(gridLayer, fieldName = 'ID'):
     Description
 
     Parameters
-    ----------
-    p1 : parameter 1
+    ----------  
+    gridLayer :  QgsVectorLayer, the (regular) grid
+    String fieldName : name of the attribute to get from gridLayer 
 
     Returns
     -------
-
-    out1 : output1
+    Array with fieldName attribute 
 
     Examples
     --------
-    >>> 
+    >>> get_param_array(gridLayer, fieldName = fieldName)
     """
-
-    # QgsVectorLayer gridLayer :  containing the (regular) grid
-    # Int layer (optional) : corresponding to the (modflow) grid layer number
-    # String fieldName : name of the attribute to get in gridLayer 
 
     # Get nrow, ncol
     nrow, ncol =  get_rgrid_nrow_ncol(gridLayer)
@@ -212,48 +209,13 @@ def get_param_array(gridLayer, fieldName = 'ID'):
     # Get fieldName attribute index 
     attr_field_idx = gridLayer.dataProvider().fieldNameIndex(fieldName)
 
-    # Get ROW and COL fields attribute indexes
-    #OBS row_field_idx = gridLayer.dataProvider().fieldNameIndex('ROW')
-    #OBS col_field_idx = gridLayer.dataProvider().fieldNameIndex('COL')
-
-    # Load data
-    #allAttrs = gridLayer.pendingAllAttributesList()
-    #gridLayer.select(allAttrs)
-
     # init lists
-    rows = []
-    cols = []
-    field_values = []
-    rowColVal = []
+    rows = [feat['ROW'] for feat in gridLayer.getFeatures()]
+    cols = [feat['COL'] for feat in gridLayer.getFeatures()]
+    field_values = [feat[fieldName] for feat in gridLayer.getFeatures()]
 
-    for feat in gridLayer.getFeatures():
-
-	# load row, col, field_value from current feature
-	row = feat['ROW']
-	col = feat['COL']	
-	field_value = feat[fieldName]
-
-	# append feat values to main lists
-	#rows.append(row)
-	#cols.append(col)
-
-	# append feat field value to main list
-	#if field_value.toFloat()[1] == True :
-	#if field_value == True :
-#		field_value = field_value #.toFloat()[0]
-	# TODO : impossible to handle string with array
-#	else : 
-#		field_value = str(field_value.toString())
-	
-	rowColVal.append( [row, col, field_value] )
-
-    # sort output lists by rising rows and cols
-    #rows = np.array(rows)
-    #cols = np.array(cols)
-    #field_values = np.array(field_values)
-
-    rowColVal = np.array(rowColVal)
-
+    rowColVal = np.array ([ [feat['ROW'], feat['COL'], feat[fieldName] ] for feat in gridLayer.getFeatures()] )
+    
     idx = np.lexsort( [rowColVal[:,1], rowColVal[:,0]] )
     
     val = rowColVal[idx,2]
@@ -367,10 +329,13 @@ def get_ptset_centroids(vLayer, gridLayer, idFieldName = 'ID',nNeighbors = 3):
 	
     cProvider.addFeatures( feat_centroids )
 
+    print('QGRIDDER _UTILS.... Get spatial index')
     # -- Create and fill spatial Index
     cLayerIndex = QgsSpatialIndex()
     for centroid in cLayer.getFeatures():
 	cLayerIndex.insertFeature(centroid)
+    print('QGRIDDER _UTILS.... END Get spatial index')
+	
 
     # init distance tool
     d = QgsDistanceArea()
@@ -379,8 +344,8 @@ def get_ptset_centroids(vLayer, gridLayer, idFieldName = 'ID',nNeighbors = 3):
     PtsetCentroids = {}
    
    # check that the selection in vLayer is not empty
-    selected_fIds = vLayer.selectedFeaturesIds()
-    if len(selected_fIds) == 0:
+    selected_feature_ids = vLayer.selectedFeaturesIds()
+    if len(selected_feature_ids) == 0:
 	print("Empty selection, all features considered")
 	features = vLayer.getFeatures()
     else :
@@ -566,10 +531,13 @@ def get_pline_centroids(pline_layer, grid_layer, id_field_name = 'ID', get_ndist
     else :
 	print("Only selected features will be considered")
 	plines = pline_layer.selectedFeatures()
-	
+
+
+    print('QGRIDDER _UTILS.... Get spatial index')
     # create and fill spatial Index
     grid_layer_index = get_spatial_indexes([grid_layer])[0] 
-
+    print('QGRIDDER _UTILS.... END Get spatial index')
+    
     # build grid feature dictionary
     grid_feat_dic = { feat.id():feat for feat in grid_layer.getFeatures()}
 
@@ -607,6 +575,70 @@ def get_pline_centroids(pline_layer, grid_layer, id_field_name = 'ID', get_ndist
 
     return(pline_cells_dic)
   
+
+
+
+def get_polygon_centroids(polygon_layer, grid_layer, id_field_name = 'ID') :
+    """
+    Description
+    -----------
+ 
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    Examples
+    --------
+    >>>  
+    """
+    # -- iterate over polygons
+
+    # Init output dictionary
+    polygon_cells_dic = {}
+
+    # check that the selection in pline_layer is not empty
+    selected_feat_ids = polygon_layer.selectedFeaturesIds()
+    if len(selected_feat_ids) == 0:
+	print("Empty selection, all features considered")
+	polygons = polygon_layer.getFeatures()
+    else :
+	print("Only selected features will be considered")
+	polygons = polygon_layer.selectedFeatures()
+	
+    # create and fill spatial Index
+    grid_layer_index = get_spatial_indexes([grid_layer])[0] 
+
+    # build grid feature dictionary
+    grid_feat_dic = { feat.id():feat for feat in grid_layer.getFeatures()}
+
+    # Iterate over plines in pline_layer
+    for polygon in polygons : 
+
+	# list of grid cells intersected by polygon
+	intersected_cells_list = []
+	
+	# get grid cells in the bbox of the polygon
+	polygon_geom = QgsGeometry(polygon.geometry())
+	grid_feat_intersect_ids = grid_layer_index.intersects(polygon_geom.boundingBox())
+
+	# shorten selection to grid cells intersected by the polygon
+	for id in grid_feat_intersect_ids:
+	    grid_cell = grid_feat_dic[id]
+	    grid_cell_geom = QgsGeometry(grid_cell.geometry())
+	    # Within grid cells in the bbox of feat, select those intersecting feat
+	    if polygon_geom.intersects(grid_cell_geom):
+		intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'] ] )
+
+	# add polygon entry into output dictionary
+	polygon_cells_dic[ polygon[id_field_name] ] =  intersected_cells_list
+
+    return(polygon_cells_dic)
+
+
+
 
 
 def get_pline_polygon_centroids(polygon_layer, grid_layer, pline_layer = None, id_field_name = 'ID') :
@@ -715,8 +747,8 @@ def get_feat_param(vLayer, idFieldName = 'ID', FieldName = 'PARAM',):
     # FieldName : the attribute field of vLayer containing feature identificator
     
    # check that the selection in vLayer is not empty
-    selected_fIds = vLayer.selectedFeaturesIds()
-    if len(selected_fIds) == 0:
+    selected_feature_ids = vLayer.selectedFeaturesIds()
+    if len(selected_feature_ids) == 0:
 	print("Empty selection, all features considered")
 	features = vLayer.getFeatures()
     else :
