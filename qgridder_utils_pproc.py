@@ -576,30 +576,46 @@ def get_pline_centroids(pline_layer, grid_layer, id_field_name = 'ID', get_ndist
     return(pline_cells_dic)
   
 
-
-
-def get_polygon_centroids(polygon_layer, grid_layer, id_field_name = 'ID') :
+# -----------------------------------------------------
+def get_polygon_centroids(polygon_layer, grid_layer, pline_layer = None, id_field_name = 'ID') :
     """
     Description
     -----------
- 
+    Returns, for each (selected) polygons in polygon_layer the row and column
+    of intersected grid cells from grid_layer. 
+    If pline_layer is not None, the normalized distance (ndist) between each centroid and the corresponding 
+    polyline of pline_layer is added to the output (see Returns). 
+    The normalized distance, ndist, is the distance from the polyline origin to 
+    the curvilinear abscissa of the cell centroid projected onto the polyline.
+    The polyline corresponding to each polygon is identified with the ID field.
+    When edited with Qgis, the polyline origin is the first point of the polyline
+    at the time of polyline creation.
 
     Parameters
     ----------
-
+    polygon_layer : polygon layer (vector)
+    grid_layer : grid layer (vector)
+    pline_layer (optional) : polyline layer (vector)
+    id_field_name (optional) : field name in polyline layer with unique feature id
+    
     Returns
     -------
+    if pline_layer is None :
+	{ polygon_feat_id : [ (row, col), ... ] , ... }
+    if pline_layer not None :
+	{ polygon_feat_id : [ (row, col, ndist), ... ] , ... }
 
     Examples
     --------
-    >>>  
+    >>> rivRowCol = get_polygon_centroids(polygon_rivers, grid, \ 
+	    pline_layer = pline_rivers, id_field_name = 'ID')     
+    
     """
-    # -- iterate over polygons
 
     # Init output dictionary
     polygon_cells_dic = {}
 
-    # check that the selection in pline_layer is not empty
+    # check that the selection in polygon_layer is not empty
     selected_feat_ids = polygon_layer.selectedFeaturesIds()
     if len(selected_feat_ids) == 0:
 	print("Empty selection, all features considered")
@@ -614,7 +630,11 @@ def get_polygon_centroids(polygon_layer, grid_layer, id_field_name = 'ID') :
     # build grid feature dictionary
     grid_feat_dic = { feat.id():feat for feat in grid_layer.getFeatures()}
 
-    # Iterate over plines in pline_layer
+    # init pline dictionary
+    if pline_layer is not None : 
+	pline_dic = { feat[id_field_name]:feat for feat in pline_layer.getFeatures() }
+    
+    # Iterate over polygons in polygon_layer
     for polygon in polygons : 
 
 	# list of grid cells intersected by polygon
@@ -624,103 +644,28 @@ def get_polygon_centroids(polygon_layer, grid_layer, id_field_name = 'ID') :
 	polygon_geom = QgsGeometry(polygon.geometry())
 	grid_feat_intersect_ids = grid_layer_index.intersects(polygon_geom.boundingBox())
 
+	# fetch corresponding pline based on ID atribute
+	if pline_layer is not None : 
+	    pline = pline_dic[ polygon[id_field_name] ] 
+	    pline_feat_dic, pline_point_layer_index, pline_cumdist_dic = get_pline_data(pline, pline_layer)
+
 	# shorten selection to grid cells intersected by the polygon
 	for id in grid_feat_intersect_ids:
 	    grid_cell = grid_feat_dic[id]
 	    grid_cell_geom = QgsGeometry(grid_cell.geometry())
 	    # Within grid cells in the bbox of feat, select those intersecting feat
 	    if polygon_geom.intersects(grid_cell_geom):
-		intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'] ] )
+		if pline_layer is not None : 
+		    grid_cell_centroid = grid_cell_geom.centroid()
+		    ndist = get_dist_pline_centroid(grid_cell_centroid, pline, pline_feat_dic, pline_point_layer_index, pline_cumdist_dic)
+		    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'], ndist ] )
+		else : 
+		    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'] ] )
 
 	# add polygon entry into output dictionary
 	polygon_cells_dic[ polygon[id_field_name] ] =  intersected_cells_list
 
     return(polygon_cells_dic)
-
-
-
-
-
-def get_pline_polygon_centroids(polygon_layer, grid_layer, pline_layer = None, id_field_name = 'ID') :
-    """
-    Description
-    -----------
-    Extension of get_pline_centroids with different cell selection strategy.
-    Returns, for each (selected) polygon in polygon_layer the row and column
-    of intersected grid cells from grid_layer. 
-    If pline_layer is not None, the normalized distance between each centroid
-    of selected cells is added (see Returns). 
-
-    Parameters
-    ----------
-    polygon_layer : polygon layer for the selection 
-    grid_layer : grid layer (vector)    
-    pline_layer : polyline layer (vector)
-    id_field_name : field name in polyline layer with unique feature id 
-    Returns
-    -------
-    if get_ndist is False :
-	{ polygon_feat_id : [ (row, col), ... ] , ... }
-    if pline_layer is not None :
-	{ polygon_feat_id : [ (row, col, ndist), ... ] , ... }
-
-    Examples
-    --------
-    >>> rivRowCol = get_polygon_centroids(sim_rivers_poly, grid, id_field_name = 'ID', pline = sim_rivers) 
-    """
-    # -- iterate over polygons
-
-    # Init output dictionary
-    polygon_cells_dic = {}
-
-    # check that the selection in pline_layer is not empty
-    selected_feat_ids = pline_layer.selectedFeaturesIds()
-    if len(selected_feat_ids) == 0:
-	print("Empty selection, all features considered")
-	plines = pline_layer.getFeatures()
-    else :
-	print("Only selected features will be considered")
-	plines = pline_layer.selectedFeatures()
-	
-    # create and fill spatial Index
-    grid_layer_index = get_spatial_indexes([grid_layer])[0] 
-
-    # build grid feature dictionary
-    grid_feat_dic = { feat.id():feat for feat in grid_layer.getFeatures()}
-
-    # Iterate over plines in pline_layer
-    for pline in plines:
-
-	# list of grid cells intersected by pline
-	intersected_cells_list = []
-	
-	# get additional pline data
-	if get_ndist == True : 
-	    pline_feat_dic, pline_point_layer_index, pline_cumdist_dic = get_pline_data(pline, pline_layer)
-
-	# get grid cells in the bbox of the pline
-	pline_geom = QgsGeometry(pline.geometry())
-	grid_feat_intersect_ids = grid_layer_index.intersects(pline_geom.boundingBox())
-
-	# shorten selection to grid cells intersected by the pline
-	for id in grid_feat_intersect_ids:
-	    grid_cell = grid_feat_dic[id]
-	    grid_cell_geom = QgsGeometry(grid_cell.geometry())
-	    # Within grid cells in the bbox of feat, select those intersecting feat
-	    if pline_geom.intersects(grid_cell_geom):
-		if get_ndist == True : 
-		    grid_cell_centroid = grid_cell_geom.centroid()
-		    ndist = get_dist_pline_centroid(grid_cell_centroid, pline, pline_feat_dic, pline_point_layer_index, pline_cumdist_dic)
-		    # add grid_cell ROW and COL and ndist attributes
-		    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'], ndist ] )
-		else : 
-		    # add grid_cell ROW and COL attributes
-		    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'] ] )
-
-	# add pline entry into output dictionary
-	pline_cells_dic[ pline[id_field_name] ] =  intersected_cells_list
-
-    return(pline_cells_dic)
 
 
 # -----------------------------------------------------
@@ -812,23 +757,18 @@ def data_to_grid(data, gridLayer, fieldName = 'PARAM', fieldType = QVariant.Doub
     centroids = np.array( [centroids_ids , centroids_x, centroids_y] )
     centroids = centroids.T
     
-    # Iterate over grid  
     # sort by decreasing y and increasing x (from top left to bottom right)
     # for regular grids, this corresponds to row-wise and column wise
     idx = np.lexsort( [centroids_x,-1*centroids_y] )
     centroids = centroids[idx,:]
 
-    res = 1
+    # populate change attribute map
+    fieldIdx = gridLayer.fieldNameIndex(fieldName)
+    attr_map = { centroids[i,0] : { fieldIdx : float(data[i]) } for i in range( centroids.shape[0] ) }
     
+    # write attributes 
     gridLayer.startEditing()
-
-    # iterate over grid cells and set fieldName values
-    for i in range(centroids.shape[0]):
-	featId = centroids[i, 0]
-	fieldIdx = gridLayer.fieldNameIndex(fieldName)
-	# Can't find a way to change type of data ... so convert to long.
-	res = res*gridLayer.changeAttributeValue(featId, fieldIdx, float(data[i]) ) 
-			
+    res = gridLayer.dataProvider().changeAttributeValues(attr_map)
     gridLayer.commitChanges()
     
     return res
