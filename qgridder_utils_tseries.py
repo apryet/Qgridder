@@ -177,6 +177,7 @@ def interp_from_file(in_file_path, dates_out, date_string_format =  '%Y-%m-%d %H
 	print('Error while reading file ' + in_file_path + '.\n'+
 		'Check file path and format (should be a 2 column CSV file).'
 		)
+	return(None)
 
     # convert datesnums to datetime
     dates_in = mdates.num2date(datenums_in)

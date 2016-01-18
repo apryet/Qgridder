@@ -311,6 +311,8 @@ class QgridderSettings :
 	# default settings
 	dic_default_settings = { 'model_type':'Modflow',
 		'obs_dir':'./', 
+		'simul_dir':'./',
+		'simul_src':'CSV Files',
 		'simul_file':'simul.file',
 		'model_src_dir':'./',
 		'simul_start_date':'2015-01-01 00:00',

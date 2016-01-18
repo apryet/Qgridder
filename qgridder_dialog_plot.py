@@ -72,7 +72,6 @@ class QGridderDialogPlot(QGridderDialog,Ui_QGridderPlot):
 	self.obs_dir = self.settings.dic_settings['obs_dir']
 	self.simul_file = self.settings.dic_settings['simul_file']
 
-	#QObject.connect(self.buttonExit, SIGNAL("clicked()"), self.reject)
 	
 
 
@@ -174,6 +173,18 @@ class QGridderDialogPlot(QGridderDialog,Ui_QGridderPlot):
 		"Qgridder Plugin Warning", 'Please select only one feature.')
 	    return
 
+
+	# load settings
+	plot_obs = self.settings.dic_settings['plot_obs']
+	plot_simul = self.settings.dic_settings['plot_simul']
+	obs_dir = self.settings.dic_settings['obs_dir']
+	simul_src = self.settings.dic_settings['simul_src']
+	simul_dir = self.settings.dic_settings['simul_dir']
+	simul_file = self.settings.dic_settings['simul_file']
+	simul_start_date = self.settings.dic_settings['simul_start_date']
+	model_src_dir = self.settings.dic_settings['model_src_dir']
+	support_grid_layer_name = self.settings.dic_settings['support_grid_layer_name']
+
 	# -- init variables
 	dates_obs = []
 	vals_obs = []
@@ -193,17 +204,15 @@ class QGridderDialogPlot(QGridderDialog,Ui_QGridderPlot):
 	obs_lay = obs_feature[obs_lay_col]
 
 	# -- Process observed records
-	if self.settings.dic_settings['plot_obs'] == 'True' :
+	if plot_obs == 'True' :
 	    
 	    obs_key = obs_feature[obs_key_col]
-	    obs_lay = obs_feature[obs_lay_col]
 
 	    # get observation file
 	    csv_delimiter = ','
 	    skip_header = True
-	    
 
-	    obs_file_path = str(self.obs_dir) + '/' + str(obs_key) + '.csv'
+	    obs_file_path = str(obs_dir) + '/' + str(obs_key) + '.csv'
 	    try :
 		dates_obs, vals_obs = np.genfromtxt(obs_file_path,delimiter=csv_delimiter, 
 			unpack=True,skip_header=skip_header,
@@ -221,56 +230,76 @@ class QGridderDialogPlot(QGridderDialog,Ui_QGridderPlot):
 	# -- Process simulated records
 	if self.settings.dic_settings['plot_simul'] == 'True' :
 
-	    # load flopy module 
-	    sys.path.append(str( self.settings.dic_settings['model_src_dir'] ))
+	    # Plot from text files
+	    if self.settings.dic_settings['simul_src'] == 'CSV Files':
+	    
 
-	    try : 
-		import flopy 
+		obs_key = obs_feature[obs_key_col]
 
-	    except : 
-		QMessageBox.warning(self, self.tr("QGridder"), 
-		   'Could not load flopy' 
-		   )
+		# get observation file
+		csv_delimiter = ','
+		skip_header = True
 
-	    # fetch model reference grid
-	    gridLayer = ftools_utils.getVectorLayerByName(self.settings.dic_settings['support_grid_layer_name'])
+		simul_file_path = str(simul_dir) + '/' + str(obs_key) + '.csv'
+		try :
+		    dates_simul, vals_simul = np.genfromtxt(simul_file_path, delimiter=csv_delimiter, 
+			    unpack=True, skip_header=skip_header,
+			    converters={ 0: mdates.strpdate2num(date_string_format)}
+			    )
+		    dates_simul = mdates.num2date(dates_simul)
 
-	    # find nearest grid cell centroid from selected point in vLayer
-	    dic_centroids = qgridder_utils.get_ptset_centroids(vLayer, gridLayer, idFieldName = 'ID', nNeighbors = 1)
+		except :
+		    QMessageBox.warning(self.iface.mainWindow(),\
+		    "Qgridder Plugin Warning", 'Error while reading file ' + simul_file_path + '\n'+
+			'Check file path and format (should be a 2 column CSV file).')
 
-	    obs_row_modflow, obs_col_modflow, obs_dist = dic_centroids[obs_feature_id][0]
+	    # Plot from Flopy project
+	    if self.settings.dic_settings['simul_src'] == 'Flopy project': 
 
-	    # swith to 0-based (row and col columns in the shape file are 1-based)
-	    obs_row = obs_row_modflow-1
-	    obs_col = obs_col_modflow-1
+		# load flopy module 
+		sys.path.append(str( model_src_dir ))
 
-	    # load simulation file
-	    model_dir = os.path.dirname( self.simul_file)
-	    os.chdir(model_dir)
-	    mf_model = flopy.modflow.Modflow.load(self.simul_file)
-	    model_name = mf_model.get_name()
+		try : 
+		    import flopy 
 
-	    # time unit converter to seconds
-	    dic_itmuni_mult = {0: None, 1: 1, 2: 60,
-				3: 3600, 4: 86400, 5: 31536000}
+		except : 
+		    QMessageBox.warning(self, self.tr("QGridder"), 
+		       'Could not load flopy' 
+		       )
 
-	    # get time unit from flopy model
-	    itmuni = mf_model.dis.itmuni
-	    itmuni_mult = dic_itmuni_mult[itmuni]	    
+		# fetch model reference grid
+		grid_layer = ftools_utils.getVectorLayerByName(support_grid_layer_name)
 
-	    # load results
-	    headobj = flopy.utils.binaryfile.HeadFile(model_dir + '/' + model_name + '.hds')
+		# find nearest grid cell centroid from selected point in vLayer
+		dic_centroids = qgridder_utils.get_ptset_centroids(vLayer, grid_layer, idFieldName = 'ID', nNeighbors = 1)
 
-	    # read binary file
-	    ts = headobj.get_ts( (obs_lay, obs_row, obs_col) )
-	    times = ts[:,0]
-	    vals_simul = ts[:,1]
+		obs_row, obs_col, obs_dist = dic_centroids[obs_feature_id][0]
 
-	    # generate simulation date sequence
-	    simul_start_date = dt.datetime.strptime(self.settings.dic_settings['simul_start_date'], '%Y-%m-%d %H:%M')
-	    # fix : it appears that output of get_ts is always in seconds
-	    #dates_simul = [ simul_start_date + dt.timedelta(seconds = time*itmuni_mult) for time in times]
-	    dates_simul = [ simul_start_date + dt.timedelta(seconds = time*1.) for time in times]
+		# load simulation file
+		model_dir = os.path.dirname( self.simul_file)
+		os.chdir(model_dir)
+		mf_model = flopy.modflow.Modflow.load(self.simul_file)
+		model_name = mf_model.get_name()
+
+		# time unit converter to seconds
+		dic_itmuni_mult = {0: None, 1: 1, 2: 60,
+				    3: 3600, 4: 86400, 5: 31536000}
+
+		# get time unit from flopy model
+		itmuni = mf_model.dis.itmuni
+		itmuni_mult = dic_itmuni_mult[itmuni]	    
+
+		# load results
+		headobj = flopy.utils.binaryfile.HeadFile(model_dir + '/' + model_name + '.hds')
+
+		# read binary file
+		ts = headobj.get_ts( (obs_lay, obs_row, obs_col) )
+		times = ts[:,0]
+		vals_simul = ts[:,1]
+
+		# generate simulation date sequence
+		simul_start_date = dt.datetime.strptime(simul_start_date, '%Y-%m-%d %H:%M')
+		dates_simul = [ simul_start_date + dt.timedelta(seconds = time*1.) for time in times]
 
 
 	# show plot

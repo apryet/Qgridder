@@ -56,19 +56,28 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
 	# Connect buttons
 	QObject.connect(self.buttonBrowseModelSrcDir, SIGNAL("clicked()"), self.browse_model_src_dir)
 	QObject.connect(self.buttonBrowseObsDir, SIGNAL("clicked()"), self.browse_obs_dir)
+	QObject.connect(self.buttonBrowseSimulDir, SIGNAL("clicked()"), self.browse_simul_dir)
 	QObject.connect(self.buttonBrowseSimulFile, SIGNAL("clicked()"), self.browse_simul_file)
 	QObject.connect(self.buttonOK, SIGNAL("clicked()"), self.commit_changes)
 	QObject.connect(self.buttonCancel, SIGNAL("clicked()"), self.exit)
+	QObject.connect(self.listSimulSources, SIGNAL("currentIndexChanged(const QString&)"), self.update_simul_sources)
+	QObject.connect(self.checkPlotSimul, SIGNAL("clicked()"), self.update_simul_sources)
 
 	# Populate model type list
 	model_types = self.settings.model_types
 	for model_type in self.settings.model_types :
 	    self.listModelTypes.addItem(unicode(model_type))
 
+	# Populate source of simulation data list
+	simul_data_sources = ['CSV Files', 'Flopy project']
+	for simul_data_source in simul_data_sources :
+	    self.listSimulSources.addItem(unicode(simul_data_source))
+
 	# update dialog from settings
 	self.load_settings_to_dialog()
 
-
+	# manage widget enabling 
+	self.update_simul_sources()
 
     def load_settings_to_dialog(self):
 
@@ -81,6 +90,8 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
 	# load settings
 	model_type = self.settings.dic_settings['model_type']
 	obs_dir = self.settings.dic_settings['obs_dir']
+	simul_src = self.settings.dic_settings['simul_src']
+	simul_dir = self.settings.dic_settings['simul_dir']
 	simul_file = self.settings.dic_settings['simul_file']
 	model_src_dir = self.settings.dic_settings['model_src_dir']
 	simul_start_date = self.settings.dic_settings['simul_start_date']
@@ -92,6 +103,7 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
 	self.listModelTypes.setCurrentIndex(self.listModelTypes.findText(model_type))
 	self.listGridLayer.setCurrentIndex(self.listGridLayer.findText(support_grid_layer_name))
 	self.textObsDir.setText(str(obs_dir))
+	self.textSimulDir.setText(str(simul_dir))
 	self.textModelDir.setText(str(model_src_dir))
 	self.textSimulStartDate.setText(str(simul_start_date))
 	self.textSimulFile.setText(str(simul_file))
@@ -131,7 +143,7 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
 	"""
 	Description
 	----------
-	Select observation directory which contains CSV observations files
+	Select directory which contains CSV observations files
  
 	"""
 	    
@@ -140,6 +152,20 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
         if obs_dir is None or encoding is None :
             return
         self.textObsDir.setText( obs_dir  )
+
+    def browse_simul_dir(self):
+	"""
+	Description
+	----------
+	Select directory which contains CSV simulation files
+ 
+	"""
+	    
+        self.textSimulDir.clear()
+        ( simul_dir, encoding ) = ftools_utils.dirDialog( self )
+        if simul_dir is None or encoding is None :
+            return
+        self.textSimulDir.setText( simul_dir  )
 
 
 
@@ -170,6 +196,8 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
 
 	dic_settings['model_type'] = str(self.listModelTypes.currentText())
 	dic_settings['obs_dir'] = str(self.textObsDir.text())
+	dic_settings['simul_src'] = str(self.listSimulSources.currentText())
+	dic_settings['simul_dir'] = str(self.textSimulDir.text())
 	dic_settings['simul_file'] = str(self.textSimulFile.text())
 	dic_settings['simul_start_date'] = str(self.textSimulStartDate.text())
 	dic_settings['model_src_dir'] = str(self.textModelDir.text())
@@ -185,18 +213,33 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
 	# update self.settings.dic_settings
 	self.settings.update_settings(dic_settings)	
 
-	QMessageBox.information(self, self.tr("Gridder"), 
-		    self.tr(" self. dic_settings grid_backup" +  str(self.settings.dic_settings['grid_backup']) )
-		    )
-
 	# save settings to project
 	self.settings.save_settings(self.proj)
 
-	QMessageBox.information(self, self.tr("Gridder"), 
-	    self.tr("reloaded self. dic_settings grid_backup" +  str(self.settings.dic_settings['grid_backup']) )
-	)
-
 	self.reject()
+
+
+    def update_simul_sources(self):
+
+	if self.checkPlotSimul.isChecked() :
+
+	    self.listSimulSources.setEnabled(True)
+	    self.labelSimulSources.setEnabled(True)
+
+	    if self.listSimulSources.currentText() == 'CSV Files': 
+		self.groupBoxSimulText.setEnabled(True)
+		self.groupBoxSimulFlopy.setEnabled(False)
+
+	    if self.listSimulSources.currentText() == 'Flopy project': 
+		self.groupBoxSimulText.setEnabled(False)
+		self.groupBoxSimulFlopy.setEnabled(True)
+
+	else :
+	    self.listSimulSources.setEnabled(False)
+	    self.labelSimulSources.setEnabled(False)
+	    self.groupBoxSimulText.setEnabled(False)
+	    self.groupBoxSimulFlopy.setEnabled(False)
+
 
     def exit(self):
 	"""
