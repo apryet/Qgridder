@@ -41,7 +41,7 @@ import time
 
 # Global constants
 
-TOLERANCE = 1e-12  # expressed relative to a value
+TOLERANCE = 1e-6  # absolute tolerance 
 MAX_DECIMALS = 6  # used to limit the effects of numerical noise
 
 # ======================================================================================
@@ -262,7 +262,7 @@ def update_fix_dict(fix_dict, this_fix_dict):
 
 
 # ======================================================================================
-def is_equal(a,b,relativeError=TOLERANCE):
+def is_equal(a,b, tol =TOLERANCE):
     """
     Description
     ----------
@@ -284,8 +284,9 @@ def is_equal(a,b,relativeError=TOLERANCE):
     """
 
     # is nearly equal to within the allowed relative error
-    norm = max(abs(a),abs(b))
-    return (norm < relativeError) or (abs(a - b) < (relativeError * norm))
+    #norm = max(abs(a),abs(b))
+    #return (norm < relativeError) or (abs(a - b) < (relativeError * norm))
+    return ( abs(a - b) < tol )
 
 
 # ======================================================================================  
@@ -395,7 +396,7 @@ def refine_by_split(featIds, n, m, topo_rules, grid_layer, progress_bar = QProgr
 	fix_dict = rowFixDict.copy()
 	fix_dict = update_fix_dict(fix_dict,colFixDict)
 	newFeatIds = split_cells(fix_dict, grid_layer)
-	print("OPTIM OVER %s sec" % (time.time() - start_time))	
+	#print("OPTIM OVER %s sec" % (time.time() - start_time))	
 	return()
     
     # -- Refinement procedure for nested grids
@@ -450,7 +451,7 @@ def refine_by_split(featIds, n, m, topo_rules, grid_layer, progress_bar = QProgr
 	# Update iteration counter
 	itCount+=1
 	labelIter.setText(unicode(itCount))
-	print("BASE OVER %s sec" % (time.time() - start_time))
+	#print("BASE OVER %s sec" % (time.time() - start_time))
     
 
 # ======================================================================================
@@ -1147,7 +1148,13 @@ def check3D_features(features, layer_num, all_layers_all_features, spatial_index
     """
     Description
     ----------
-    Check the 3D topology of features in layer layer_num
+    Check the 3D topology of features in layer layer_num.
+    The algorithm iterates over the features of layer layer_num.
+    For each feature, it checks for the occurrence of overlapping cells over below (l > layer_num)
+    and above (l < layer_num). If the number of neighbors exceeds pmax, or that the total area of 
+    then the overlapping cells is less than the area of the feature, then the feature is added to
+    the fix_dict to be split. It is necessary to consider the area so as to avoid the occurrence of
+    cells partially overlapped, which is not accepted by numerical PDE solvers.
 
     Parameters
     ----------
@@ -1167,7 +1174,7 @@ def check3D_features(features, layer_num, all_layers_all_features, spatial_index
     fix_dict = { 'id':[] , 'n':[], 'm':[] }
     nLayers = len(all_layers_all_features)
     # iterate over features
-    for feat in features : 
+    for feat in features :
 	# count overlapping cells in the overlying layer \
 	# note that layer layer_num is not necessarily overlain by layer_num + 1 \
 	# and underlain by layer_num - 1.
