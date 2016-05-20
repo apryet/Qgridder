@@ -152,7 +152,7 @@ class QGridderDialogCheck3D(QGridderDialog, Ui_QGridderCheck3D):
 
     def run_check3D(self):
 	allLayers = []
-	topoRules = {'model':'newsam', 'nmax':2,'pmax':4}
+	topoRules = {'model':'nested', 'nmax':2,'pmax':4}
 	for row in range( self.listLayers3D.count() ) : 
 	    vLayerName = self.listLayers3D.item(row).text()
 	    vLayer  = ftools_utils.getMapLayerByName( unicode( vLayerName ) )
