@@ -652,7 +652,7 @@ def find_neighbors(input_feature, all_features, v_layerIndex):
 
 	# Numbering rule for neighbors of feature 0 :
 	# | 8 | 1 | 5 |
-	# | 4 | 0 | 2 |
+	# | 4 | 0 | 2 |/.m
 	# | 7 | 3 | 6 |
 
 	# Identify type of neighborhood 

@@ -329,12 +329,10 @@ def get_ptset_centroids(v_layer, grid_layer, id_field_name = 'ID',nNeighbors = 3
 	
     cProvider.addFeatures( feat_centroids )
 
-    print('QGRIDDER _UTILS.... Get spatial index')
     # -- Create and fill spatial Index
     cLayerIndex = QgsSpatialIndex()
     for centroid in cLayer.getFeatures():
 	cLayerIndex.insertFeature(centroid)
-    print('QGRIDDER _UTILS.... END Get spatial index')
 	
 
     # init distance tool
@@ -734,7 +732,7 @@ def data_to_grid(data, grid_layer, field_name = 'PARAM', fieldType = QVariant.Do
     # Select all features along with their attributes
     #allAttrs = grid_layer.pendingAllAttributesList()
     #grid_layer.select(allAttrs)
-
+    print('STARTING')
     # load dic of current layer attributes
     field_name_map = grid_layer.dataProvider().fieldNameMap()
 
@@ -747,10 +745,13 @@ def data_to_grid(data, grid_layer, field_name = 'PARAM', fieldType = QVariant.Do
     # elements are sorted from top left to bottom right
     data = np.reshape(data, -1)
 
+    print('building all_features')
     # Init variables
     all_features = {feat.id():feat for feat in grid_layer.getFeatures()}
+    print('building all_centroids')
     all_centroids = [feat.geometry().centroid().asPoint() \
 			for feat in all_features.values()]
+    print('sorting centroids')
     centroids_ids = all_features.keys()
     centroids_x = np.around(np.array([centroid.x() for centroid in all_centroids]), MAX_DECIMALS)
     centroids_y = np.around(np.array([centroid.y() for centroid in all_centroids]), MAX_DECIMALS)
@@ -762,10 +763,12 @@ def data_to_grid(data, grid_layer, field_name = 'PARAM', fieldType = QVariant.Do
     idx = np.lexsort( [centroids_x,-1*centroids_y] )
     centroids = centroids[idx,:]
 
+    print('building attribute map')
     # populate change attribute map
     field_idx = grid_layer.fieldNameIndex(field_name)
     attr_map = { centroids[i,0] : { field_idx : float(data[i]) } for i in range( centroids.shape[0] ) }
     
+    print('updating attributes')
     # write attributes 
     grid_layer.startEditing()
     res = grid_layer.dataProvider().changeAttributeValues(attr_map)
