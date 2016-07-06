@@ -102,7 +102,7 @@ def cells_budget(ml, cbc, cells = [], tsteps = [], aggr = False ):
 		left = frf_array[tstep][lay,row,col-1]
 	    # if the cell considered is not at the grid back border, consider the back neighbor
 	    if row -1 >= 0 :
-		back  = frf_array[tstep][lay,row-1,col]
+		back  = fff_array[tstep][lay,row-1,col]
 	    # if the cell considered is not in the first layer, consider the layer above
 	    if lay -1 >= 0 : 
 		above = flf_array[tstep][lay-1,row,col]
