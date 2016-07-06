@@ -612,10 +612,11 @@ def check_topo(featId, n, m, topo_rules, all_features, v_layer, v_layerIndex):
     return fix_dict
 
 # --------------------------------------------------------------------------------------------------------------
-# Find the neighbors of input_feature neighbor and identify the direction
 def find_neighbors(input_feature, all_features, v_layerIndex):
     """
     Description
+    ----------
+    Find the neighbors of input_feature  and identify the direction
 
     Parameters
     ----------
@@ -752,27 +753,25 @@ def get_centroid_layer(grid_layer) :
 def get_rgrid_nrow_ncol(grid_layer):
     """
     Description
+    ----------
+    Get number of rows (nrow) and columns (ncol) of a structured grid
 
     Parameters
     ----------
-    p1 : parameter 1
+    grid_layer : the structured grid layer
 
     Returns
     -------
+    (nrow, ncol)
 
-    out1 : output1
 
     Examples
     --------
-    >>> 
+    >>> nrow, ncol = get_rgrid_nrow_ncol(layer)
     """
 
     # TODO : check if the grid is actually regular 
     
-    # Load layer
-    #allAttrs = grid_layer.pendingAllAttributesList()
-    #grid_layer.select(allAttrs)
-
     # Init variables 
     all_features = {feat.id():feat for feat in grid_layer.getFeatures()}
     allCentroids = [feat.geometry().centroid().asPoint() \
@@ -817,20 +816,21 @@ def get_rgrid_delr_delc(grid_layer):
     Description
     ----------
 
-    get delr delc of a structured (modflow-like) grid layer
+    get cell dimensions (delr, delc) of a structured (modflow-like) grid layer
 
     Parameters
     ----------
-    p1 : parameter 1
+    grid_layer: the (modflow-like) structured grid layer
 
     Returns
     -------
-
-    out1 : output1
+    (delr, delc)
+    For regular grids, delr and delc are floats 
+    For irregular grids, delr and delc are lists 
 
     Examples
     --------
-    >>> 
+    >>> delr, delc = get_rgrid_delr_delc(grid_layer)
     """
 
 

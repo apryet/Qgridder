@@ -206,10 +206,6 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
 	dic_settings['plot_simul'] = str(self.checkPlotSimul.isChecked())
 	dic_settings['grid_backup'] = str(self.checkGridBackup.isChecked())
 
-	QMessageBox.information(self, self.tr("Gridder"), 
-		    self.tr(" dic_settings grid_backup" +  str(dic_settings['grid_backup']) )
-		    )
-
 	# update self.settings.dic_settings
 	self.settings.update_settings(dic_settings)	
 
