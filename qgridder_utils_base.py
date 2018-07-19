@@ -1215,7 +1215,7 @@ def check3D_features(features, layer_num, all_layers_all_features, spatial_index
 
 
 def check3D_features_mp(features, layer_num, all_layers, spatial_indexes, topo_rules, queue)  :
-            """
+        """
         Description
         ----------
         Equivalent to check3D_features with parallel computing (under development)
