@@ -4,9 +4,9 @@
  qgridder_dialog_settings.py
                                  Qgridder - A QGIS plugin
 
- This file handles Qgridder graphical user interface                           
+ This file handles Qgridder graphical user interface
 
- Qgridder Builds 2D regular and unstructured grids and comes together with 
+ Qgridder Builds 2D regular and unstructured grids and comes together with
  pre- and post-processing capabilities for spatially distributed modeling.
 
                              -------------------
@@ -49,7 +49,7 @@ class QGridderDialogPreProc(QGridderDialog, Ui_QGridderPreProc):
         # Set up the user interface
         QDialog.__init__(self)
         self.iface = iface
-        self.settings = settings                
+        self.settings = settings
         self.setupUi(self)
 
         # Populate model name list
@@ -65,14 +65,14 @@ class QGridderDialogPreProc(QGridderDialog, Ui_QGridderPreProc):
         ----------
 
         """
-        # selected grid layer name 
+        # selected grid layer name
         grid_layer_name = self.listGridLayer.currentText()
         # Load input grid layer
         grid_layer = ftools_utils.getMapLayerByName( unicode( grid_layer_name ) )
 
         res = qgridder_utils.rgrid_numbering(grid_layer)
 
-        if res == True : 
+        if res == True :
             QMessageBox.information(self, self.tr("Gridder"),
                     self.tr("Numbering successful, refer to layer attribute table.")
                     )
@@ -85,5 +85,5 @@ class QGridderDialogPreProc(QGridderDialog, Ui_QGridderPreProc):
 
         self.reject()
 
-            
-       
+
+

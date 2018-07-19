@@ -6,8 +6,8 @@
 
  This file gathers qgridder modules qgridder_utils_base, qgridder_utils_pproc,
  qgridder_utils_tseries.
- 
- Qgridder Builds 2D regular and unstructured grids and comes together with 
+
+ Qgridder Builds 2D regular and unstructured grids and comes together with
  pre- and post-processing capabilities for spatially distributed modeling.
 
                               -------------------

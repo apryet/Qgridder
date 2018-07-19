@@ -4,9 +4,9 @@
  qgridderdialog_base.py
                                  Qgridder - A QGIS plugin
 
- This file handles Qgridder graphical user interface                           
+ This file handles Qgridder graphical user interface
 
- Qgridder Builds 2D regular and unstructured grids and comes together with 
+ Qgridder Builds 2D regular and unstructured grids and comes together with
  pre- and post-processing capabilities for spatially distributed modeling.
 
                              -------------------

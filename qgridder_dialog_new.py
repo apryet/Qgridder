@@ -4,9 +4,9 @@
  qgridderdialog.py
                                  Qgridder - A QGIS plugin
 
- This file handles Qgridder graphical user interface                           
+ This file handles Qgridder graphical user interface
 
- Qgridder Builds 2D regular and unstructured grids and comes together with 
+ Qgridder Builds 2D regular and unstructured grids and comes together with
  pre- and post-processing capabilities for spatially distributed modeling.
 
                              -------------------
@@ -47,19 +47,19 @@ class QGridderDialogNew(QGridderDialog, Ui_QGridderNew):
         # Set up the user interface from Designer.
         QDialog.__init__(self)
         self.iface = iface
-        self.settings = settings                
+        self.settings = settings
         self.setupUi(self)
 
         # Set up widgets
         self.checkRatio.setCheckState(Qt.Checked)
         self.checkLoadLayer.setCheckState(Qt.Checked)
-        
+
         # Connect buttons
         QObject.connect(self.buttonUpdateFromLayer, SIGNAL("clicked()"), self.update_from_layer)
         QObject.connect(self.buttonUpdateFromCanvas, SIGNAL("clicked()"), self.update_from_canvas)
         QObject.connect(self.buttonBrowse, SIGNAL("clicked()"), self.out_file)
         QObject.connect(self.buttonWriteGrid, SIGNAL("clicked()"), self.run_write_grid)
-        
+
         # Connect actions
         QObject.connect(self.sboxXres, SIGNAL("valueChanged(double)"), self.set_Yres)
         QObject.connect(self.textXmin, SIGNAL("textChanged(const QString &)"), self.estim_number_grid_cells)
@@ -89,7 +89,7 @@ class QGridderDialogNew(QGridderDialog, Ui_QGridderNew):
         # Init labels
         self.labelIter.hide()
 
-        # Init variables 
+        # Init variables
         self.OutFileName = 'grid.shp'
         self.encoding = 'System'
 
@@ -110,7 +110,7 @@ class QGridderDialogNew(QGridderDialog, Ui_QGridderNew):
     #  ======= Choose output shape file
     def set_out_file(self):
         self.OutFileName = self.textOutFilename.text()
-   
+
    #  ======= Update extents from layer
     def update_from_layer( self ):
         mLayerName = self.listSourceLayer.currentText()
@@ -135,14 +135,14 @@ class QGridderDialogNew(QGridderDialog, Ui_QGridderNew):
 
     # ======= Estimate number of grid cells
     def estim_number_grid_cells(self,value = ' '):
-        
+
         try :
-            Xmin = float( self.textXmin.text() ) 
-            Xmax = float( self.textXmax.text() ) 
-            Ymin = float( self.textYmin.text() ) 
-            Ymax = float( self.textYmax.text() ) 
-            Xres = float( self.sboxXres.value() ) 
-            Yres = float( self.sboxYres.value() ) 
+            Xmin = float( self.textXmin.text() )
+            Xmax = float( self.textXmax.text() )
+            Ymin = float( self.textYmin.text() )
+            Ymax = float( self.textYmax.text() )
+            Xres = float( self.sboxXres.value() )
+            Yres = float( self.sboxYres.value() )
             if Xres != 0 and Yres !=0:
                 Nx = round((Xmax - Xmin) / Xres)
                 Ny = round((Ymax - Ymin) / Yres)
@@ -151,17 +151,17 @@ class QGridderDialogNew(QGridderDialog, Ui_QGridderNew):
                 N = ' '
         except :
             N = ' '
-        
+
         self.labelNumberCells.setText( unicode(N) )
 
     # ======= Build grid ========================================
     def run_write_grid(self):
         self.buttonWriteGrid.setEnabled( False )
 
-        # Check input data 
+        # Check input data
         if (self.textXmin.text() == "" or self.textXmax.text() == "" or
                 self.textYmin.text() == "" or self.textYmax.text() == ""):
-            QMessageBox.information(self, self.tr("Gridder"), 
+            QMessageBox.information(self, self.tr("Gridder"),
                     self.tr("Please specify valid extent coordinates")
                     )
         elif self.textOutFilename.text() == "":
@@ -174,7 +174,7 @@ class QGridderDialogNew(QGridderDialog, Ui_QGridderNew):
                     )
         elif float( self.textXmin.text() ) >= float( self.textXmax.text() ) or \
                 float( self.textYmin.text() ) >= float( self.textYmax.text() ):
-                    QMessageBox.information(self, self.tr("Gridder"), 
+                    QMessageBox.information(self, self.tr("Gridder"),
                     self.tr("Check extent coordinates")
                     )
         else:
@@ -216,7 +216,7 @@ class QGridderDialogNew(QGridderDialog, Ui_QGridderNew):
             # If a source layer is defined, retrieve CRS
             if ftools_utils.getMapLayerByName(unicode(self.listSourceLayer.currentText())) != None :
                 crs = ftools_utils.getMapLayerByName(unicode(self.listSourceLayer.currentText())).crs()
-                if not crs.isValid(): 
+                if not crs.isValid():
                     crs = None
             else :
                 crs = None
@@ -244,7 +244,7 @@ class QGridderDialogNew(QGridderDialog, Ui_QGridderNew):
 
             # Load shape file writer
             writer = QgsVectorFileWriter(unicode(self.textOutFilename.text()), self.encoding, fields, QGis.WKBPolygon, crs)
-            
+
             # Call function to make grid
             qgridder_utils.make_rgrid(rectFeat, n, m, writer, self.progressBarBuildGrid)
 
@@ -253,18 +253,18 @@ class QGridderDialogNew(QGridderDialog, Ui_QGridderNew):
 
             # Post-operation information
             QApplication.restoreOverrideCursor()
-            QMessageBox.information(self, self.tr("Generate Vector Grid"), 
+            QMessageBox.information(self, self.tr("Generate Vector Grid"),
                     "Created output shapefile:\n" + unicode(self.OutFileName) + "\n"
                     )
 
             # Load output layer if it is not already loaded
             if self.checkLoadLayer.isChecked():
-                # list currently loaded layer. If the layer is loaded, unload it.        
+                # list currently loaded layer. If the layer is loaded, unload it.
                 for (name,layer) in QgsMapLayerRegistry.instance().mapLayers().iteritems():
                     # Note : reload() doesn't work.
                     if layer.source()==self.OutFileName:
                         QgsMapLayerRegistry.instance().removeMapLayers( layer.id() )
-                        
+
                 # load layer
                 ftools_utils.addShapeToCanvas( self.OutFileName )
                 # update layer list in plugin

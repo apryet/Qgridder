@@ -4,9 +4,9 @@
  qgridderdialog.py
                                  Qgridder - A QGIS plugin
 
- This file handles Qgridder graphical user interface                           
+ This file handles Qgridder graphical user interface
 
- Qgridder Builds 2D regular and unstructured grids and comes together with 
+ Qgridder Builds 2D regular and unstructured grids and comes together with
  pre- and post-processing capabilities for spatially distributed modeling.
 
                              -------------------
@@ -49,7 +49,7 @@ class QGridderDialogExport(QGridderDialog, Ui_QGridderExport):
         # Set up the user interface
         QDialog.__init__(self)
         self.iface = iface
-        self.settings = settings                
+        self.settings = settings
         self.setupUi(self)
         self.proj = QgsProject.instance()
 
@@ -87,8 +87,8 @@ class QGridderDialogExport(QGridderDialog, Ui_QGridderExport):
         gridLayerName = self.listGridLayer.currentText()
 
         outTextFileName = self.textOutTextFileName.text()
-        
-        # settings        
+
+        # settings
         delimiter = ','
         lineterminator = '\r'
         max_decimals = 2
@@ -133,7 +133,7 @@ class QGridderDialogExport(QGridderDialog, Ui_QGridderExport):
                    return "Export canceled "
 
         txtfile.write('END' + lineterminator)
-        
+
         progress.close()
         txtfile.close()
 

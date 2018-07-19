@@ -5,8 +5,8 @@
                                  Qgridder - A QGIS plugin
 
  This file gathers main plugin functions.
- 
- Qgridder Builds 2D regular and unstructured grids and comes together with 
+
+ Qgridder Builds 2D regular and unstructured grids and comes together with
  pre- and post-processing capabilities for spatially distributed modeling.
 
                               -------------------
@@ -41,7 +41,7 @@ import time
 
 # Global constants
 
-TOLERANCE = 1e-6  # absolute tolerance 
+TOLERANCE = 1e-6  # absolute tolerance
 MAX_DECIMALS = 6  # used to limit the effects of numerical noise
 
 # ======================================================================================
@@ -49,7 +49,7 @@ def make_rgrid(input_feat, n, m, vprovider, progress_bar = QProgressDialog("Buil
     """
     Description
     ----------
-    Builds regular grid of n lines and m columns, from QgsRectangle bbox. 
+    Builds regular grid of n lines and m columns, from QgsRectangle bbox.
     Resulting features are appended to vprovider
 
     Parameters
@@ -62,13 +62,13 @@ def make_rgrid(input_feat, n, m, vprovider, progress_bar = QProgressDialog("Buil
     Returns
     -------
 
-    List of feature ids in the grid 
+    List of feature ids in the grid
 
     Examples
     --------
-    >>> 
+    >>>
     """
-     
+
     # Retrieve bbox and attributes from input feature
     bbox = input_feat.geometry().boundingBox()
     #attr = input_feat.attributeMap()
@@ -80,7 +80,7 @@ def make_rgrid(input_feat, n, m, vprovider, progress_bar = QProgressDialog("Buil
     xx, yy = np.meshgrid(x, y)
 
     # Initialize progress bar
-    progress_bar.setRange(0,100)        
+    progress_bar.setRange(0,100)
     progress_bar.setValue(0)
     count = 0
     countMax = n*m
@@ -99,17 +99,17 @@ def make_rgrid(input_feat, n, m, vprovider, progress_bar = QProgressDialog("Buil
             x1, x2, x3, x4 = xx[i+1,j],  xx[i+1,j+1],  xx[i,j+1],  xx[i,j]
             y1, y2, y3, y4 = yy[i+1,j],  yy[i+1,j+1],  yy[i,j+1],  yy[i,j]
             # define feature points
-            pt1, pt2, pt3, pt4 =  QgsPoint(x1, y1), QgsPoint(x2, y2), QgsPoint(x3, y3), QgsPoint(x4, y4) 
+            pt1, pt2, pt3, pt4 =  QgsPoint(x1, y1), QgsPoint(x2, y2), QgsPoint(x3, y3), QgsPoint(x4, y4)
             pt5 = pt1
             # define polygon from points
             polygon = [[pt1, pt2, pt3, pt4, pt5]]
-            # initialize new feature 
+            # initialize new feature
             out_feat = QgsFeature()
             #out_feat.setAttributeMap(attr)
             out_feat.setAttributes(attr)
             out_geom = QgsGeometry()
             out_feat.setGeometry(out_geom.fromPolygon(polygon))
-            # save features 
+            # save features
             out_feat_list.append(out_feat)
             # update counter
             count += 1
@@ -122,7 +122,7 @@ def make_rgrid(input_feat, n, m, vprovider, progress_bar = QProgressDialog("Buil
                     QCoreApplication.processEvents()
 
     progress_bar.setValue(100)
-    # Check type of vector provider 
+    # Check type of vector provider
     # If vprovider is a layer provider
     if repr(QgsVectorDataProvider) == str(type(vprovider)):
         isFeatureAddSuccessful, newFeatures = vprovider.addFeatures(out_feat_list)
@@ -132,7 +132,7 @@ def make_rgrid(input_feat, n, m, vprovider, progress_bar = QProgressDialog("Buil
     else :
         for out_feat in out_feat_list:
             vprovider.addFeature(out_feat)
-        return([]) 
+        return([])
 
 
 # ======================================================================================
@@ -159,10 +159,10 @@ def rect_size(input_feature):
     -------
 
     Dictionary {'dx':dx,'dy':dy} where dx and dy are the extents of input_feature.
-    
+
     Examples
     --------
-    >>> 
+    >>>
     """
 
     # Extract the four corners of input_feature
@@ -191,11 +191,11 @@ def build_vect(p1, p2):
 
     Examples
     --------
-    >>> 
+    >>>
     """
     return { 'x' :  p2.x()-p1.x(), 'y': p2.y()-p1.y() }
 
-# ====================================================================================== 
+# ======================================================================================
 # Check if two vectors are colinear
 def is_colinear(v1, v2):
     """
@@ -212,12 +212,12 @@ def is_colinear(v1, v2):
 
     Examples
     --------
-    >>> 
+    >>>
     """
 
     if( is_equal( v1['y']*v2['x'] - v1['x']*v2['y'] , 0 ) ):
         return True
-    else : 
+    else :
         return False
 
 
@@ -243,7 +243,7 @@ def update_fix_dict(fix_dict, this_fix_dict):
 
     Examples
     --------
-    >>> 
+    >>>
     """
 
     for fId, n, m in zip( this_fix_dict['id'], this_fix_dict['n'], this_fix_dict['m'] ):
@@ -266,12 +266,12 @@ def is_equal(a,b, tol =TOLERANCE):
     """
     Description
     ----------
-    From Ftools, voronoi.py 
+    From Ftools, voronoi.py
     Check whether two values are identical for a given a tolerance interval
 
     Parameters
     ----------
-    a, b : float values to compare 
+    a, b : float values to compare
     relativeError : float value representative of the tolerance
 
     Returns
@@ -280,7 +280,7 @@ def is_equal(a,b, tol =TOLERANCE):
 
     Examples
     --------
-    >>> 
+    >>>
     """
 
     # is nearly equal to within the allowed relative error
@@ -289,7 +289,7 @@ def is_equal(a,b, tol =TOLERANCE):
     return ( abs(a - b) < tol )
 
 
-# ======================================================================================  
+# ======================================================================================
 def is_over(geomA,geomB,relativeError=TOLERANCE):
     """
     Description
@@ -303,10 +303,10 @@ def is_over(geomA,geomB,relativeError=TOLERANCE):
     Returns
     -------
     relativeError : float value representative of the tolerance
-    
+
     Examples
     --------
-    >>> 
+    >>>
     """
 
     return ( is_equal( geomA.x(), geomB.x() ) and
@@ -336,7 +336,7 @@ def refine_by_split(featIds, n, m, topo_rules, grid_layer, progress_bar = QProgr
 
     Examples
     --------
-    >>> 
+    >>>
     """
     start_time = time.time()
 
@@ -344,44 +344,44 @@ def refine_by_split(featIds, n, m, topo_rules, grid_layer, progress_bar = QProgr
     if topo_rules['nmax'] == 1 :
         # build feature dictionary
         all_features = {feature.id(): feature for feature in grid_layer.getFeatures()}
-    
+
         # init fix dictionary
         rowFixDict = { 'id': [] , 'n':[], 'm':[] }
         colFixDict = { 'id': [] , 'n':[], 'm':[] }
 
-        # Initialize spatial index 
+        # Initialize spatial index
         grid_layerIndex = QgsSpatialIndex()
         # Fill spatial Index
         for feat in all_features.values():
             grid_layerIndex.insertFeature(feat)
-            
+
         # get bbox of grid layer
         grid_bbox = grid_layer.extent()
 
         # iterate over initial feature set
-        # -- cells that have to be split horizontally 
-        if n > 1 : 
+        # -- cells that have to be split horizontally
+        if n > 1 :
             for featId in featIds :
                 # only consider featId if current row has not been considered before
-                if featId not in rowFixDict['id'] : 
-                    # build bounding box over row        
+                if featId not in rowFixDict['id'] :
+                    # build bounding box over row
                     bbox = all_features[featId].geometry().boundingBox()
                     bbox.setXMinimum( grid_bbox.xMinimum() )
                     bbox.setXMaximum( grid_bbox.xMaximum()  )
                     bbox.setYMinimum( bbox.yMinimum() + TOLERANCE )
                     bbox.setYMaximum( bbox.yMaximum() - TOLERANCE )
-                    # get features in current row 
+                    # get features in current row
                     rowFeatIds = grid_layerIndex.intersects( bbox )
                     # update fix_dict with features in current row
-                    this_fix_dict = { 'id':rowFeatIds , 'n':[n]*len(rowFeatIds), 'm':[1]*len(rowFeatIds) } 
+                    this_fix_dict = { 'id':rowFeatIds , 'n':[n]*len(rowFeatIds), 'm':[1]*len(rowFeatIds) }
                     rowFixtDict = update_fix_dict(rowFixDict,this_fix_dict)
-        
+
         # --  cells that have to be split along columns
-        if m > 1 : 
+        if m > 1 :
             for featId in featIds :
                 # only consider featId if current row has not been considered before
-                if featId not in colFixDict['id'] : 
-                    # build bounding box over column        
+                if featId not in colFixDict['id'] :
+                    # build bounding box over column
                     bbox = all_features[featId].geometry().boundingBox()
                     bbox.setXMinimum( bbox.xMinimum() + TOLERANCE )
                     bbox.setXMaximum( bbox.xMaximum() - TOLERANCE )
@@ -390,33 +390,33 @@ def refine_by_split(featIds, n, m, topo_rules, grid_layer, progress_bar = QProgr
                     # get features in current column
                     colFeatIds = grid_layerIndex.intersects( bbox )
                     # update fix_dict with features in current column
-                    this_fix_dict = { 'id':colFeatIds , 'n':[1]*len(colFeatIds), 'm':[m]*len(colFeatIds) } 
+                    this_fix_dict = { 'id':colFeatIds , 'n':[1]*len(colFeatIds), 'm':[m]*len(colFeatIds) }
                     colFixtDict = update_fix_dict(colFixDict,this_fix_dict)
 
         fix_dict = rowFixDict.copy()
         fix_dict = update_fix_dict(fix_dict,colFixDict)
         newFeatIds = split_cells(fix_dict, grid_layer)
-        #print("OPTIM OVER %s sec" % (time.time() - start_time))        
+        #print("OPTIM OVER %s sec" % (time.time() - start_time))
         return()
-    
+
     # -- Refinement procedure for nested grids
-    
+
     # init iteration counter
     itCount = 0
 
     # init fix dict
     fix_dict = { 'id': featIds , 'n':[n]*len(featIds), 'm':[m]*len(featIds) }
-    
+
     # Continue until input_features is empty
     while len(fix_dict['id']) > 0:
 
         # Split input_features
         newFeatIds = split_cells(fix_dict, grid_layer)
 
-        # Get all the features         
+        # Get all the features
         all_features = {feature.id(): feature for feature in grid_layer.getFeatures()}
 
-        # Initialize spatial index 
+        # Initialize spatial index
         grid_layerIndex = QgsSpatialIndex()
         # Fill spatial Index
         for feat in all_features.values():
@@ -426,7 +426,7 @@ def refine_by_split(featIds, n, m, topo_rules, grid_layer, progress_bar = QProgr
         fix_dict = { 'id':[] , 'n':[], 'm':[] }
 
         # Initialize progress bar
-        progress_bar.setRange(0,100)        
+        progress_bar.setRange(0,100)
         progress_bar.setValue(0)
         count = 0
         countMax = len(newFeatIds)
@@ -452,7 +452,7 @@ def refine_by_split(featIds, n, m, topo_rules, grid_layer, progress_bar = QProgr
         itCount+=1
         labelIter.setText(unicode(itCount))
         #print("BASE OVER %s sec" % (time.time() - start_time))
-    
+
 
 # ======================================================================================
 def split_cells(fix_dict, v_layer = QgsVectorLayer()):
@@ -473,7 +473,7 @@ def split_cells(fix_dict, v_layer = QgsVectorLayer()):
 
     Examples
     --------
-    >>> 
+    >>>
     """
 
     # note that n and m parameters are obsolete.
@@ -486,7 +486,7 @@ def split_cells(fix_dict, v_layer = QgsVectorLayer()):
     # since ids() are updated
     v_layer.dataProvider().deleteFeatures(fix_dict['id'])
 
-    # Initialize the list of new features 
+    # Initialize the list of new features
     newFeatIds = []
 
     # Split each element of fix_dict
@@ -494,7 +494,7 @@ def split_cells(fix_dict, v_layer = QgsVectorLayer()):
         feat = all_features[featId]
         newFeatIds.extend( make_rgrid(feat, n, m, v_layer.dataProvider() ) )
 
-    # Return new features 
+    # Return new features
     return(newFeatIds)
 
 # --------------------------------------------------------------------------------------------------------------
@@ -514,7 +514,7 @@ def is_valid_boundary( feat1, feat2, direction, topo_rules ):
 
     Examples
     --------
-    >>> 
+    >>>
     """
 
     # feat1, feat2 (QgsFeature) : the features considered
@@ -523,17 +523,17 @@ def is_valid_boundary( feat1, feat2, direction, topo_rules ):
         # | 8 | 1 | 5 |
         # | 4 | 0 | 2 |
         # | 7 | 3 | 6 |
-    # topo Rules (Dict) : 
+    # topo Rules (Dict) :
         # -- for Modflow
         #topo_rules = {'model':'modflow','nmax':1}
         # -- for Nested
         # topo_rules = {'model':'nested', 'nmax':2}
 
     # get feat1 geometry
-    dx1, dy1 = rect_size(feat1)['dx'], rect_size(feat1)['dy'] 
+    dx1, dy1 = rect_size(feat1)['dx'], rect_size(feat1)['dy']
 
     # get feat2 geometry
-    dx2, dy2 = rect_size(feat2)['dx'], rect_size(feat2)['dy'] 
+    dx2, dy2 = rect_size(feat2)['dx'], rect_size(feat2)['dy']
 
     # Check if the boundary satisfies topo_rules
     # Note: in the logic of this program, we only consider the case
@@ -573,7 +573,7 @@ def check_topo(featId, n, m, topo_rules, all_features, v_layer, v_layerIndex):
 
     Examples
     --------
-    >>> 
+    >>>
     """
 
     # Get the feature
@@ -629,7 +629,7 @@ def find_neighbors(input_feature, all_features, v_layerIndex):
 
     Examples
     --------
-    >>> 
+    >>>
     """
 
     # Get neighbors Ids.
@@ -640,7 +640,7 @@ def find_neighbors(input_feature, all_features, v_layerIndex):
 
     # Initialize dictionary
     neighbors = { 'direction':[], 'feature':[] }
-   
+
     # Extract the four corners of input_feature
     # Note : rectangle points are numbered from top-left to bottom-left, clockwise
     p0, p1, p2, p3 = ftools_utils.extractPoints(input_feature.geometry())[:4]
@@ -657,7 +657,7 @@ def find_neighbors(input_feature, all_features, v_layerIndex):
         # | 4 | 0 | 2 |/.m
         # | 7 | 3 | 6 |
 
-        # Identify type of neighborhood 
+        # Identify type of neighborhood
         if is_over(p0, q0) and is_over(p1, q1) and is_over(p2, q2) and is_over(p3, q3):
             cell_dir = 0 # features overlap
         elif is_over(p0, q3) and is_over(p1, q2):
@@ -692,12 +692,12 @@ def find_neighbors(input_feature, all_features, v_layerIndex):
                 is_colinear(build_vect(q2, p3), {'x':0, 'y':1} ) and \
                 is_colinear(build_vect(p0, q1), {'x':0, 'y':1} ) :
                     cell_dir = 4 # feature B is to the left of A
-        else : 
+        else :
             cell_dir = -1 # feature B is not a neighbor in a valid grid
-            
+
         # If the feature is an "actual" neighbor, save it to the dictionary
         # "actual" = neither the feature itself, neither neighbors from corners
-        #if cell_dir > 0 : 
+        #if cell_dir > 0 :
         neighbors['direction'].append(cell_dir)
         neighbors['feature'].append(featNeighbor)
 
@@ -741,8 +741,8 @@ def get_centroid_layer(grid_layer) :
 
     # populate layer
     success, feature = cLayer.dataProvider().addFeatures( feat_centroids )
-        
-    if success : 
+
+    if success :
         return(cLayer)
     else :
         return(None)
@@ -770,9 +770,9 @@ def get_rgrid_nrow_ncol(grid_layer):
     >>> nrow, ncol = get_rgrid_nrow_ncol(layer)
     """
 
-    # TODO : check if the grid is actually regular 
-    
-    # Init variables 
+    # TODO : check if the grid is actually regular
+
+    # Init variables
     all_features = {feat.id():feat for feat in grid_layer.getFeatures()}
     allCentroids = [feat.geometry().centroid().asPoint() \
                         for feat in all_features.values()]
@@ -791,7 +791,7 @@ def get_rgrid_nrow_ncol(grid_layer):
     #return yy
     while is_equal(yy[i],yy[i+1]):
         i+=1
-        if i >= (yy.size - 1): 
+        if i >= (yy.size - 1):
             break # for one-row grids
     ncol = i+1
 
@@ -825,8 +825,8 @@ def get_rgrid_delr_delc(grid_layer):
     Returns
     -------
     (delr, delc)
-    For regular grids, delr and delc are floats 
-    For irregular grids, delr and delc are lists 
+    For regular grids, delr and delc are floats
+    For irregular grids, delr and delc are lists
 
     Examples
     --------
@@ -834,14 +834,14 @@ def get_rgrid_delr_delc(grid_layer):
     """
 
 
-    # TODO : check if the grid is actually regular 
-    
+    # TODO : check if the grid is actually regular
+
     # Load layer
     #allAttrs = grid_layer.pendingAllAttributesList()
     #grid_layer.select(allAttrs)
     #grid_layer.dataProvider().select(allAttrs)
 
-    # Init variables 
+    # Init variables
     all_features = {feat.id():feat for feat in grid_layer.getFeatures()}
     allCentroids = [feat.geometry().centroid().asPoint() \
                         for feat in all_features.values()]
@@ -860,14 +860,14 @@ def get_rgrid_delr_delc(grid_layer):
 
     # sort by decreasing y and increasing x
     idx_row = np.lexsort([centroids[:,1],-centroids[:,2]])
-    # iterate along first row 
+    # iterate along first row
     for featId in centroids[idx_row,0][:ncol]:
         # Extract the four corners of feat
         # Note : rectangle points are numbered from top-left to bottom-left, clockwise
         p0, p1, p2, p3 = ftools_utils.extractPoints(all_features[featId].geometry())[:4]
         delr.append( p1.x() - p0.x() )
 
-    # sort by increasing x and decreasing y    
+    # sort by increasing x and decreasing y
     idx_col = np.lexsort([-centroids[:,2],centroids[:,1]])
     # iterate along first col
     for featId in centroids[idx_col,0][:nrow]:
@@ -876,7 +876,7 @@ def get_rgrid_delr_delc(grid_layer):
         p0, p1, p2, p3 = ftools_utils.extractPoints(all_features[featId].geometry())[:4]
         delc.append( p0.y() - p3.y() )
 
-    # round 
+    # round
     delr = [round(val, MAX_DECIMALS) for val in delr]
     delc = [round(val, MAX_DECIMALS) for val in delc]
 
@@ -907,10 +907,10 @@ def rgrid_numbering(grid_layer):
 
     Examples
     --------
-    >>> 
+    >>>
     """
 
-    # TODO : check if the grid is actually regular 
+    # TODO : check if the grid is actually regular
 
     caps = grid_layer.dataProvider().capabilities()
 
@@ -924,7 +924,7 @@ def rgrid_numbering(grid_layer):
     centroids_y = np.around(np.array([centroid.y() for centroid in allCentroids]), MAX_DECIMALS)
     centroids = np.array( [centroids_ids , centroids_x, centroids_y] )
     centroids = centroids.T
-    
+
     # Fetch field name index of ROW and COL
     # If columns don't exist, add them
     row_field_idx = grid_layer.dataProvider().fieldNameIndex('ROW')
@@ -934,16 +934,16 @@ def rgrid_numbering(grid_layer):
 
     if row_field_idx == -1:
         if caps & QgsVectorDataProvider.AddAttributes:
-          res = grid_layer.dataProvider().addAttributes(  [QgsField("ROW", QVariant.Int)] ) 
-      
+          res = grid_layer.dataProvider().addAttributes(  [QgsField("ROW", QVariant.Int)] )
+
     if col_field_idx == -1:
         if caps & QgsVectorDataProvider.AddAttributes:
           res = res*grid_layer.dataProvider().addAttributes( [QgsField("COL", QVariant.Int)] )
 
     if cx_field_idx == -1:
         if caps & QgsVectorDataProvider.AddAttributes:
-          res = grid_layer.dataProvider().addAttributes(  [QgsField("CX", QVariant.Double)] ) 
-      
+          res = grid_layer.dataProvider().addAttributes(  [QgsField("CX", QVariant.Double)] )
+
     if cy_field_idx == -1:
         if caps & QgsVectorDataProvider.AddAttributes:
           res = res*grid_layer.dataProvider().addAttributes( [QgsField("CY", QVariant.Double)] )
@@ -959,7 +959,7 @@ def rgrid_numbering(grid_layer):
     # get nrow, ncol
     nrow, ncol =  get_rgrid_nrow_ncol(grid_layer)
 
-    # Iterate over grid row-wise and column wise 
+    # Iterate over grid row-wise and column wise
     # sort by decreasing y and increasing x
     idx = np.lexsort( [centroids_x,-1*centroids_y] )
     centroids = centroids[idx,:]
@@ -980,21 +980,21 @@ def rgrid_numbering(grid_layer):
         cy = centroids[i, 2]
         attr = { row_field_idx : int(row), col_field_idx : int(col),\
                 cx_field_idx : float(cx), cy_field_idx : float(cy)}
-        attrValues[featId] = attr 
+        attrValues[featId] = attr
         col+=1
 
-    # write attributes to shapefile 
+    # write attributes to shapefile
     res = grid_layer.dataProvider().changeAttributeValues(attrValues)
 
     # commit
     grid_layer.commitChanges()
 
-    # res should be True if the operation is successful 
-    return(res) 
+    # res should be True if the operation is successful
+    return(res)
 
-    
+
 # ======================================================================================
-def get_overlapping_features_areas(feat, spatialIndex, grid_layerFeatures) : 
+def get_overlapping_features_areas(feat, spatialIndex, grid_layerFeatures) :
     """
     Description
 
@@ -1011,7 +1011,7 @@ def get_overlapping_features_areas(feat, spatialIndex, grid_layerFeatures) :
 
     Examples
     --------
-    >>> 
+    >>>
     """
     # get bbox of feat
     featBbox = feat.geometry().boundingBox()
@@ -1029,7 +1029,7 @@ def get_overlapping_features_areas(feat, spatialIndex, grid_layerFeatures) :
     overlapping_cells_areas = []
 
     # iterate over overlapping cells and get areas
-    for overlapping_feat_id in overlapping_feat_ids : 
+    for overlapping_feat_id in overlapping_feat_ids :
         overlapping_cells_areas.append(grid_layerFeatures[overlapping_feat_id].geometry().area())
 
     # return number of overlapping features
@@ -1038,7 +1038,7 @@ def get_overlapping_features_areas(feat, spatialIndex, grid_layerFeatures) :
 
 
 # ======================================================================================
-def get_spatial_indexes(all_layers) : 
+def get_spatial_indexes(all_layers) :
     """
     Description
     ----------
@@ -1047,18 +1047,18 @@ def get_spatial_indexes(all_layers) :
     Parameters
     ----------
     all_layers : list of Qgis vector layer
- 
+
     Returns
     -------
     list of Qgis spatial indexes
 
     Examples
     --------
-    >>> 
+    >>>
     """
 
     spatial_indexes = []
-    for v_layer in all_layers : 
+    for v_layer in all_layers :
         v_layerIndex = QgsSpatialIndex()
         for feat in v_layer.getFeatures() :
             v_layerIndex.insertFeature(feat)
@@ -1082,15 +1082,15 @@ def correct_pseudo3D_grid(all_layers, topo_rules, nproc=1) :
     -------
     Examples
     --------
-    >>> 
+    >>>
     """
 
     nLayers = len(all_layers)
     nfix = 1
-    while nfix > 0 :  
+    while nfix > 0 :
         nfix = 0
         # iterate over each layers of the pseudo-3D mesh
-        for layer_num in range(nLayers) : 
+        for layer_num in range(nLayers) :
             # build list of dictionaries of all features for each layer
             all_layers_all_features = []
             for grid_layer in all_layers :
@@ -1098,8 +1098,8 @@ def correct_pseudo3D_grid(all_layers, topo_rules, nproc=1) :
             # update spatial indexes
             spatial_indexes = get_spatial_indexes(all_layers)
             # iterate over each cells of layer layer_num
-            if nproc <= 1 : 
-                fix_dict = check3D_features(all_layers_all_features[layer_num].values(), 
+            if nproc <= 1 :
+                fix_dict = check3D_features(all_layers_all_features[layer_num].values(),
                         layer_num, all_layers_all_features, spatial_indexes, topo_rules
                         )
             else :
@@ -1110,12 +1110,12 @@ def correct_pseudo3D_grid(all_layers, topo_rules, nproc=1) :
                 # build processes
                 processes = []
                 for i in range(nproc) :
-                    processes.append(mp.Process(target=check3D_features_mp, 
-                                        args=(all_features_chunks[i], 
-                                        layer_num, all_layers, 
-                                        spatial_indexes, 
-                                        topo_rules, 
-                                        queue) 
+                    processes.append(mp.Process(target=check3D_features_mp,
+                                        args=(all_features_chunks[i],
+                                        layer_num, all_layers,
+                                        spatial_indexes,
+                                        topo_rules,
+                                        queue)
                                         )
                                     )
                 # Run processes
@@ -1130,15 +1130,15 @@ def correct_pseudo3D_grid(all_layers, topo_rules, nproc=1) :
                 fix_dicts = [output.get() for p in processes]
 
                 # Build single FixDict
-                fix_dict = { 'id':[NULL] , 'n':[NULL], 'm':[NULL] }        
+                fix_dict = { 'id':[NULL] , 'n':[NULL], 'm':[NULL] }
                 for fix_dict_partial in fix_dicts :
                     update_fix_dict( fix_dict_main, fix_dict_partial )
 
 
             # split cells
-            if len(fix_dict['id']) > 0 : 
-                refine_by_split(fix_dict['id'], 2, 2, 
-                        topo_rules, all_layers[layer_num], 
+            if len(fix_dict['id']) > 0 :
+                refine_by_split(fix_dict['id'], 2, 2,
+                        topo_rules, all_layers[layer_num],
                         )
             nfix += len(fix_dict['id'])
 
@@ -1151,7 +1151,7 @@ def check3D_features(features, layer_num, all_layers_all_features, spatial_index
     Check the 3D topology of features in layer layer_num.
     The algorithm iterates over the features of layer layer_num.
     For each feature, it checks for the occurrence of overlapping cells over below (l > layer_num)
-    and above (l < layer_num). If the number of neighbors exceeds pmax, or that the total area of 
+    and above (l < layer_num). If the number of neighbors exceeds pmax, or that the total area of
     then the overlapping cells is less than the area of the feature, then the feature is added to
     the fix_dict to be split. It is necessary to consider the area so as to avoid the occurrence of
     cells partially overlapped, which is not accepted by numerical PDE solvers.
@@ -1170,7 +1170,7 @@ def check3D_features(features, layer_num, all_layers_all_features, spatial_index
     --------
     >>> fix_dict = check3D_features(features, layer_num, all_layers, spatial_indexes, topo_rules)
     """
-    # initialize fix_dict, dictionary of features to fix 
+    # initialize fix_dict, dictionary of features to fix
     fix_dict = { 'id':[] , 'n':[], 'm':[] }
     nLayers = len(all_layers_all_features)
     # iterate over features
@@ -1185,8 +1185,8 @@ def check3D_features(features, layer_num, all_layers_all_features, spatial_index
         # check DOWNWARD for overlapping cells
         while l < nLayers :
             # count number of features in spatial_indexes[l] overlapping feature "feat"
-            overlapping_cells_areas = get_overlapping_features_areas(feat,spatial_indexes[l], 
-                                            all_layers_all_features[l] 
+            overlapping_cells_areas = get_overlapping_features_areas(feat,spatial_indexes[l],
+                                            all_layers_all_features[l]
                                         )
             p = len(overlapping_cells_areas)
             if p > 0 :
@@ -1239,7 +1239,7 @@ def chunks(seq, n) :
         Split list seq into n list
         Parameters
         ----------
-        seq : input list 
+        seq : input list
         n : number of elements to split seq into
 
         Returns

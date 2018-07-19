@@ -7,7 +7,7 @@
  This file gathers functions which facilitate pre- and post-processing of
  spatially distributed numerical models based on Qgridder grids.
 
- Qgridder builds 2D regular and unstructured grids and comes together with 
+ Qgridder builds 2D regular and unstructured grids and comes together with
  pre- and post-processing capabilities for spatially distributed modeling.
 
                               -------------------
@@ -45,7 +45,7 @@ import matplotlib.dates as mdates
 # ======= Plot
 def plot_chart(obs = {'t':[], 'val':[]}, simul = {'t':[], 'val':[]}, xlim = [], ylim = [], title=''):
     """
-    Draws a plot of observed and simulated records. Designed to accept dates from mdates on the x-axis.  
+    Draws a plot of observed and simulated records. Designed to accept dates from mdates on the x-axis.
 
     Parameters
     ----------
@@ -85,7 +85,7 @@ def plot_chart(obs = {'t':[], 'val':[]}, simul = {'t':[], 'val':[]}, xlim = [], 
     axes.grid()
 
     # plot title
-    axes.set_title(title)        
+    axes.set_title(title)
 
     # print plot decoration
     l = axes.legend()

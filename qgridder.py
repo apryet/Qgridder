@@ -4,9 +4,9 @@
  qgridder.py
                                  Qgridder - A QGIS plugin
 
- Plugin main file. 
- 
- Qgridder Builds 2D regular and unstructured grids and comes together with 
+ Plugin main file.
+
+ Qgridder Builds 2D regular and unstructured grids and comes together with
  pre- and post-processing capabilities for spatially distributed modeling.
 
                               -------------------
@@ -51,7 +51,7 @@ class QGridder:
     """
     Description
     -----------
-    Qgridder plugin class 
+    Qgridder plugin class
     """
 
 
@@ -82,7 +82,7 @@ class QGridder:
         # initialize locale
         localePath = ""
         locale = QSettings().value("locale/userLocale")[0:2]
-       
+
         if QFileInfo(self.plugin_dir).exists():
             localePath = self.plugin_dir + "/i18n/Qgridder_" + locale + ".qm"
 
@@ -92,7 +92,7 @@ class QGridder:
 
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
-   
+
     def initGui(self):
         """
         Description
@@ -123,9 +123,9 @@ class QGridder:
         QObject.connect(self.action_export, SIGNAL("activated()"), self.run_export)
         QObject.connect(self.action_settings, SIGNAL("activated()"), self.run_settings)
         QObject.connect(self.action_preproc, SIGNAL("activated()"), self.run_preproc)
-        
 
-        # Add toolbar buttons 
+
+        # Add toolbar buttons
         self.iface.addToolBarIcon(self.action_new)
         self.iface.addToolBarIcon(self.action_refinement)
         self.iface.addToolBarIcon(self.action_check3D)
@@ -133,7 +133,7 @@ class QGridder:
         self.iface.addToolBarIcon(self.action_export)
         self.iface.addToolBarIcon(self.action_settings)
         self.iface.addToolBarIcon(self.action_preproc)
-        
+
 
         # Add menu items
         self.iface.addPluginToMenu("Qgridder", self.action_new)
@@ -143,7 +143,7 @@ class QGridder:
         self.iface.addPluginToMenu("Qgridder", self.action_export)
         self.iface.addPluginToMenu("Qgridder", self.action_settings)
         self.iface.addPluginToMenu("Qgridder", self.action_preproc)
-        
+
 
     def unload(self):
         """
@@ -223,7 +223,7 @@ class QGridder:
         """
         Description
         -----------
-        Launch plot chart dialog 
+        Launch plot chart dialog
         """
         # update settings
         self.settings.load_settings( QgsProject.instance() )
@@ -283,7 +283,7 @@ class QGridder:
         result = self.dlg_settings.exec_()
 
 
-class QgridderSettings : 
+class QgridderSettings :
     """
     Description
     -----------
@@ -300,8 +300,8 @@ class QgridderSettings :
         self.list_grid_bckup = []
         # load settings from Qgis project
         self.load_settings(self.proj)
-    
-    def load_settings(self, proj) : 
+
+    def load_settings(self, proj) :
         """
         Description
         -----------
@@ -310,7 +310,7 @@ class QgridderSettings :
 
         # default settings
         dic_default_settings = { 'model_type':'Modflow',
-                'obs_dir':'./', 
+                'obs_dir':'./',
                 'simul_dir':'./',
                 'simul_src':'CSV Files',
                 'simul_file':'simul.file',
@@ -328,16 +328,16 @@ class QgridderSettings :
         for key in dic_default_settings.keys() :
             entry_value, valid_entry = self.proj.readEntry('qgridder', str(key))
             print(str(entry_value) + str(valid_entry) )
-            
-            if entry_value == '' : 
-                self.dic_settings[key] = dic_default_settings[key] 
+
+            if entry_value == '' :
+                self.dic_settings[key] = dic_default_settings[key]
             else :
                 self.dic_settings[key] = entry_value
 
         return()
 
-        
-    def save_settings(self, proj) : 
+
+    def save_settings(self, proj) :
         """
         Description
         -----------
@@ -351,7 +351,7 @@ class QgridderSettings :
         return(success)
 
 
-    def update_settings(self, dic_settings) : 
+    def update_settings(self, dic_settings) :
         """
         Description
         -----------

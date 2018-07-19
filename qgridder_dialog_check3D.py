@@ -4,9 +4,9 @@
  qgridder_dialog_check3D.py
                                  Qgridder - A QGIS plugin
 
- This file handles Qgridder graphical user interface                           
+ This file handles Qgridder graphical user interface
 
- Qgridder Builds 2D regular and unstructured grids and comes together with 
+ Qgridder Builds 2D regular and unstructured grids and comes together with
  pre- and post-processing capabilities for spatially distributed modeling.
 
                              -------------------
@@ -47,10 +47,10 @@ class QGridderDialogCheck3D(QGridderDialog, Ui_QGridderCheck3D):
         # Set up the user interface from Designer.
         QDialog.__init__(self)
         self.iface = iface
-        self.settings = settings                
+        self.settings = settings
         self.setupUi(self)
 
-        
+
         # Connect buttons
         QObject.connect(self.buttonLayer3DUp, SIGNAL("clicked()"), self.layer3D_up)
         QObject.connect(self.buttonLayer3DDown, SIGNAL("clicked()"), self.layer3D_down)
@@ -72,10 +72,10 @@ class QGridderDialogCheck3D(QGridderDialog, Ui_QGridderCheck3D):
             NamesofLayersInMapCanvas.append(layer.name())
         # check whether each layer of the listLayers3D list is loaded
         itemRemoved = True
-        while( itemRemoved == True ) : 
+        while( itemRemoved == True ) :
             itemRemoved = False
             for row in range(self.listLayers3D.count()) :
-                if self.listLayers3D.item(row) != None : 
+                if self.listLayers3D.item(row) != None :
                     if self.listLayers3D.item(row).text() not in NamesofLayersInMapCanvas :
                         self.listLayers3D.takeItem(row)
                         itemRemoved = True
@@ -122,8 +122,8 @@ class QGridderDialogCheck3D(QGridderDialog, Ui_QGridderCheck3D):
             newLayerName = file_info.completeBaseName()
 
         # check whether this layer name is already in the 3D list
-        if len(self.listLayers3D.findItems(newLayerName,Qt.MatchFixedString)) != 0 : 
-            QMessageBox.information(self, self.tr("Gridder"), 
+        if len(self.listLayers3D.findItems(newLayerName,Qt.MatchFixedString)) != 0 :
+            QMessageBox.information(self, self.tr("Gridder"),
                     self.tr("This layer is already in the list."))
             return()
 
@@ -134,7 +134,7 @@ class QGridderDialogCheck3D(QGridderDialog, Ui_QGridderCheck3D):
             if layer.source()==self.OutFileName:
                 QgsMapLayerRegistry.instance().removeMapLayers( layer.id() )
         ftools_utils.addShapeToCanvas( OutFileName )
-        
+
         # add new layer to listLayers3D
         self.listLayers3D.addItem(newLayerName)
 
@@ -142,26 +142,26 @@ class QGridderDialogCheck3D(QGridderDialog, Ui_QGridderCheck3D):
         # get layer name
         existingGridLayerName = self.listExistingLayer.currentText()
         # check whether current layer is not already in the list
-        if len(self.listLayers3D.findItems(existingGridLayerName,Qt.MatchFixedString)) == 0 : 
+        if len(self.listLayers3D.findItems(existingGridLayerName,Qt.MatchFixedString)) == 0 :
             # add new layer
             self.listLayers3D.addItem(existingGridLayerName)
         else :
-            QMessageBox.information(self, self.tr("Gridder"), 
+            QMessageBox.information(self, self.tr("Gridder"),
                     self.tr("This layer is already in the list.")
                     )
 
     def run_check3D(self):
         allLayers = []
         topoRules = {'model':'nested', 'nmax':2,'pmax':4}
-        for row in range( self.listLayers3D.count() ) : 
+        for row in range( self.listLayers3D.count() ) :
             vLayerName = self.listLayers3D.item(row).text()
             vLayer  = ftools_utils.getMapLayerByName( unicode( vLayerName ) )
             allLayers.append(vLayer)
         qgridder_utils.correct_pseudo3D_grid(allLayers, topoRules)
-        QMessageBox.information(self, self.tr("Qgridder"), 
+        QMessageBox.information(self, self.tr("Qgridder"),
             self.tr('pseudo-3D grid topology successfully checked and corrected')
         )
-        # Refresh map canvas 
+        # Refresh map canvas
         self.iface.mapCanvas().refresh()
         return()
 

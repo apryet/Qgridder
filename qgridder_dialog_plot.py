@@ -34,9 +34,9 @@ import sys
 import numpy as np
 import datetime as dt
 
-try : 
+try :
     import matplotlib.dates as mdates
-except : 
+except :
     print('Could not load matplotlib.dates module')
 
 
@@ -48,7 +48,7 @@ class QGridderDialogPlot(QGridderDialog,Ui_QGridderPlot):
     # ======= Initialization
     def __init__(self, iface, settings) :
         """
-        Draws a plot of observed and simulated records. Designed to accept dates from mdates on the x-axis.  
+        Draws a plot of observed and simulated records. Designed to accept dates from mdates on the x-axis.
 
         Parameters
         ----------
@@ -72,13 +72,13 @@ class QGridderDialogPlot(QGridderDialog,Ui_QGridderPlot):
         self.obs_dir = self.settings.dic_settings['obs_dir']
         self.simul_file = self.settings.dic_settings['simul_file']
 
-        
+
 
 
     # ======= Plot
     def plot_chart(self, obs = {'t':[], 'val':[]}, simul = {'t':[], 'val':[]}, xlim = [], ylim = [], title=''):
         """
-        Draws a plot of observed and simulated records. Designed to accept dates from mdates on the x-axis.  
+        Draws a plot of observed and simulated records. Designed to accept dates from mdates on the x-axis.
 
         Parameters
         ----------
@@ -118,7 +118,7 @@ class QGridderDialogPlot(QGridderDialog,Ui_QGridderPlot):
         axes.grid()
 
         # plot title
-        axes.set_title(title)        
+        axes.set_title(title)
 
         # print plot decoration
         l = axes.legend()
@@ -132,7 +132,7 @@ class QGridderDialogPlot(QGridderDialog,Ui_QGridderPlot):
     # Plot data
     def run_plot(self):
         """
-        Draws a plot of observed and simulated records. Designed to accept dates from mdates on the x-axis.  
+        Draws a plot of observed and simulated records. Designed to accept dates from mdates on the x-axis.
 
         Parameters
         ----------
@@ -167,7 +167,7 @@ class QGridderDialogPlot(QGridderDialog,Ui_QGridderPlot):
             QMessageBox.warning(self.iface.mainWindow(),\
                 "Qgridder Plugin Warning", 'Please select one feature.')
             return
-            
+
         elif vLayer.selectedFeatureCount()>1:
             QMessageBox.warning(self.iface.mainWindow(),\
                 "Qgridder Plugin Warning", 'Please select only one feature.')
@@ -205,7 +205,7 @@ class QGridderDialogPlot(QGridderDialog,Ui_QGridderPlot):
 
         # -- Process observed records
         if plot_obs == 'True' :
-            
+
             obs_key = obs_feature[obs_key_col]
 
             # get observation file
@@ -214,7 +214,7 @@ class QGridderDialogPlot(QGridderDialog,Ui_QGridderPlot):
 
             obs_file_path = str(obs_dir) + '/' + str(obs_key) + '.csv'
             try :
-                dates_obs, vals_obs = np.genfromtxt(obs_file_path,delimiter=csv_delimiter, 
+                dates_obs, vals_obs = np.genfromtxt(obs_file_path,delimiter=csv_delimiter,
                         unpack=True,skip_header=skip_header,
                         converters={ 0: mdates.strpdate2num(date_string_format)}
                         )
@@ -232,7 +232,7 @@ class QGridderDialogPlot(QGridderDialog,Ui_QGridderPlot):
 
             # Plot from text files
             if self.settings.dic_settings['simul_src'] == 'CSV Files':
-            
+
 
                 obs_key = obs_feature[obs_key_col]
 
@@ -242,7 +242,7 @@ class QGridderDialogPlot(QGridderDialog,Ui_QGridderPlot):
 
                 simul_file_path = str(simul_dir) + '/' + str(obs_key) + '.csv'
                 try :
-                    dates_simul, vals_simul = np.genfromtxt(simul_file_path, delimiter=csv_delimiter, 
+                    dates_simul, vals_simul = np.genfromtxt(simul_file_path, delimiter=csv_delimiter,
                             unpack=True, skip_header=skip_header,
                             converters={ 0: mdates.strpdate2num(date_string_format)}
                             )
@@ -254,17 +254,17 @@ class QGridderDialogPlot(QGridderDialog,Ui_QGridderPlot):
                         'Check file path and format (should be a 2 column CSV file).')
 
             # Plot from Flopy project
-            if self.settings.dic_settings['simul_src'] == 'Flopy project': 
+            if self.settings.dic_settings['simul_src'] == 'Flopy project':
 
-                # load flopy module 
+                # load flopy module
                 sys.path.append(str( model_src_dir ))
 
-                try : 
-                    import flopy 
+                try :
+                    import flopy
 
-                except : 
-                    QMessageBox.warning(self, self.tr("QGridder"), 
-                       'Could not load flopy' 
+                except :
+                    QMessageBox.warning(self, self.tr("QGridder"),
+                       'Could not load flopy'
                        )
 
                 # fetch model reference grid
@@ -287,7 +287,7 @@ class QGridderDialogPlot(QGridderDialog,Ui_QGridderPlot):
 
                 # get time unit from flopy model
                 itmuni = mf_model.dis.itmuni
-                itmuni_mult = dic_itmuni_mult[itmuni]            
+                itmuni_mult = dic_itmuni_mult[itmuni]
 
                 # load results
                 headobj = flopy.utils.binaryfile.HeadFile(model_dir + '/' + model_name + '.hds')

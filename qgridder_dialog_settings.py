@@ -4,9 +4,9 @@
  qgridder_dialog_settings.py
                                  Qgridder - A QGIS plugin
 
- This file handles Qgridder graphical user interface                           
+ This file handles Qgridder graphical user interface
 
- Qgridder Builds 2D regular and unstructured grids and comes together with 
+ Qgridder Builds 2D regular and unstructured grids and comes together with
  pre- and post-processing capabilities for spatially distributed modeling.
 
                              -------------------
@@ -49,7 +49,7 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
         # Set up the user interface
         QDialog.__init__(self)
         self.iface = iface
-        self.settings = settings        
+        self.settings = settings
         self.setupUi(self)
         self.proj = QgsProject.instance()
 
@@ -76,7 +76,7 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
         # update dialog from settings
         self.load_settings_to_dialog()
 
-        # manage widget enabling 
+        # manage widget enabling
         self.update_simul_sources()
 
     def load_settings_to_dialog(self):
@@ -84,7 +84,7 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
         # Populate model name list
         self.populate_layer_list(self.listGridLayer)
 
-        # (re)load settings 
+        # (re)load settings
         # self.settings.load_settings(self.proj)
 
         # load settings
@@ -108,19 +108,19 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
         self.textSimulStartDate.setText(str(simul_start_date))
         self.textSimulFile.setText(str(simul_file))
 
-        if plot_obs == 'True' : 
+        if plot_obs == 'True' :
             self.checkPlotObs.setChecked( True )
         else :
             self.checkPlotObs.setChecked( False )
 
-        if plot_simul == 'True' : 
+        if plot_simul == 'True' :
             self.checkPlotSimul.setChecked( True )
         else :
             self.checkPlotSimul.setChecked( False )
 
-        if grid_backup == 'True' : 
+        if grid_backup == 'True' :
             self.checkGridBackup.setChecked( True )
-        else : 
+        else :
             self.checkGridBackup.setChecked( False )
 
 
@@ -132,7 +132,7 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
         Note that this is model-dependent.
 
         """
-            
+
         self.textSimulFile.clear()
         ( simul_file, encoding ) = ftools_utils.openDialog( self, filtering="All files (*.*)" )
         if simul_file is None or encoding is None:
@@ -144,9 +144,9 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
         Description
         ----------
         Select directory which contains CSV observations files
- 
+
         """
-            
+
         self.textObsDir.clear()
         ( obs_dir, encoding ) = ftools_utils.dirDialog( self )
         if obs_dir is None or encoding is None :
@@ -158,9 +158,9 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
         Description
         ----------
         Select directory which contains CSV simulation files
- 
+
         """
-            
+
         self.textSimulDir.clear()
         ( simul_dir, encoding ) = ftools_utils.dirDialog( self )
         if simul_dir is None or encoding is None :
@@ -174,9 +174,9 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
         Description
         ----------
         Select path to model python modules (e.g. Flopy)
- 
+
         """
-            
+
         self.textModelDir.clear()
         ( model_src_dir, encoding ) = ftools_utils.dirDialog( self )
         if model_src_dir is None or encoding is None :
@@ -207,7 +207,7 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
         dic_settings['grid_backup'] = str(self.checkGridBackup.isChecked())
 
         # update self.settings.dic_settings
-        self.settings.update_settings(dic_settings)        
+        self.settings.update_settings(dic_settings)
 
         # save settings to project
         self.settings.save_settings(self.proj)
@@ -222,11 +222,11 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
             self.listSimulSources.setEnabled(True)
             self.labelSimulSources.setEnabled(True)
 
-            if self.listSimulSources.currentText() == 'CSV Files': 
+            if self.listSimulSources.currentText() == 'CSV Files':
                 self.groupBoxSimulText.setEnabled(True)
                 self.groupBoxSimulFlopy.setEnabled(False)
 
-            if self.listSimulSources.currentText() == 'Flopy project': 
+            if self.listSimulSources.currentText() == 'Flopy project':
                 self.groupBoxSimulText.setEnabled(False)
                 self.groupBoxSimulFlopy.setEnabled(True)
 
@@ -244,7 +244,7 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
         Close settings without saving
 
         """
-            
+
         self.reject()
 
-                
+

@@ -4,9 +4,9 @@
  qgridderdialog.py
                                  Qgridder - A QGIS plugin
 
- This file handles Qgridder graphical user interface                           
+ This file handles Qgridder graphical user interface
 
- Qgridder Builds 2D regular and unstructured grids and comes together with 
+ Qgridder Builds 2D regular and unstructured grids and comes together with
  pre- and post-processing capabilities for spatially distributed modeling.
 
                              -------------------
@@ -46,13 +46,13 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
         # Set up the user interface from Designer.
         QDialog.__init__(self)
         self.iface = iface
-        self.settings = settings                
+        self.settings = settings
         self.setupUi(self)
 
         # init undo button
         if len(self.settings.list_grid_bckup) > 0 :
             self.buttonUndoRefine.setEnabled(True)
-        else : 
+        else :
             self.buttonUndoRefine.setEnabled(False)
 
         # Connect buttons
@@ -79,17 +79,17 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
     # ======= Refine grid ========================================
     def run_regular_refine(self):
 
-        # selected grid layer name 
+        # selected grid layer name
         grid_layer_name = self.listGridLayer.currentText()
 
         # number of elements, horizontally
         n =  self.sboxDivideHoriz.value()
         # number of elements, vertically
-        m = self.sboxDivideVert.value() 
+        m = self.sboxDivideVert.value()
 
         # Check input data
         if (type(n) != int or type(m) != int or m<1 or n<1):
-            QMessageBox.information(self, self.tr("Gridder"), 
+            QMessageBox.information(self, self.tr("Gridder"),
                     self.tr("Can't divide features, please verify the number of elements")
                     )
             return
@@ -117,7 +117,7 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
         if self.checkTopo.isChecked() :
             if self.settings.dic_settings['model_type'] == 'Modflow':
                 topoRules = {'model':'modflow','nmax':1}
-            elif self.settings.dic_settings['model_type'] == 'Nested': 
+            elif self.settings.dic_settings['model_type'] == 'Nested':
                  topoRules = {'model':'nested', 'nmax':2}
             else :
                 QMessageBox.information(self, self.tr("Gridder"),
@@ -142,15 +142,15 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
         self.buttonRefine.setEnabled( False )
 
         # Backup input grid layer
-        if self.settings.dic_settings['grid_backup'] == 'True' : 
-            if len( self.settings.list_grid_bckup ) < int( self.settings.dic_settings['max_grid_backup'] ) : 
-                backup_grid_layer = QgsVectorLayer("Point?crs=" + grid_layer.crs().authid(), 'backupLayer', providerLib =  'memory')        
+        if self.settings.dic_settings['grid_backup'] == 'True' :
+            if len( self.settings.list_grid_bckup ) < int( self.settings.dic_settings['max_grid_backup'] ) :
+                backup_grid_layer = QgsVectorLayer("Point?crs=" + grid_layer.crs().authid(), 'backupLayer', providerLib =  'memory')
                 success, feature = backup_grid_layer.dataProvider().addFeatures( [feat for feat in grid_layer.getFeatures()] )
                 self.settings.list_grid_bckup.append( backup_grid_layer )
 
         # Fetch selected features from input grid_layer
         selected_fIds = grid_layer.selectedFeaturesIds()
-        
+
         # Clean user selection
         grid_layer.setSelectedFeatures([])
 
@@ -159,30 +159,30 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
         self.labelIter.show()
         self.labelIter.setText(unicode(1))
 
-        # Refine grid 
+        # Refine grid
         qgridder_utils.refine_by_split(selected_fIds, n, m, topoRules, grid_layer, self.progressBarRegularRefine, self.labelIter)
 
         # Refresh refined grid layer
         self.iface.mapCanvas().refresh()
 
         # Post-operation information
-        QMessageBox.information(self, self.tr("Gridder"), 
+        QMessageBox.information(self, self.tr("Gridder"),
                 self.tr("Vector Grid Refined")
-                )        
+                )
 
         # Enable Write Grid button and reset cursor
         self.buttonRefine.setEnabled( True )
         QApplication.restoreOverrideCursor()
 
         # Enable undo button
-        if self.settings.dic_settings['grid_backup'] == 'True' : 
+        if self.settings.dic_settings['grid_backup'] == 'True' :
             self.buttonUndoRefine.setEnabled(True)
 
 
     # ======= Undo Refine grid ========================================
     def run_undo_refine(self) :
         if len(self.settings.list_grid_bckup) > 0 :
-            # selected grid layer name 
+            # selected grid layer name
             grid_layer_name = self.listGridLayer.currentText()
             # Load input grid layer
             grid_layer = ftools_utils.getMapLayerByName( unicode( grid_layer_name ) )
@@ -195,7 +195,7 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
             # remove last backup
             self.settings.list_grid_bckup.pop()
 
-            
+
 
 
 
