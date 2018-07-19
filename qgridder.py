@@ -9,7 +9,7 @@
  Qgridder Builds 2D regular and unstructured grids and comes together with 
  pre- and post-processing capabilities for spatially distributed modeling.
 
-			      -------------------
+                              -------------------
         begin                : 2013-04-08
         copyright            : (C) 2013 by Pryet
         email                : alexandre.pryet@ensegid.fr
@@ -56,16 +56,16 @@ class QGridder:
 
 
     def __init__(self, iface):
-	"""
-	Description
-	-----------
-	Initialize Qgridder plugin
-	"""
+        """
+        Description
+        -----------
+        Initialize Qgridder plugin
+        """
         # Save reference to the QGIS interface
         self.iface = iface
 
-	# load settings
-	self.settings = QgridderSettings()
+        # load settings
+        self.settings = QgridderSettings()
 
         # Create the dialogs and keep reference
         self.dlg_new = QGridderDialogNew(self.iface, self.settings)
@@ -75,8 +75,8 @@ class QGridder:
         self.dlg_export = QGridderDialogExport(self.iface,  self.settings)
         self.dlg_settings = QGridderDialogSettings(self.iface,  self.settings)
         self.dlg_preproc = QGridderDialogPreProc(self.iface,  self.settings)
-	# Initialize menu
-	self.qgridder_menu = None
+        # Initialize menu
+        self.qgridder_menu = None
         # initialize plugin directory
         self.plugin_dir = QFileInfo(QgsApplication.qgisUserDbFilePath()).path() + "/python/plugins/Qgridder"
         # initialize locale
@@ -94,25 +94,25 @@ class QGridder:
                 QCoreApplication.installTranslator(self.translator)
    
     def initGui(self):
-	"""
-	Description
-	-----------
-	Initialize plugin Gui :  dialogs, icons and menu
-	"""
-	#Create actions that will set up plugin
+        """
+        Description
+        -----------
+        Initialize plugin Gui :  dialogs, icons and menu
+        """
+        #Create actions that will set up plugin
         self.action_new = QAction(QIcon(":/plugins/Qgridder/icon_new.png"), \
             "New grid", self.iface.mainWindow())
-	self.action_refinement = QAction(QIcon(":/plugins/Qgridder/icon_refinement.png"), \
+        self.action_refinement = QAction(QIcon(":/plugins/Qgridder/icon_refinement.png"), \
             "Refine grid", self.iface.mainWindow())
-	self.action_check3D = QAction(QIcon(":/plugins/Qgridder/icon_check3D.png"), \
+        self.action_check3D = QAction(QIcon(":/plugins/Qgridder/icon_check3D.png"), \
             "3D grid", self.iface.mainWindow())
-	self.action_plot = QAction(QIcon(":/plugins/Qgridder/icon_plot.png"), \
+        self.action_plot = QAction(QIcon(":/plugins/Qgridder/icon_plot.png"), \
             "Plot chart", self.iface.mainWindow())
-	self.action_export = QAction(QIcon(":/plugins/Qgridder/icon_export.png"), \
+        self.action_export = QAction(QIcon(":/plugins/Qgridder/icon_export.png"), \
             "Export", self.iface.mainWindow())
-	self.action_settings = QAction(QIcon(":/plugins/Qgridder/icon_settings.png"), \
+        self.action_settings = QAction(QIcon(":/plugins/Qgridder/icon_settings.png"), \
             "Settings", self.iface.mainWindow())
-	self.action_preproc = QAction(QIcon(":/plugins/Qgridder/icon_pproc.png"), \
+        self.action_preproc = QAction(QIcon(":/plugins/Qgridder/icon_pproc.png"), \
             "Settings", self.iface.mainWindow())
 
         # connect the action to the run method
@@ -123,7 +123,7 @@ class QGridder:
         QObject.connect(self.action_export, SIGNAL("activated()"), self.run_export)
         QObject.connect(self.action_settings, SIGNAL("activated()"), self.run_settings)
         QObject.connect(self.action_preproc, SIGNAL("activated()"), self.run_preproc)
-	
+        
 
         # Add toolbar buttons 
         self.iface.addToolBarIcon(self.action_new)
@@ -133,9 +133,9 @@ class QGridder:
         self.iface.addToolBarIcon(self.action_export)
         self.iface.addToolBarIcon(self.action_settings)
         self.iface.addToolBarIcon(self.action_preproc)
-	
+        
 
-	# Add menu items
+        # Add menu items
         self.iface.addPluginToMenu("Qgridder", self.action_new)
         self.iface.addPluginToMenu("Qgridder", self.action_refinement)
         self.iface.addPluginToMenu("Qgridder", self.action_check3D)
@@ -143,15 +143,15 @@ class QGridder:
         self.iface.addPluginToMenu("Qgridder", self.action_export)
         self.iface.addPluginToMenu("Qgridder", self.action_settings)
         self.iface.addPluginToMenu("Qgridder", self.action_preproc)
-	
+        
 
     def unload(self):
-	"""
-	Description
-	-----------
-	Remove the plugin menu item and icon
-	"""
-	self.iface.removeToolBarIcon(self.action_new)
+        """
+        Description
+        -----------
+        Remove the plugin menu item and icon
+        """
+        self.iface.removeToolBarIcon(self.action_new)
         self.iface.removeToolBarIcon(self.action_refinement)
         self.iface.removeToolBarIcon(self.action_check3D)
         self.iface.removeToolBarIcon(self.action_plot)
@@ -159,7 +159,7 @@ class QGridder:
         self.iface.removeToolBarIcon(self.action_settings)
         self.iface.removeToolBarIcon(self.action_preproc)
 
-	self.iface.removePluginMenu("Qgridder", self.action_new)
+        self.iface.removePluginMenu("Qgridder", self.action_new)
         self.iface.removePluginMenu("Qgridder", self.action_refinement)
         self.iface.removePluginMenu("Qgridder", self.action_check3D)
         self.iface.removePluginMenu("Qgridder", self.action_plot)
@@ -170,117 +170,117 @@ class QGridder:
 
 
     def run_new(self):
-	"""
-	Description
-	-----------
-	Launch grid creation dialog
-	"""
-	# update settings
-	self.settings.load_settings( QgsProject.instance() )
-	# Populate layer list
-	self.dlg_new.populate_layer_list(self.dlg_new.listSourceLayer)
-	# Get update extents from map canvas
-	self.dlg_new.update_from_canvas()
-	# show the dialog
-	self.dlg_new.show()
-	# Run the dialog event loop
-	result = self.dlg_new.exec_()
+        """
+        Description
+        -----------
+        Launch grid creation dialog
+        """
+        # update settings
+        self.settings.load_settings( QgsProject.instance() )
+        # Populate layer list
+        self.dlg_new.populate_layer_list(self.dlg_new.listSourceLayer)
+        # Get update extents from map canvas
+        self.dlg_new.update_from_canvas()
+        # show the dialog
+        self.dlg_new.show()
+        # Run the dialog event loop
+        result = self.dlg_new.exec_()
 
     def run_refinement(self):
-	"""
-	Description
-	-----------
-	Launch grid refinement dialog
-	"""
-	# update settings
-	self.settings.load_settings( QgsProject.instance() )
-	# Populate layer list
-	self.dlg_refinement.populate_layer_list(self.dlg_refinement.listGridLayer)
+        """
+        Description
+        -----------
+        Launch grid refinement dialog
+        """
+        # update settings
+        self.settings.load_settings( QgsProject.instance() )
+        # Populate layer list
+        self.dlg_refinement.populate_layer_list(self.dlg_refinement.listGridLayer)
 
-	# show the dialog
-	self.dlg_refinement.show()
-	# Run the dialog event loop
-	result = self.dlg_refinement.exec_()
+        # show the dialog
+        self.dlg_refinement.show()
+        # Run the dialog event loop
+        result = self.dlg_refinement.exec_()
 
     def run_check3D(self):
-	"""
-	Description
-	-----------
-	Launch pseudo 3D grid topology check dialog
-	"""
-	# update settings
-	self.settings.load_settings( QgsProject.instance() )
-	# Populate layer list
-	self.dlg_check3D.populate_layer_list(self.dlg_check3D.listReferenceGrid)
-	self.dlg_check3D.populate_layer_list(self.dlg_check3D.listExistingLayer)
+        """
+        Description
+        -----------
+        Launch pseudo 3D grid topology check dialog
+        """
+        # update settings
+        self.settings.load_settings( QgsProject.instance() )
+        # Populate layer list
+        self.dlg_check3D.populate_layer_list(self.dlg_check3D.listReferenceGrid)
+        self.dlg_check3D.populate_layer_list(self.dlg_check3D.listExistingLayer)
 
-	# show the dialog
-	self.dlg_check3D.show()
-	# Run the dialog event loop
-	result = self.dlg_check3D.exec_()
+        # show the dialog
+        self.dlg_check3D.show()
+        # Run the dialog event loop
+        result = self.dlg_check3D.exec_()
 
     def run_plot(self):
-	"""
-	Description
-	-----------
-	Launch plot chart dialog 
-	"""
-	# update settings
-	self.settings.load_settings( QgsProject.instance() )
-	# show the dialog
-	self.dlg_plot.show()
-	# plot data
-	self.dlg_plot.run_plot()
-	# Run the dialog event loop
-	result = self.dlg_plot.exec_()
+        """
+        Description
+        -----------
+        Launch plot chart dialog 
+        """
+        # update settings
+        self.settings.load_settings( QgsProject.instance() )
+        # show the dialog
+        self.dlg_plot.show()
+        # plot data
+        self.dlg_plot.run_plot()
+        # Run the dialog event loop
+        result = self.dlg_plot.exec_()
 
     def run_preproc(self):
-	"""
-	Description
-	-----------
-	Launch pre-processing dialog
-	"""
-	# update settings
-	self.settings.load_settings( QgsProject.instance() )
-	# update layer list
-	self.dlg_preproc.populate_layer_list(self.dlg_preproc.listGridLayer)
-	# show the dialog
-	self.dlg_preproc.show()
-	# Run the dialog event loop
-	result = self.dlg_preproc.exec_()
+        """
+        Description
+        -----------
+        Launch pre-processing dialog
+        """
+        # update settings
+        self.settings.load_settings( QgsProject.instance() )
+        # update layer list
+        self.dlg_preproc.populate_layer_list(self.dlg_preproc.listGridLayer)
+        # show the dialog
+        self.dlg_preproc.show()
+        # Run the dialog event loop
+        result = self.dlg_preproc.exec_()
 
     def run_export(self):
-	"""
-	Description
-	-----------
-	Launch grid creation dialog
-	"""
-	# update settings
-	self.settings.load_settings( QgsProject.instance() )
-	# Populate layer list
-	self.dlg_export.populate_layer_list(self.dlg_export.listGridLayer)
+        """
+        Description
+        -----------
+        Launch grid creation dialog
+        """
+        # update settings
+        self.settings.load_settings( QgsProject.instance() )
+        # Populate layer list
+        self.dlg_export.populate_layer_list(self.dlg_export.listGridLayer)
 
-	# show the dialog
-	self.dlg_export.show()
-	# Run the dialog event loop
-	result = self.dlg_export.exec_()
+        # show the dialog
+        self.dlg_export.show()
+        # Run the dialog event loop
+        result = self.dlg_export.exec_()
 
     def run_settings(self):
-	"""
-	Description
-	-----------
-	Launch grid creation dialog
-	"""
-	# update settings
-	self.settings.load_settings( QgsProject.instance() )
+        """
+        Description
+        -----------
+        Launch grid creation dialog
+        """
+        # update settings
+        self.settings.load_settings( QgsProject.instance() )
 
-	# refresh dialog with current settings
-	self.dlg_settings.load_settings_to_dialog()
+        # refresh dialog with current settings
+        self.dlg_settings.load_settings_to_dialog()
 
-	# show the dialog
-	self.dlg_settings.show()
-	# Run the dialog event loop
-	result = self.dlg_settings.exec_()
+        # show the dialog
+        self.dlg_settings.show()
+        # Run the dialog event loop
+        result = self.dlg_settings.exec_()
 
 
 class QgridderSettings : 
@@ -290,75 +290,75 @@ class QgridderSettings :
     Qgridder settings
     """
     def __init__(self) :
-	# link to project instance
-	self.proj = QgsProject.instance()
-	# initialize settings dictionary
-	self.dic_settings  = {}
-	# support model types (grid topology)
-	self.model_types = ['Modflow','Nested']
-	# initialize list of grid backups
-	self.list_grid_bckup = []
-	# load settings from Qgis project
-	self.load_settings(self.proj)
+        # link to project instance
+        self.proj = QgsProject.instance()
+        # initialize settings dictionary
+        self.dic_settings  = {}
+        # support model types (grid topology)
+        self.model_types = ['Modflow','Nested']
+        # initialize list of grid backups
+        self.list_grid_bckup = []
+        # load settings from Qgis project
+        self.load_settings(self.proj)
     
     def load_settings(self, proj) : 
-	"""
-	Description
-	-----------
-	Load settings from Qgis project
-	"""
+        """
+        Description
+        -----------
+        Load settings from Qgis project
+        """
 
-	# default settings
-	dic_default_settings = { 'model_type':'Modflow',
-		'obs_dir':'./', 
-		'simul_dir':'./',
-		'simul_src':'CSV Files',
-		'simul_file':'simul.file',
-		'model_src_dir':'./',
-		'simul_start_date':'2015-01-01 00:00',
-		'support_grid_layer_name' : 'grid',
-		'plot_obs':'True',
-		'plot_simul':'False',
-		'grid_backup':'True',
-		'max_grid_backup':'5'
-		}
+        # default settings
+        dic_default_settings = { 'model_type':'Modflow',
+                'obs_dir':'./', 
+                'simul_dir':'./',
+                'simul_src':'CSV Files',
+                'simul_file':'simul.file',
+                'model_src_dir':'./',
+                'simul_start_date':'2015-01-01 00:00',
+                'support_grid_layer_name' : 'grid',
+                'plot_obs':'True',
+                'plot_simul':'False',
+                'grid_backup':'True',
+                'max_grid_backup':'5'
+                }
 
 
-	# load settings from Qgis project
-	for key in dic_default_settings.keys() :
-	    entry_value, valid_entry = self.proj.readEntry('qgridder', str(key))
-	    print(str(entry_value) + str(valid_entry) )
-	    
-	    if entry_value == '' : 
-		self.dic_settings[key] = dic_default_settings[key] 
-	    else :
-		self.dic_settings[key] = entry_value
+        # load settings from Qgis project
+        for key in dic_default_settings.keys() :
+            entry_value, valid_entry = self.proj.readEntry('qgridder', str(key))
+            print(str(entry_value) + str(valid_entry) )
+            
+            if entry_value == '' : 
+                self.dic_settings[key] = dic_default_settings[key] 
+            else :
+                self.dic_settings[key] = entry_value
 
-	return()
+        return()
 
-	
+        
     def save_settings(self, proj) : 
-	"""
-	Description
-	-----------
-	Save settings to Qgis project
-	"""
+        """
+        Description
+        -----------
+        Save settings to Qgis project
+        """
 
-	success = True
-	for key,val in zip(self.dic_settings.keys(),self.dic_settings.values()) :
-	    success = success*self.proj.writeEntry('qgridder', str(key), str(val))
+        success = True
+        for key,val in zip(self.dic_settings.keys(),self.dic_settings.values()) :
+            success = success*self.proj.writeEntry('qgridder', str(key), str(val))
 
-	return(success)
+        return(success)
 
 
     def update_settings(self, dic_settings) : 
-	"""
-	Description
-	-----------
-	Update settings from Qgis project
-	"""
+        """
+        Description
+        -----------
+        Update settings from Qgis project
+        """
 
-	self.dic_settings = dic_settings
+        self.dic_settings = dic_settings
 
 
 

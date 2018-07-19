@@ -10,7 +10,7 @@
  Qgridder builds 2D regular and unstructured grids and comes together with 
  pre- and post-processing capabilities for spatially distributed modeling.
 
-			      -------------------
+                              -------------------
         begin                : 2013-04-08
         copyright            : (C) 2013 by Pryet
         email                : alexandre.pryet@ensegid.fr
@@ -76,28 +76,28 @@ def get_param(grid_layer, output_type = 'array', layer = '', field_name = ''):
 
     # Selection should not be empty if output_type 'list' is selected
     if len(selected_feature_ids) == 0 and output_type == 'list':
-	print("Empty selection. To export all features, export as array.")
-	return(False)
+        print("Empty selection. To export all features, export as array.")
+        return(False)
 
     # Selection will not be considered if output_type 'array' is selected
     if len(selected_feature_ids) != 0 and output_type == 'array':
-	print("Export type is array. Feature selection is not considered. All features will be exported")
+        print("Export type is array. Feature selection is not considered. All features will be exported")
 
     # If a field name is provided, get corresponding field index
     if field_name !='' :
-	attr_field_idx = grid_layer.dataProvider().fieldNameIndex(field_name)
+        attr_field_idx = grid_layer.dataProvider().fieldNameIndex(field_name)
 
-	# If the field is not found in attribute table
-	if attr_field_idx == -1 :
-	    print("Field " + field_name + "  not found in grid attribute table.")
-	    # If output_type is array, return
-	    if output_type == 'array':
-		return(np.array([]))
+        # If the field is not found in attribute table
+        if attr_field_idx == -1 :
+            print("Field " + field_name + "  not found in grid attribute table.")
+            # If output_type is array, return
+            if output_type == 'array':
+                return(np.array([]))
     else :
-	# Field name should not be '' if output type is 'array'
-	if output_type == 'array':
-		print("A valid field name must be provided for output_type \'array\' ")
-		return(np.array([]))
+        # Field name should not be '' if output type is 'array'
+        if output_type == 'array':
+                print("A valid field name must be provided for output_type \'array\' ")
+                return(np.array([]))
 
     # Get row and col field indexes 
     row_field_idx = grid_layer.dataProvider().fieldNameIndex('ROW')
@@ -105,17 +105,17 @@ def get_param(grid_layer, output_type = 'array', layer = '', field_name = ''):
     
     # If row and col fields are not found, call rgrid_numbering  
     if row_field_idx == -1 | col_field_idx == -1 : 
-	rgrid_numbering(grid_layer) 
-	row_field_idx = grid_layer.dataProvider().fieldNameIndex('ROW')
-	col_field_idx = grid_layer.dataProvider().fieldNameIndex('COL')
+        rgrid_numbering(grid_layer) 
+        row_field_idx = grid_layer.dataProvider().fieldNameIndex('ROW')
+        col_field_idx = grid_layer.dataProvider().fieldNameIndex('COL')
 
     if output_type == 'list':
-	output = get_param_list(grid_layer, all_features, layer = layer, field_name = field_name)
+        output = get_param_list(grid_layer, all_features, layer = layer, field_name = field_name)
     elif output_type =='array' :
-	output = get_param_array(grid_layer, field_name = field_name)
+        output = get_param_array(grid_layer, field_name = field_name)
     else : 
-	print("Output type must be either \'list\' or \'array\'")
-	return([])
+        print("Output type must be either \'list\' or \'array\'")
+        return([])
 
     return(output)
 
@@ -157,29 +157,29 @@ def get_param_list(grid_layer, all_features,  layer = '', field_name = ''):
 
     # iterate over selected feature ids
     for fId in selected_feature_ids:
-	feat = all_features[fId] 
-	row = feat[row_field_idx]
-	col = feat[col_field_idx]
+        feat = all_features[fId] 
+        row = feat[row_field_idx]
+        col = feat[col_field_idx]
 
-	this_feat_list = []
+        this_feat_list = []
 
-	# add layer number
-	if layer != '':
-	    this_feat_list.append(layer)
+        # add layer number
+        if layer != '':
+            this_feat_list.append(layer)
 
-	# add row and col number
-	this_feat_list.append(row)
-	this_feat_list.append(col)
+        # add row and col number
+        this_feat_list.append(row)
+        this_feat_list.append(col)
 
-	# add attribute value
-	if field_name != '' :
-	    field_value = feat[attr_field_idx]
-	    if field_value.toFloat()[1] == True:
-		this_feat_list.append(field_value)
-	    else : 
-		this_feat_list.append(str(field_value.toString()))
+        # add attribute value
+        if field_name != '' :
+            field_value = feat[attr_field_idx]
+            if field_value.toFloat()[1] == True:
+                this_feat_list.append(field_value)
+            else : 
+                this_feat_list.append(str(field_value.toString()))
 
-	grid_list.append(this_feat_list)
+        grid_list.append(this_feat_list)
 
     return grid_list
 
@@ -261,9 +261,9 @@ def get_ptset_xy(v_layer, id_field_name = 'ID'):
 
     # iterate over v_layer features 
     for feat in v_layer.getFeatures() :
-	feat_id = feat[id_field_name]
-	feat_point = feat.geometry().asPoint()
-	dic_ptset[feat_id] = ( feat_point.x(), feat_point.y() )
+        feat_id = feat[id_field_name]
+        feat_point = feat.geometry().asPoint()
+        dic_ptset[feat_id] = ( feat_point.x(), feat_point.y() )
 
     return(dic_ptset)
 
@@ -303,12 +303,12 @@ def get_ptset_centroids(v_layer, grid_layer, id_field_name = 'ID',nNeighbors = 3
 
     # check that grid_layer is a grid
     try :
-	res = rgrid_numbering(grid_layer)
-	if res == False:
-	    print("The grid layer does not seem to be valid")
-	    return(False)
+        res = rgrid_numbering(grid_layer)
+        if res == False:
+            print("The grid layer does not seem to be valid")
+            return(False)
     except :
-	return(False)
+        return(False)
 
     # -- create temporary layer of cell centroids
     # init layer type (point) and crs 
@@ -321,19 +321,19 @@ def get_ptset_centroids(v_layer, grid_layer, id_field_name = 'ID',nNeighbors = 3
     # fill layer with centroids
     feat_centroids = []
     for cell in grid_layer.getFeatures():
-	feat = QgsFeature()
-	geom = cell.geometry().centroid()
-	feat.setAttributes( cell.attributes() )
-	feat.setGeometry( QgsGeometry(geom) )
-	feat_centroids.append(feat)
-	
+        feat = QgsFeature()
+        geom = cell.geometry().centroid()
+        feat.setAttributes( cell.attributes() )
+        feat.setGeometry( QgsGeometry(geom) )
+        feat_centroids.append(feat)
+        
     cProvider.addFeatures( feat_centroids )
 
     # -- Create and fill spatial Index
     cLayerIndex = QgsSpatialIndex()
     for centroid in cLayer.getFeatures():
-	cLayerIndex.insertFeature(centroid)
-	
+        cLayerIndex.insertFeature(centroid)
+        
 
     # init distance tool
     d = QgsDistanceArea()
@@ -344,25 +344,25 @@ def get_ptset_centroids(v_layer, grid_layer, id_field_name = 'ID',nNeighbors = 3
    # check that the selection in v_layer is not empty
     selected_feature_ids = v_layer.selectedFeaturesIds()
     if len(selected_feature_ids) == 0:
-	print("Empty selection, all features considered")
-	features = v_layer.getFeatures()
+        print("Empty selection, all features considered")
+        features = v_layer.getFeatures()
     else :
-	print("Only selected features will be considered")
-	features = v_layer.selectedFeatures()
+        print("Only selected features will be considered")
+        features = v_layer.selectedFeatures()
 
     # iterate over selected points, find neighbors, fill pointCentroids dictionary
     for selectedPoint in features:
-	neighborsIds = cLayerIndex.nearestNeighbor(selectedPoint.geometry().asPoint(), nNeighbors)
-	neighborsData = []
-	# iterate over neighbors
-	for neighborId in neighborsIds:
-	    neighborFeat = QgsFeature()
-	    cProvider.getFeatures( QgsFeatureRequest().setFilterFid( neighborId ) ).nextFeature( neighborFeat )
-	    row = neighborFeat['ROW']
-	    col = neighborFeat['COL']
-	    dist = d.measureLine( neighborFeat.geometry().asPoint(), selectedPoint.geometry().asPoint() )
-	    neighborsData.append( (row, col, dist) )
-	PtsetCentroids[selectedPoint[id_field_name]] = neighborsData
+        neighborsIds = cLayerIndex.nearestNeighbor(selectedPoint.geometry().asPoint(), nNeighbors)
+        neighborsData = []
+        # iterate over neighbors
+        for neighborId in neighborsIds:
+            neighborFeat = QgsFeature()
+            cProvider.getFeatures( QgsFeatureRequest().setFilterFid( neighborId ) ).nextFeature( neighborFeat )
+            row = neighborFeat['ROW']
+            col = neighborFeat['COL']
+            dist = d.measureLine( neighborFeat.geometry().asPoint(), selectedPoint.geometry().asPoint() )
+            neighborsData.append( (row, col, dist) )
+        PtsetCentroids[selectedPoint[id_field_name]] = neighborsData
 
     return(PtsetCentroids)
 
@@ -400,10 +400,10 @@ def get_pline_data(pline, pline_layer) :
     pline_feat_list = []
 
     for point in pline_point_list : 
-	feat = QgsFeature()
-	geom = QgsGeometry.fromPoint(point)
-	feat.setGeometry(geom)
-	pline_feat_list.append(feat)
+        feat = QgsFeature()
+        geom = QgsGeometry.fromPoint(point)
+        feat.setGeometry(geom)
+        pline_feat_list.append(feat)
 
     # init and populate memory layer with polyline features
     pline_point_layer = QgsVectorLayer("Point?crs=" + pline_layer.crs().authid(), 'pline_point_layer', providerLib =  'memory')
@@ -419,8 +419,8 @@ def get_pline_data(pline, pline_layer) :
     pline_dist_list = []
 
     for i in range(len(pline_point_list) - 1) : 
-	dist = pline_feat_list[i].geometry().distance( pline_feat_list[i+1].geometry() )
-	pline_dist_list.append(dist)
+        dist = pline_feat_list[i].geometry().distance( pline_feat_list[i+1].geometry() )
+        pline_dist_list.append(dist)
 
     # build list of cumulated distances along polyline
     pline_cumdist_list = list(np.cumsum(pline_dist_list))
@@ -431,7 +431,7 @@ def get_pline_data(pline, pline_layer) :
     pline_cumdist_dic = {}
 
     for i, key in zip( range(len(pline_cumdist_list)), sorted(pline_feat_dic.keys()) ):
-	pline_cumdist_dic[key] = pline_cumdist_list[i]
+        pline_cumdist_dic[key] = pline_cumdist_list[i]
 
 
     # return variables of interest for get_dist_pline_centroid
@@ -508,9 +508,9 @@ def get_pline_centroids(pline_layer, grid_layer, id_field_name = 'ID', get_ndist
     Returns
     -------
     if get_ndist is False :
-	{ pline_feat_id : [ (row, col), ... ] , ... }
+        { pline_feat_id : [ (row, col), ... ] , ... }
     if get_ndist is True :
-	{ pline_feat_id : [ (row, col, ndist), ... ] , ... }
+        { pline_feat_id : [ (row, col, ndist), ... ] , ... }
 
     Examples
     --------
@@ -524,11 +524,11 @@ def get_pline_centroids(pline_layer, grid_layer, id_field_name = 'ID', get_ndist
     # check that the selection in pline_layer is not empty
     selected_feat_ids = pline_layer.selectedFeaturesIds()
     if len(selected_feat_ids) == 0:
-	print("Empty selection, all features considered")
-	plines = pline_layer.getFeatures()
+        print("Empty selection, all features considered")
+        plines = pline_layer.getFeatures()
     else :
-	print("Only selected features will be considered")
-	plines = pline_layer.selectedFeatures()
+        print("Only selected features will be considered")
+        plines = pline_layer.selectedFeatures()
 
 
     print('QGRIDDER _UTILS.... Get spatial index')
@@ -542,34 +542,34 @@ def get_pline_centroids(pline_layer, grid_layer, id_field_name = 'ID', get_ndist
     # Iterate over plines in pline_layer
     for pline in plines:
 
-	# list of grid cells intersected by pline
-	intersected_cells_list = []
-	
-	# get additional pline data
-	if get_ndist == True : 
-	    pline_feat_dic, pline_point_layer_index, pline_cumdist_dic = get_pline_data(pline, pline_layer)
+        # list of grid cells intersected by pline
+        intersected_cells_list = []
+        
+        # get additional pline data
+        if get_ndist == True : 
+            pline_feat_dic, pline_point_layer_index, pline_cumdist_dic = get_pline_data(pline, pline_layer)
 
-	# get grid cells in the bbox of the pline
-	pline_geom = QgsGeometry(pline.geometry())
-	grid_feat_intersect_ids = grid_layer_index.intersects(pline_geom.boundingBox())
+        # get grid cells in the bbox of the pline
+        pline_geom = QgsGeometry(pline.geometry())
+        grid_feat_intersect_ids = grid_layer_index.intersects(pline_geom.boundingBox())
 
-	# shorten selection to grid cells intersected by the pline
-	for id in grid_feat_intersect_ids:
-	    grid_cell = grid_feat_dic[id]
-	    grid_cell_geom = QgsGeometry(grid_cell.geometry())
-	    # Within grid cells in the bbox of feat, select those intersecting feat
-	    if pline_geom.intersects(grid_cell_geom):
-		if get_ndist == True : 
-		    grid_cell_centroid = grid_cell_geom.centroid()
-		    ndist = get_dist_pline_centroid(grid_cell_centroid, pline, pline_feat_dic, pline_point_layer_index, pline_cumdist_dic)
-		    # add grid_cell ROW and COL and ndist attributes
-		    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'], ndist ] )
-		else : 
-		    # add grid_cell ROW and COL attributes
-		    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'] ] )
+        # shorten selection to grid cells intersected by the pline
+        for id in grid_feat_intersect_ids:
+            grid_cell = grid_feat_dic[id]
+            grid_cell_geom = QgsGeometry(grid_cell.geometry())
+            # Within grid cells in the bbox of feat, select those intersecting feat
+            if pline_geom.intersects(grid_cell_geom):
+                if get_ndist == True : 
+                    grid_cell_centroid = grid_cell_geom.centroid()
+                    ndist = get_dist_pline_centroid(grid_cell_centroid, pline, pline_feat_dic, pline_point_layer_index, pline_cumdist_dic)
+                    # add grid_cell ROW and COL and ndist attributes
+                    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'], ndist ] )
+                else : 
+                    # add grid_cell ROW and COL attributes
+                    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'] ] )
 
-	# add pline entry into output dictionary
-	pline_cells_dic[ pline[id_field_name] ] =  intersected_cells_list
+        # add pline entry into output dictionary
+        pline_cells_dic[ pline[id_field_name] ] =  intersected_cells_list
 
     return(pline_cells_dic)
   
@@ -599,14 +599,14 @@ def get_polygon_centroids(polygon_layer, grid_layer, pline_layer = None, id_fiel
     Returns
     -------
     if pline_layer is None :
-	{ polygon_feat_id : [ (row, col), ... ] , ... }
+        { polygon_feat_id : [ (row, col), ... ] , ... }
     if pline_layer not None :
-	{ polygon_feat_id : [ (row, col, ndist), ... ] , ... }
+        { polygon_feat_id : [ (row, col, ndist), ... ] , ... }
 
     Examples
     --------
     >>> rivRowCol = get_polygon_centroids(polygon_rivers, grid, \ 
-	    pline_layer = pline_rivers, id_field_name = 'ID')     
+            pline_layer = pline_rivers, id_field_name = 'ID')     
     
     """
 
@@ -616,12 +616,12 @@ def get_polygon_centroids(polygon_layer, grid_layer, pline_layer = None, id_fiel
     # check that the selection in polygon_layer is not empty
     selected_feat_ids = polygon_layer.selectedFeaturesIds()
     if len(selected_feat_ids) == 0:
-	print("Empty selection, all features considered")
-	polygons = polygon_layer.getFeatures()
+        print("Empty selection, all features considered")
+        polygons = polygon_layer.getFeatures()
     else :
-	print("Only selected features will be considered")
-	polygons = polygon_layer.selectedFeatures()
-	
+        print("Only selected features will be considered")
+        polygons = polygon_layer.selectedFeatures()
+        
     # create and fill spatial Index
     grid_layer_index = get_spatial_indexes([grid_layer])[0] 
 
@@ -630,38 +630,38 @@ def get_polygon_centroids(polygon_layer, grid_layer, pline_layer = None, id_fiel
 
     # init pline dictionary
     if pline_layer is not None : 
-	pline_dic = { feat[id_field_name]:feat for feat in pline_layer.getFeatures() }
+        pline_dic = { feat[id_field_name]:feat for feat in pline_layer.getFeatures() }
     
     # Iterate over polygons in polygon_layer
     for polygon in polygons : 
 
-	# list of grid cells intersected by polygon
-	intersected_cells_list = []
-	
-	# get grid cells in the bbox of the polygon
-	polygon_geom = QgsGeometry(polygon.geometry())
-	grid_feat_intersect_ids = grid_layer_index.intersects(polygon_geom.boundingBox())
+        # list of grid cells intersected by polygon
+        intersected_cells_list = []
+        
+        # get grid cells in the bbox of the polygon
+        polygon_geom = QgsGeometry(polygon.geometry())
+        grid_feat_intersect_ids = grid_layer_index.intersects(polygon_geom.boundingBox())
 
-	# fetch corresponding pline based on ID atribute
-	if pline_layer is not None : 
-	    pline = pline_dic[ polygon[id_field_name] ] 
-	    pline_feat_dic, pline_point_layer_index, pline_cumdist_dic = get_pline_data(pline, pline_layer)
+        # fetch corresponding pline based on ID atribute
+        if pline_layer is not None : 
+            pline = pline_dic[ polygon[id_field_name] ] 
+            pline_feat_dic, pline_point_layer_index, pline_cumdist_dic = get_pline_data(pline, pline_layer)
 
-	# shorten selection to grid cells intersected by the polygon
-	for id in grid_feat_intersect_ids:
-	    grid_cell = grid_feat_dic[id]
-	    grid_cell_geom = QgsGeometry(grid_cell.geometry())
-	    # Within grid cells in the bbox of feat, select those intersecting feat
-	    if polygon_geom.intersects(grid_cell_geom):
-		if pline_layer is not None : 
-		    grid_cell_centroid = grid_cell_geom.centroid()
-		    ndist = get_dist_pline_centroid(grid_cell_centroid, pline, pline_feat_dic, pline_point_layer_index, pline_cumdist_dic)
-		    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'], ndist ] )
-		else : 
-		    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'] ] )
+        # shorten selection to grid cells intersected by the polygon
+        for id in grid_feat_intersect_ids:
+            grid_cell = grid_feat_dic[id]
+            grid_cell_geom = QgsGeometry(grid_cell.geometry())
+            # Within grid cells in the bbox of feat, select those intersecting feat
+            if polygon_geom.intersects(grid_cell_geom):
+                if pline_layer is not None : 
+                    grid_cell_centroid = grid_cell_geom.centroid()
+                    ndist = get_dist_pline_centroid(grid_cell_centroid, pline, pline_feat_dic, pline_point_layer_index, pline_cumdist_dic)
+                    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'], ndist ] )
+                else : 
+                    intersected_cells_list.append( [ grid_cell['ROW'], grid_cell['COL'] ] )
 
-	# add polygon entry into output dictionary
-	polygon_cells_dic[ polygon[id_field_name] ] =  intersected_cells_list
+        # add polygon entry into output dictionary
+        polygon_cells_dic[ polygon[id_field_name] ] =  intersected_cells_list
 
     return(polygon_cells_dic)
 
@@ -692,19 +692,19 @@ def get_feat_param(v_layer, id_field_name = 'ID', field_name = 'PARAM',):
    # check that the selection in v_layer is not empty
     selected_feature_ids = v_layer.selectedFeaturesIds()
     if len(selected_feature_ids) == 0:
-	print("Empty selection, all features considered")
-	features = v_layer.getFeatures()
+        print("Empty selection, all features considered")
+        features = v_layer.getFeatures()
     else :
-	print("Only selected features will be considered")
-	features = v_layer.selectedFeatures()
+        print("Only selected features will be considered")
+        features = v_layer.selectedFeatures()
 
     # init output dictionary
     ptset_field_values = {}
 
     for feat in features:
-	this_feat_id = feat[ id_field_name ]
-	this_feat_field_value = feat[ field_name ]
-	ptset_field_values[ this_feat_id  ] = this_feat_field_value
+        this_feat_id = feat[ id_field_name ]
+        this_feat_field_value = feat[ field_name ]
+        ptset_field_values[ this_feat_id  ] = this_feat_field_value
 
     return(ptset_field_values)
 
@@ -738,8 +738,8 @@ def data_to_grid(data, grid_layer, field_name = 'PARAM', fieldType = QVariant.Do
 
     # if field "field_name" does not exist in attribute map, add it
     if field_name not in field_name_map.keys():
-	grid_layer.dataProvider().addAttributes(  [QgsField( field_name, fieldType)] )
-	grid_layer.updateFields()
+        grid_layer.dataProvider().addAttributes(  [QgsField( field_name, fieldType)] )
+        grid_layer.updateFields()
     
     # reshape array to a 1D vector
     # elements are sorted from top left to bottom right
@@ -750,7 +750,7 @@ def data_to_grid(data, grid_layer, field_name = 'PARAM', fieldType = QVariant.Do
     all_features = {feat.id():feat for feat in grid_layer.getFeatures()}
     print('building all_centroids')
     all_centroids = [feat.geometry().centroid().asPoint() \
-			for feat in all_features.values()]
+                        for feat in all_features.values()]
     print('sorting centroids')
     centroids_ids = all_features.keys()
     centroids_x = np.around(np.array([centroid.x() for centroid in all_centroids]), MAX_DECIMALS)

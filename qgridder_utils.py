@@ -10,7 +10,7 @@
  Qgridder Builds 2D regular and unstructured grids and comes together with 
  pre- and post-processing capabilities for spatially distributed modeling.
 
-			      -------------------
+                              -------------------
         begin                : 2013-04-08
         copyright            : (C) 2013 by Pryet
         email                : alexandre.pryet@ensegid.fr

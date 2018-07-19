@@ -9,7 +9,7 @@
  Qgridder Builds 2D regular and unstructured grids and comes together with 
  pre- and post-processing capabilities for spatially distributed modeling.
 
-			     -------------------
+                             -------------------
         begin                : 2013-04-08
         copyright            : (C) 2013 by Pryet
         email                : alexandre.pryet@ensegid.fr
@@ -40,34 +40,34 @@ class QGridderDialogExport(QGridderDialog, Ui_QGridderExport):
     Qgridder settings dialog class
     """
     def __init__(self,iface, settings):
-	"""
-	Description
-	-----------
-	Initialize export window
+        """
+        Description
+        -----------
+        Initialize export window
 
-	"""
-	# Set up the user interface
-     	QDialog.__init__(self)
-	self.iface = iface
-	self.settings = settings		
-	self.setupUi(self)
-	self.proj = QgsProject.instance()
+        """
+        # Set up the user interface
+        QDialog.__init__(self)
+        self.iface = iface
+        self.settings = settings                
+        self.setupUi(self)
+        self.proj = QgsProject.instance()
 
-	# Connect buttons
-	QObject.connect(self.buttonExportTextFile, SIGNAL("clicked()"), self.export_geometry)
-	QObject.connect(self.buttonBrowseOutputFile, SIGNAL("clicked()"), self.out_text_file)
+        # Connect buttons
+        QObject.connect(self.buttonExportTextFile, SIGNAL("clicked()"), self.export_geometry)
+        QObject.connect(self.buttonBrowseOutputFile, SIGNAL("clicked()"), self.out_text_file)
 
-	# Populate layer list
-	self.populate_layer_list(self.listGridLayer)
+        # Populate layer list
+        self.populate_layer_list(self.listGridLayer)
 
 
     def out_text_file(self):
-	"""
-	Description
-	-----------
-	Choose output shape file
+        """
+        Description
+        -----------
+        Choose output shape file
 
-	"""
+        """
 
         self.textOutTextFileName.clear()
         fileName, self.encoding  = ftools_utils.saveDialog( self )
@@ -77,63 +77,63 @@ class QGridderDialogExport(QGridderDialog, Ui_QGridderExport):
 
 
     def export_geometry(self) :
-	"""
-	Description
-	-----------
-	Export grid to text file
+        """
+        Description
+        -----------
+        Export grid to text file
 
-	"""
+        """
 
-	gridLayerName = self.listGridLayer.currentText()
+        gridLayerName = self.listGridLayer.currentText()
 
-	outTextFileName = self.textOutTextFileName.text()
-	
-	# settings	
-	delimiter = ','
-	lineterminator = '\r'
-	max_decimals = 2
+        outTextFileName = self.textOutTextFileName.text()
+        
+        # settings        
+        delimiter = ','
+        lineterminator = '\r'
+        max_decimals = 2
 
-	# Error checks
-	if len(outTextFileName) <= 0:
-		return "No output file given"
+        # Error checks
+        if len(outTextFileName) <= 0:
+                return "No output file given"
 
-	gridLayer = ftools_utils.getMapLayerByName( unicode( gridLayerName ) )
+        gridLayer = ftools_utils.getMapLayerByName( unicode( gridLayerName ) )
 
-	if gridLayer == None:
-		return "Layer " + gridLayerName + " not found"
+        if gridLayer == None:
+                return "Layer " + gridLayerName + " not found"
 
-	# Create the CSV file
-	try:
-		txtfile = open(outTextFileName, 'w')
-	except ValueError:
-	    print "Writing Error.  Try again..."
+        # Create the CSV file
+        try:
+                txtfile = open(outTextFileName, 'w')
+        except ValueError:
+            print "Writing Error.  Try again..."
 
-	# Iterate through each feature in the source layer
-	feature_count = gridLayer.dataProvider().featureCount()
+        # Iterate through each feature in the source layer
+        feature_count = gridLayer.dataProvider().featureCount()
 
-	# Initialize progress bar
-	progress=QProgressDialog("Exporting attributes...", "Abort Export", 0, feature_count);
-	progress.setWindowModality(Qt.WindowModal)
+        # Initialize progress bar
+        progress=QProgressDialog("Exporting attributes...", "Abort Export", 0, feature_count);
+        progress.setWindowModality(Qt.WindowModal)
 
-	# Select all features along with their attributes
-	allAttrs = gridLayer.pendingAllAttributesList()
-	gridLayer.select(allAttrs)
+        # Select all features along with their attributes
+        allAttrs = gridLayer.pendingAllAttributesList()
+        gridLayer.select(allAttrs)
 
-	# Iterate over grid cells
-	for feat in gridLayer.getFeatures():
-	    p0, p1, p2, p3 = ftools_utils.extractPoints(feat.geometry())[:4]
-	    txtfile.write(str(feat.id()) + ' AUTO' + lineterminator)
-	    for point in [p0,p1,p2,p3,p0]:
-		xcoor = round(point.x(), max_decimals)
-		ycoor = round(point.y(), max_decimals)
-		txtfile.write('\t' + str(xcoor) + delimiter + str(ycoor) + lineterminator)
-	    txtfile.write('END' + lineterminator)
-	    progress.setValue(feat.id())
-	    if (progress.wasCanceled()):
-		   return "Export canceled "
+        # Iterate over grid cells
+        for feat in gridLayer.getFeatures():
+            p0, p1, p2, p3 = ftools_utils.extractPoints(feat.geometry())[:4]
+            txtfile.write(str(feat.id()) + ' AUTO' + lineterminator)
+            for point in [p0,p1,p2,p3,p0]:
+                xcoor = round(point.x(), max_decimals)
+                ycoor = round(point.y(), max_decimals)
+                txtfile.write('\t' + str(xcoor) + delimiter + str(ycoor) + lineterminator)
+            txtfile.write('END' + lineterminator)
+            progress.setValue(feat.id())
+            if (progress.wasCanceled()):
+                   return "Export canceled "
 
-	txtfile.write('END' + lineterminator)
-	
-	progress.close()
-	txtfile.close()
+        txtfile.write('END' + lineterminator)
+        
+        progress.close()
+        txtfile.close()
 
