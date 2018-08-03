@@ -4,12 +4,12 @@
  qgridder_dialog_check3D.py
                                  Qgridder - A QGIS plugin
 
- This file handles Qgridder graphical user interface                           
+ This file handles Qgridder graphical user interface
 
- Qgridder Builds 2D regular and unstructured grids and comes together with 
+ Qgridder Builds 2D regular and unstructured grids and comes together with
  pre- and post-processing capabilities for spatially distributed modeling.
 
-			     -------------------
+                             -------------------
         begin                : 2013-04-08
         copyright            : (C) 2013 by Pryet
         email                : alexandre.pryet@ensegid.fr
@@ -44,125 +44,125 @@ class QGridderDialogCheck3D(QGridderDialog, Ui_QGridderCheck3D):
     """
     def __init__(self,iface, settings):
 
-	# Set up the user interface from Designer.
-     	QDialog.__init__(self)
-	self.iface = iface
-	self.settings = settings		
-	self.setupUi(self)
+        # Set up the user interface from Designer.
+        QDialog.__init__(self)
+        self.iface = iface
+        self.settings = settings
+        self.setupUi(self)
 
-	
-	# Connect buttons
-	QObject.connect(self.buttonLayer3DUp, SIGNAL("clicked()"), self.layer3D_up)
-	QObject.connect(self.buttonLayer3DDown, SIGNAL("clicked()"), self.layer3D_down)
-	QObject.connect(self.buttonLayer3DRemove, SIGNAL("clicked()"), self.remove_layer3D)
-	QObject.connect(self.buttonAddNewLayer3D, SIGNAL("clicked()"), self.add_new_layer3D)
-	QObject.connect(self.buttonAddExistingLayer3D, SIGNAL("clicked()"), self.add_existing_layer3D)
-	QObject.connect(self.buttonCheck3D, SIGNAL("clicked()"), self.run_check3D)
 
-	# Populate model name list
-	self.populate_layer_list(self.listReferenceGrid)
-	self.populate_layer_list(self.listExistingLayer)
+        # Connect buttons
+        QObject.connect(self.buttonLayer3DUp, SIGNAL("clicked()"), self.layer3D_up)
+        QObject.connect(self.buttonLayer3DDown, SIGNAL("clicked()"), self.layer3D_down)
+        QObject.connect(self.buttonLayer3DRemove, SIGNAL("clicked()"), self.remove_layer3D)
+        QObject.connect(self.buttonAddNewLayer3D, SIGNAL("clicked()"), self.add_new_layer3D)
+        QObject.connect(self.buttonAddExistingLayer3D, SIGNAL("clicked()"), self.add_existing_layer3D)
+        QObject.connect(self.buttonCheck3D, SIGNAL("clicked()"), self.run_check3D)
+
+        # Populate model name list
+        self.populate_layer_list(self.listReferenceGrid)
+        self.populate_layer_list(self.listExistingLayer)
 
 
     # ========== update listLayers3D
     def update_listLayers3D(self) :
-	NamesofLayersInMapCanvas =  []
-	# load list of every layers in map canvas
-	for layer in self.iface.mapCanvas().layers() :
-	    NamesofLayersInMapCanvas.append(layer.name())
-	# check whether each layer of the listLayers3D list is loaded
-	itemRemoved = True
-	while( itemRemoved == True ) : 
-	    itemRemoved = False
-	    for row in range(self.listLayers3D.count()) :
-		if self.listLayers3D.item(row) != None : 
-		    if self.listLayers3D.item(row).text() not in NamesofLayersInMapCanvas :
-			self.listLayers3D.takeItem(row)
-			itemRemoved = True
-			break
+        NamesofLayersInMapCanvas =  []
+        # load list of every layers in map canvas
+        for layer in self.iface.mapCanvas().layers() :
+            NamesofLayersInMapCanvas.append(layer.name())
+        # check whether each layer of the listLayers3D list is loaded
+        itemRemoved = True
+        while( itemRemoved == True ) :
+            itemRemoved = False
+            for row in range(self.listLayers3D.count()) :
+                if self.listLayers3D.item(row) != None :
+                    if self.listLayers3D.item(row).text() not in NamesofLayersInMapCanvas :
+                        self.listLayers3D.takeItem(row)
+                        itemRemoved = True
+                        break
 
     # ---------- Pseudo 3D grid management --------------------------------
 
     def layer3D_up(self):
-	itemRow = self.listLayers3D.currentRow()
-	if itemRow > 0 :
-	    item = self.listLayers3D.takeItem(itemRow)
-	    self.listLayers3D.insertItem(itemRow-1,item)
-	    self.listLayers3D.setCurrentRow(itemRow-1)
+        itemRow = self.listLayers3D.currentRow()
+        if itemRow > 0 :
+            item = self.listLayers3D.takeItem(itemRow)
+            self.listLayers3D.insertItem(itemRow-1,item)
+            self.listLayers3D.setCurrentRow(itemRow-1)
 
     def layer3D_down(self):
-	itemRow = self.listLayers3D.currentRow()
-	if itemRow < self.listLayers3D.count() - 1 :
-	    item = self.listLayers3D.takeItem(itemRow)
-	    self.listLayers3D.insertItem(itemRow+1,item)
-	    self.listLayers3D.setCurrentRow(itemRow+1)
+        itemRow = self.listLayers3D.currentRow()
+        if itemRow < self.listLayers3D.count() - 1 :
+            item = self.listLayers3D.takeItem(itemRow)
+            self.listLayers3D.insertItem(itemRow+1,item)
+            self.listLayers3D.setCurrentRow(itemRow+1)
 
     def remove_layer3D(self):
-	itemRow = self.listLayers3D.currentRow()
-	removedItem = self.listLayers3D.takeItem(itemRow)
+        itemRow = self.listLayers3D.currentRow()
+        removedItem = self.listLayers3D.takeItem(itemRow)
 
     def add_new_layer3D(self):
-	# fetch reference grid from listReferenceGrid
-	ReferenceGridLayerName = self.listReferenceGrid.currentText()
+        # fetch reference grid from listReferenceGrid
+        ReferenceGridLayerName = self.listReferenceGrid.currentText()
         if not ReferenceGridLayerName == "":
             ReferenceGridLayer = ftools_utils.getMapLayerByName( unicode( ReferenceGridLayerName ) )
 
-	# Copy reference grid to shapefile to user defined location
-	OutFileName, Encoding = ftools_utils.saveDialog( self )
-	if (OutFileName, OutFileName) == (None, None) :
-	    return()
+        # Copy reference grid to shapefile to user defined location
+        OutFileName, Encoding = ftools_utils.saveDialog( self )
+        if (OutFileName, OutFileName) == (None, None) :
+            return()
 
-	# write new layer to shapefile
-	ftools_utils.writeVectorLayerToShape( ReferenceGridLayer, OutFileName, self.encoding )
-
-
-	# get new layer name
-	file_info = QFileInfo( OutFileName )
-	if file_info.exists():
-	    newLayerName = file_info.completeBaseName()
-
-	# check whether this layer name is already in the 3D list
-	if len(self.listLayers3D.findItems(newLayerName,Qt.MatchFixedString)) != 0 : 
-	    QMessageBox.information(self, self.tr("Gridder"), 
-		    self.tr("This layer is already in the list."))
-	    return()
+        # write new layer to shapefile
+        ftools_utils.writeVectorLayerToShape( ReferenceGridLayer, OutFileName, self.encoding )
 
 
-	# Load new layer into map canvas ...
-	for (name,layer) in	QgsMapLayerRegistry.instance().mapLayers().iteritems():
-	    # Note : reload() doesn't work.
-	    if layer.source()==self.OutFileName:
-		QgsMapLayerRegistry.instance().removeMapLayers( layer.id() )
-	ftools_utils.addShapeToCanvas( OutFileName )
-        
-	# add new layer to listLayers3D
-	self.listLayers3D.addItem(newLayerName)
+        # get new layer name
+        file_info = QFileInfo( OutFileName )
+        if file_info.exists():
+            newLayerName = file_info.completeBaseName()
+
+        # check whether this layer name is already in the 3D list
+        if len(self.listLayers3D.findItems(newLayerName,Qt.MatchFixedString)) != 0 :
+            QMessageBox.information(self, self.tr("Gridder"),
+                    self.tr("This layer is already in the list."))
+            return()
+
+
+        # Load new layer into map canvas ...
+        for (name,layer) in QgsMapLayerRegistry.instance().mapLayers().iteritems():
+            # Note : reload() doesn't work.
+            if layer.source()==self.OutFileName:
+                QgsMapLayerRegistry.instance().removeMapLayers( layer.id() )
+        ftools_utils.addShapeToCanvas( OutFileName )
+
+        # add new layer to listLayers3D
+        self.listLayers3D.addItem(newLayerName)
 
     def add_existing_layer3D(self):
-	# get layer name
-	existingGridLayerName = self.listExistingLayer.currentText()
-	# check whether current layer is not already in the list
-	if len(self.listLayers3D.findItems(existingGridLayerName,Qt.MatchFixedString)) == 0 : 
-	    # add new layer
-	    self.listLayers3D.addItem(existingGridLayerName)
-	else :
-	    QMessageBox.information(self, self.tr("Gridder"), 
-		    self.tr("This layer is already in the list.")
-		    )
+        # get layer name
+        existingGridLayerName = self.listExistingLayer.currentText()
+        # check whether current layer is not already in the list
+        if len(self.listLayers3D.findItems(existingGridLayerName,Qt.MatchFixedString)) == 0 :
+            # add new layer
+            self.listLayers3D.addItem(existingGridLayerName)
+        else :
+            QMessageBox.information(self, self.tr("Gridder"),
+                    self.tr("This layer is already in the list.")
+                    )
 
     def run_check3D(self):
-	allLayers = []
-	topoRules = {'model':'nested', 'nmax':2,'pmax':4}
-	for row in range( self.listLayers3D.count() ) : 
-	    vLayerName = self.listLayers3D.item(row).text()
-	    vLayer  = ftools_utils.getMapLayerByName( unicode( vLayerName ) )
-	    allLayers.append(vLayer)
-	qgridder_utils.correct_pseudo3D_grid(allLayers, topoRules)
-	QMessageBox.information(self, self.tr("Qgridder"), 
-	    self.tr('pseudo-3D grid topology successfully checked and corrected')
-	)
-	# Refresh map canvas 
-	self.iface.mapCanvas().refresh()
-	return()
+        allLayers = []
+        topoRules = {'model':'nested', 'nmax':2,'pmax':4}
+        for row in range( self.listLayers3D.count() ) :
+            vLayerName = self.listLayers3D.item(row).text()
+            vLayer  = ftools_utils.getMapLayerByName( unicode( vLayerName ) )
+            allLayers.append(vLayer)
+        qgridder_utils.correct_pseudo3D_grid(allLayers, topoRules)
+        QMessageBox.information(self, self.tr("Qgridder"),
+            self.tr('pseudo-3D grid topology successfully checked and corrected')
+        )
+        # Refresh map canvas
+        self.iface.mapCanvas().refresh()
+        return()
 
 

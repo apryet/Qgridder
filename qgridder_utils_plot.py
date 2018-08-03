@@ -7,10 +7,10 @@
  This file gathers functions which facilitate pre- and post-processing of
  spatially distributed numerical models based on Qgridder grids.
 
- Qgridder builds 2D regular and unstructured grids and comes together with 
+ Qgridder builds 2D regular and unstructured grids and comes together with
  pre- and post-processing capabilities for spatially distributed modeling.
 
-			      -------------------
+                              -------------------
         begin                : 2013-04-08
         copyright            : (C) 2013 by Pryet
         email                : alexandre.pryet@ensegid.fr
@@ -45,7 +45,7 @@ import matplotlib.dates as mdates
 # ======= Plot
 def plot_chart(obs = {'t':[], 'val':[]}, simul = {'t':[], 'val':[]}, xlim = [], ylim = [], title=''):
     """
-    Draws a plot of observed and simulated records. Designed to accept dates from mdates on the x-axis.  
+    Draws a plot of observed and simulated records. Designed to accept dates from mdates on the x-axis.
 
     Parameters
     ----------
@@ -72,10 +72,10 @@ def plot_chart(obs = {'t':[], 'val':[]}, simul = {'t':[], 'val':[]}, xlim = [], 
     val_simul = simul['val']
 
     if len(xlim) == 2 :
-	axes.set_xlim(xlim[0],xlim[1])
+        axes.set_xlim(xlim[0],xlim[1])
 
     if len(ylim) == 2 :
-	axes.set_ylim(ylim[0],ylim[1])
+        axes.set_ylim(ylim[0],ylim[1])
 
     # plot records
     axes.plot(t_obs,val_obs,'g+',label='Obs.')
@@ -85,7 +85,7 @@ def plot_chart(obs = {'t':[], 'val':[]}, simul = {'t':[], 'val':[]}, xlim = [], 
     axes.grid()
 
     # plot title
-    axes.set_title(title)	
+    axes.set_title(title)
 
     # print plot decoration
     l = axes.legend()

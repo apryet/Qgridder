@@ -23,9 +23,9 @@
 import numpy as np
 import datetime as dt
 
-try : 
+try :
     import matplotlib.dates as mdates
-except : 
+except :
     print('Could not load matplotlib.dates module')
 
 
@@ -40,9 +40,9 @@ def gen_time_seq(date_start_string, tstep, n_tstep, date_string_format = '%Y-%m-
                         '%Y-%m-%d %H:%M', e.g. '2015-03-02 12:00'.
     tstep : length of time step in seconds.
     n_tstep : number of time steps
-    date_string_format : date string format used in input file, 
+    date_string_format : date string format used in input file,
                          see https://docs.python.org/2/library/datetime.html#strftime-strptime-behavior
-    
+
     Returns
     -------
 
@@ -50,7 +50,7 @@ def gen_time_seq(date_start_string, tstep, n_tstep, date_string_format = '%Y-%m-
 
     Examples
     --------
-    # generate a sequence of 20 datetimes instances starting from 2015-03-02 12:00 at 1-minute-interval. 
+    # generate a sequence of 20 datetimes instances starting from 2015-03-02 12:00 at 1-minute-interval.
     >>> dates_out = gen_time_seq(date_start_string = '2015-03-02 12:00' ,tstep = 60 ,n_tstep = 20)
 
     """
@@ -60,13 +60,13 @@ def gen_time_seq(date_start_string, tstep, n_tstep, date_string_format = '%Y-%m-
     date_end = date_start + dt.timedelta(seconds = tstep*n_tstep)
     # generate sequence of dates
     datenums_out = mdates.drange(date_start,date_end - dt.timedelta(seconds=0.001), dt.timedelta(seconds=tstep))
-    # convert to list of datetime 
+    # convert to list of datetime
     dates_out = mdates.num2date(datenums_out)
 
     return(dates_out)
 
 # ---------------------------------------------------------------
-def lin_time_interp(dates_in, vals_in, dates_out) : 
+def lin_time_interp(dates_in, vals_in, dates_out) :
     """
     Perform linear interpolation from an input time series so as to provide
     output values at required times. If output times are found before / after
@@ -76,7 +76,7 @@ def lin_time_interp(dates_in, vals_in, dates_out) :
     ----------
     dates_in : Pandas DataFrame object with a date index and a 'val' column
     vals_in : dates for which to provide interpolated values.
-    
+
     Returns
     -------
     vals_out : a numpy array with interpolates values at t_out
@@ -93,15 +93,15 @@ def lin_time_interp(dates_in, vals_in, dates_out) :
     # convert dates to datenums
     datenums_in = mdates.date2num(dates_in)
     datenums_out = mdates.date2num(dates_out)
-	
-    # array of indexes corresponding with closest timestamp after "observed" value 
+
+    # array of indexes corresponding with closest timestamp after "observed" value
     idx_after = np.searchsorted(datenums_in, datenums_out)
 
     # look for dates outside time span of input values
     is_outside = np.zeros( (n_tstep,)) # default value, for dates within time span of input values
     is_outside[ idx_after == 0 ] = -1 # value for dates before first input value
     is_outside[ idx_after == n_tstep ] = 1 # value for dates after last input value
-    idx_after[ idx_after == 0 ] = 1 # correct idx_after to avoid index value out of bound 
+    idx_after[ idx_after == 0 ] = 1 # correct idx_after to avoid index value out of bound
     idx_after[ idx_after == len(datenums_in) ] = len(datenums_in) - 1 # correct idx_after to avoid index value out of bound
 
 
@@ -114,10 +114,10 @@ def lin_time_interp(dates_in, vals_in, dates_out) :
 
 
     #calculate new weighted value
-    span = times_after - times_before   
+    span = times_after - times_before
     weight_before = (times_after - datenums_out) / span
     weight_after = (datenums_out - times_before ) / span
-    vals_out = weight_before * vals_before + weight_after * vals_after 
+    vals_out = weight_before * vals_before + weight_after * vals_after
 
 
     # set values outside to first / last value
@@ -130,29 +130,29 @@ def lin_time_interp(dates_in, vals_in, dates_out) :
 
 # ---------------------------------------------------------------
 def interp_from_file(in_file_path, dates_out, date_string_format =  '%Y-%m-%d %H:%M',
-	csv_delimiter =',' , skip_header = 1, quotechar='\"'
-	  ) : 
+        csv_delimiter =',' , skip_header = 1, quotechar='\"'
+          ) :
     """
     Performs linear interpolation from an input csv file with lin_time_interp
 
     Parameters
     ----------
-    in_file_path : input csv file following format 
-		TIMESTAMP,val
-		2012-01-01 12:00,0.0
-		2012-02-01 13:00,0.0
+    in_file_path : input csv file following format
+                TIMESTAMP,val
+                2012-01-01 12:00,0.0
+                2012-02-01 13:00,0.0
 
-		A header line must be present, but column names may be chosen freely.
-		The first column should be the date in string format.
-		The second column should 
+                A header line must be present, but column names may be chosen freely.
+                The first column should be the date in string format.
+                The second column should
 
     dates_out : list of datetime objects, as generated by gen_time_seq(...).
 
-    date_string_format : date string format used in input file, 
+    date_string_format : date string format used in input file,
                          see https://docs.python.org/2/library/datetime.html#strftime-strptime-behavior
 
     csv_delimiter, skip_header, quotechar : parameters for numpy.genfromtxt(...)
-    
+
     Returns
     -------
 
@@ -168,23 +168,23 @@ def interp_from_file(in_file_path, dates_out, date_string_format =  '%Y-%m-%d %H
     # read observed data
 
     try :
-	datenums_in, vals_in = np.genfromtxt(in_file_path,delimiter=csv_delimiter, 
-		unpack=True,skip_header=skip_header,
-		converters={ 0: mdates.strpdate2num(date_string_format)}
-		)
+        datenums_in, vals_in = np.genfromtxt(in_file_path,delimiter=csv_delimiter,
+                unpack=True,skip_header=skip_header,
+                converters={ 0: mdates.strpdate2num(date_string_format)}
+                )
 
     except :
-	print('Error while reading file ' + in_file_path + '.\n'+
-		'Check file path and format (should be a 2 column CSV file).'
-		)
-	return(None)
+        print('Error while reading file ' + in_file_path + '.\n'+
+                'Check file path and format (should be a 2 column CSV file).'
+                )
+        return(None)
 
     # convert datesnums to datetime
     dates_in = mdates.num2date(datenums_in)
 
-    # compute vals_out 
+    # compute vals_out
     vals_out = lin_time_interp(dates_in, vals_in, dates_out)
 
-    return( vals_out ) 
+    return( vals_out )
 
 

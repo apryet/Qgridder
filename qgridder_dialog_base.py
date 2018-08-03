@@ -4,12 +4,12 @@
  qgridderdialog_base.py
                                  Qgridder - A QGIS plugin
 
- This file handles Qgridder graphical user interface                           
+ This file handles Qgridder graphical user interface
 
- Qgridder Builds 2D regular and unstructured grids and comes together with 
+ Qgridder Builds 2D regular and unstructured grids and comes together with
  pre- and post-processing capabilities for spatially distributed modeling.
 
-			     -------------------
+                             -------------------
         begin                : 2013-04-08
         copyright            : (C) 2013 by Pryet
         email                : alexandre.pryet@ensegid.fr
@@ -36,25 +36,25 @@ class QGridderDialog(QDialog):
     """
     def __init__(self,iface):
 
-	# Set up the user interface from Designer.
-	self.iface = iface
+        # Set up the user interface from Designer.
+        self.iface = iface
 
-	#  ======= Populate input layer list
+        #  ======= Populate input layer list
     def populate_layer_list(self,listOfLayers):
-	listOfLayers.clear()
-	layermap = QgsMapLayerRegistry.instance().mapLayers()
+        listOfLayers.clear()
+        layermap = QgsMapLayerRegistry.instance().mapLayers()
 
-	if type(layermap)==dict :
-	    if len(layermap) > 0:
-		listOfLayers.setEnabled(True)
-		for name, layer in layermap.iteritems():
-		    listOfLayers.addItem( unicode( layer.name() ) )
-		    if layer == self.iface.activeLayer():
-			listOfLayers.setCurrentIndex( listOfLayers.count() -1 )
-	    else :
-		listOfLayers.setEnabled(False)
-	else :
-	    listOfLayers.setEnabled(False)
+        if type(layermap)==dict :
+            if len(layermap) > 0:
+                listOfLayers.setEnabled(True)
+                for name, layer in layermap.iteritems():
+                    listOfLayers.addItem( unicode( layer.name() ) )
+                    if layer == self.iface.activeLayer():
+                        listOfLayers.setCurrentIndex( listOfLayers.count() -1 )
+            else :
+                listOfLayers.setEnabled(False)
+        else :
+            listOfLayers.setEnabled(False)
 
 
 
