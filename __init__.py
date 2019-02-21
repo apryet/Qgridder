@@ -32,5 +32,5 @@ def qgisMinimumVersion():
     return "2.0"
 def classFactory(iface):
     # load Gridder class from file Gridder
-    from qgridder import QGridder
+    from .qgridder import QGridder
     return QGridder(iface)

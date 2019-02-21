@@ -30,8 +30,8 @@
 """
 
 # Import PyQt and QGIS modules
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from qgis.core import *
 
 # Initialize Qt resources from file resources.py

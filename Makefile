@@ -1,4 +1,4 @@
-#/***************************************************************************
+#***************************************************************************
 # QGridder
 # 
 # Builds 2D grids for finite difference
@@ -65,10 +65,10 @@ default: compile
 compile: $(UI_FILES) $(RESOURCE_FILES)
 
 %.py : %.qrc
-	pyrcc4 -o $*.py  $<
+	pyrcc5 -o $*.py  $<
 
 %.py : %.ui
-	pyuic4 -o $@ $<
+	pyuic5 -o $@ $<
 
 %.qm : %.ts
 	lrelease $<
