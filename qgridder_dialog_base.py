@@ -24,9 +24,9 @@
  *                                                                         *
  ***************************************************************************/
 """
-
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 
 
@@ -42,12 +42,12 @@ class QGridderDialog(QDialog):
         #  ======= Populate input layer list
     def populate_layer_list(self,listOfLayers):
         listOfLayers.clear()
-        layermap = QgsMapLayerRegistry.instance().mapLayers()
+        layermap = QgsProject.instance().mapLayers()
 
         if type(layermap)==dict :
             if len(layermap) > 0:
                 listOfLayers.setEnabled(True)
-                for name, layer in layermap.iteritems():
+                for name, layer in layermap.items():
                     listOfLayers.addItem( unicode( layer.name() ) )
                     if layer == self.iface.activeLayer():
                         listOfLayers.setCurrentIndex( listOfLayers.count() -1 )
@@ -55,6 +55,3 @@ class QGridderDialog(QDialog):
                 listOfLayers.setEnabled(False)
         else :
             listOfLayers.setEnabled(False)
-
-
-

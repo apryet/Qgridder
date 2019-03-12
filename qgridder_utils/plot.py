@@ -30,14 +30,15 @@
  ****
 """
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
+
 import numpy as np
 from math import *
 
-from qgridder_utils_base import *
-import ftools_utils
+from .base import *
+from . import ftools_utils
 
 from matplotlib import pyplot as plt
 import matplotlib.dates as mdates

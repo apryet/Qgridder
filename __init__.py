@@ -20,17 +20,7 @@
  ***************************************************************************/
  This script initializes the plugin, making it known to QGIS.
 """
-def name():
-    return "Qgridder"
-def description():
-    return "Builds 2D grids for finite difference"
-def version():
-    return "Version 0.1"
-def icon():
-    return "icon.png"
-def qgisMinimumVersion():
-    return "2.0"
 def classFactory(iface):
-    # load Gridder class from file Gridder
+    # loads Qgridder class
     from .qgridder import QGridder
     return QGridder(iface)

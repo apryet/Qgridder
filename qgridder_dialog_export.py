@@ -25,15 +25,16 @@
  ***************************************************************************/
 """
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 
-from qgridder_dialog_base import QGridderDialog
-from ui_qgridder_export import Ui_QGridderExport
+from .qgridder_dialog_base import QGridderDialog
+from .ui_qgridder_export import Ui_QGridderExport
 
-import ftools_utils
-import qgridder_utils
+from .qgridder_utils import ftools_utils
+from . import qgridder_utils
 
 class QGridderDialogExport(QGridderDialog, Ui_QGridderExport):
     """
@@ -54,8 +55,8 @@ class QGridderDialogExport(QGridderDialog, Ui_QGridderExport):
         self.proj = QgsProject.instance()
 
         # Connect buttons
-        QObject.connect(self.buttonExportTextFile, SIGNAL("clicked()"), self.export_geometry)
-        QObject.connect(self.buttonBrowseOutputFile, SIGNAL("clicked()"), self.out_text_file)
+        self.buttonExportTextFile.clicked.connect(self.export_geometry)
+        self.buttonBrowseOutputFile.clicked.connect(self.out_text_file)
 
         # Populate layer list
         self.populate_layer_list(self.listGridLayer)
@@ -106,7 +107,7 @@ class QGridderDialogExport(QGridderDialog, Ui_QGridderExport):
         try:
                 txtfile = open(outTextFileName, 'w')
         except ValueError:
-            print "Writing Error.  Try again..."
+            print("Writing Error.  Try again...")
 
         # Iterate through each feature in the source layer
         feature_count = gridLayer.dataProvider().featureCount()

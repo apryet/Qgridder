@@ -36,8 +36,8 @@ from qgis.core import *
 import numpy as np
 from math import *
 
-from qgridder_utils_base import *
-import ftools_utils
+from .base import *
+from . import ftools_utils
 
 # ---------------------------------
 
@@ -72,7 +72,7 @@ def get_param(grid_layer, output_type = 'array', layer = '', field_name = ''):
     row_field_idx = col_field_idx = attr_field_idx = -1
 
     # Fetch selected features from input grid_layer
-    selected_feature_ids = grid_layer.selectedFeaturesIds()
+    selected_feature_ids = grid_layer.selectedFeatureIds()
 
     # Selection should not be empty if output_type 'list' is selected
     if len(selected_feature_ids) == 0 and output_type == 'list':
@@ -330,10 +330,7 @@ def get_ptset_centroids(v_layer, grid_layer, id_field_name = 'ID',nNeighbors = 3
     cProvider.addFeatures( feat_centroids )
 
     # -- Create and fill spatial Index
-    cLayerIndex = QgsSpatialIndex()
-    for centroid in cLayer.getFeatures():
-        cLayerIndex.insertFeature(centroid)
-
+    cLayerIndex = QgsSpatialIndex(cLayer.getFeatures())
 
     # init distance tool
     d = QgsDistanceArea()

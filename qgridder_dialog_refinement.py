@@ -25,15 +25,16 @@
  ***************************************************************************/
 """
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 
-from qgridder_dialog_base import QGridderDialog
-from ui_qgridder_refinement import Ui_QGridderRefinement
+from .qgridder_dialog_base import QGridderDialog
+from .ui_qgridder_refinement import Ui_QGridderRefinement
 
-import ftools_utils
-import qgridder_utils
+from . import qgridder_utils
+from .qgridder_utils import ftools_utils
 
 import numpy as np
 
@@ -56,9 +57,9 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
             self.buttonUndoRefine.setEnabled(False)
 
         # Connect buttons
-        QObject.connect(self.buttonRefine, SIGNAL("clicked()"), self.run_regular_refine)
-        QObject.connect(self.buttonUndoRefine, SIGNAL("clicked()"), self.run_undo_refine)
-
+        self.buttonRefine.clicked.connect(self.run_regular_refine)
+        self.buttonUndoRefine.clicked.connect(self.run_undo_refine)
+        
         # Populate model name list
         self.populate_layer_list(self.listGridLayer)
 
@@ -144,15 +145,15 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
         # Backup input grid layer
         if self.settings.dic_settings['grid_backup'] == 'True' :
             if len( self.settings.list_grid_bckup ) < int( self.settings.dic_settings['max_grid_backup'] ) :
-                backup_grid_layer = QgsVectorLayer("Point?crs=" + grid_layer.crs().authid(), 'backupLayer', providerLib =  'memory')
+                backup_grid_layer = QgsVectorLayer("Polygon?crs=" + grid_layer.crs().authid(), 'backupLayer', providerLib =  'memory')
                 success, feature = backup_grid_layer.dataProvider().addFeatures( [feat for feat in grid_layer.getFeatures()] )
                 self.settings.list_grid_bckup.append( backup_grid_layer )
 
         # Fetch selected features from input grid_layer
-        selected_fIds = grid_layer.selectedFeaturesIds()
+        selected_fIds = grid_layer.selectedFeatureIds()
 
         # Clean user selection
-        grid_layer.setSelectedFeatures([])
+        grid_layer.selectByIds([])
 
         # Init labels
         self.labelIterations.show()
@@ -173,6 +174,9 @@ class QGridderDialogRefinement(QGridderDialog, Ui_QGridderRefinement):
         # Enable Write Grid button and reset cursor
         self.buttonRefine.setEnabled( True )
         QApplication.restoreOverrideCursor()
+
+        # Refresh map canvas
+        self.iface.mapCanvas().refresh()
 
         # Enable undo button
         if self.settings.dic_settings['grid_backup'] == 'True' :

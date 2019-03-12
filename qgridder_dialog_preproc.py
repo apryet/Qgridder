@@ -25,15 +25,17 @@
  ***************************************************************************/
 """
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 
-from qgridder_dialog_base import QGridderDialog
-from ui_qgridder_preproc import Ui_QGridderPreProc
+from .qgridder_dialog_base import QGridderDialog
+from .ui_qgridder_preproc import Ui_QGridderPreProc
 
-import ftools_utils
-import qgridder_utils
+from . import qgridder_utils
+from .qgridder_utils import ftools_utils
 
 class QGridderDialogPreProc(QGridderDialog, Ui_QGridderPreProc):
     """
@@ -56,7 +58,7 @@ class QGridderDialogPreProc(QGridderDialog, Ui_QGridderPreProc):
         self.populate_layer_list(self.listGridLayer)
 
         # Connect buttons
-        QObject.connect(self.buttonProceedNumbering, SIGNAL("clicked()"), self.run_numbering)
+        self.buttonProceedNumbering.clicked.connect(self.run_numbering)
 
 
     def run_numbering(self):

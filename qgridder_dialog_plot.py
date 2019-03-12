@@ -19,15 +19,17 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 
-from qgridder_dialog_base import QGridderDialog
-from ui_qgridder_plot import Ui_QGridderPlot
+from .qgridder_dialog_base import QGridderDialog
+from .ui_qgridder_plot import Ui_QGridderPlot
 
-import qgridder_utils
-import ftools_utils
+from . import qgridder_utils
+from .qgridder_utils import ftools_utils
 
 import os
 import sys

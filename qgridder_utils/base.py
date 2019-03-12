@@ -29,12 +29,14 @@
  ***************************************************************************/
 """
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
+
 import numpy as np
 import multiprocessing as mp
-import ftools_utils
+from . import ftools_utils
 import time
 
 # ======================================================================================
@@ -45,7 +47,7 @@ TOLERANCE = 1e-6  # absolute tolerance
 MAX_DECIMALS = 6  # used to limit the effects of numerical noise
 
 # ======================================================================================
-def make_rgrid(input_feat, n, m, vprovider, progress_bar = QProgressDialog("Building grid...", "Abort",0,100) ):
+def make_rgrid(input_feat, n, m, vprovider, progress_bar = None ):
     """
     Description
     ----------
@@ -71,7 +73,6 @@ def make_rgrid(input_feat, n, m, vprovider, progress_bar = QProgressDialog("Buil
 
     # Retrieve bbox and attributes from input feature
     bbox = input_feat.geometry().boundingBox()
-    #attr = input_feat.attributeMap()
     attr = input_feat.attributes()
 
     # Compute grid coordinates
@@ -80,8 +81,9 @@ def make_rgrid(input_feat, n, m, vprovider, progress_bar = QProgressDialog("Buil
     xx, yy = np.meshgrid(x, y)
 
     # Initialize progress bar
-    progress_bar.setRange(0,100)
-    progress_bar.setValue(0)
+    if progress_bar is not None : 
+        progress_bar.setRange(0,100)
+        progress_bar.setValue(0)
     count = 0
     countMax = n*m
     countUpdate = countMax * 0.05 # update each 5%
@@ -99,16 +101,15 @@ def make_rgrid(input_feat, n, m, vprovider, progress_bar = QProgressDialog("Buil
             x1, x2, x3, x4 = xx[i+1,j],  xx[i+1,j+1],  xx[i,j+1],  xx[i,j]
             y1, y2, y3, y4 = yy[i+1,j],  yy[i+1,j+1],  yy[i,j+1],  yy[i,j]
             # define feature points
-            pt1, pt2, pt3, pt4 =  QgsPoint(x1, y1), QgsPoint(x2, y2), QgsPoint(x3, y3), QgsPoint(x4, y4)
+            pt1, pt2, pt3, pt4 =  QgsPointXY(x1, y1), QgsPointXY(x2, y2), QgsPointXY(x3, y3), QgsPointXY(x4, y4)
             pt5 = pt1
             # define polygon from points
             polygon = [[pt1, pt2, pt3, pt4, pt5]]
             # initialize new feature
             out_feat = QgsFeature()
-            #out_feat.setAttributeMap(attr)
             out_feat.setAttributes(attr)
             out_geom = QgsGeometry()
-            out_feat.setGeometry(out_geom.fromPolygon(polygon))
+            out_feat.setGeometry(out_geom.fromPolygonXY(polygon))
             # save features
             out_feat_list.append(out_feat)
             # update counter
@@ -118,10 +119,12 @@ def make_rgrid(input_feat, n, m, vprovider, progress_bar = QProgressDialog("Buil
             # each 5%, update progress bar
             if int( np.fmod( count, countUpdate ) ) == 0:
                     prog = int( count / countMax * 100 )
-                    progress_bar.setValue(prog)
-                    QCoreApplication.processEvents()
+                    if progress_bar is not None : 
+                        progress_bar.setValue(prog)
+                    QApplication.processEvents()
 
-    progress_bar.setValue(100)
+    if progress_bar is not None : 
+        progress_bar.setValue(100)
     # Check type of vector provider
     # If vprovider is a layer provider
     if repr(QgsVectorDataProvider) == str(type(vprovider)):
@@ -314,7 +317,7 @@ def is_over(geomA,geomB,relativeError=TOLERANCE):
             )
 
 # ======================================================================================
-def refine_by_split(featIds, n, m, topo_rules, grid_layer, progress_bar = QProgressDialog("Building grid...", "Abort",0,100), labelIter = QLabel() ) :
+def refine_by_split(featIds, n, m, topo_rules, grid_layer, progress_bar, labelIter ) :
     """
     Description
     ----------
@@ -350,10 +353,7 @@ def refine_by_split(featIds, n, m, topo_rules, grid_layer, progress_bar = QProgr
         colFixDict = { 'id': [] , 'n':[], 'm':[] }
 
         # Initialize spatial index
-        grid_layerIndex = QgsSpatialIndex()
-        # Fill spatial Index
-        for feat in all_features.values():
-            grid_layerIndex.insertFeature(feat)
+        grid_layerIndex = QgsSpatialIndex(grid_layer.getFeatures())
 
         # get bbox of grid layer
         grid_bbox = grid_layer.extent()
@@ -776,7 +776,7 @@ def get_rgrid_nrow_ncol(grid_layer):
     all_features = {feat.id():feat for feat in grid_layer.getFeatures()}
     allCentroids = [feat.geometry().centroid().asPoint() \
                         for feat in all_features.values()]
-    centroids_ids = all_features.keys()
+    centroids_ids = list(all_features.keys())
     centroids_x = [centroid.x() for centroid in allCentroids]
     centroids_y = [centroid.y() for centroid in allCentroids]
     centroids = np.array( [centroids_ids , centroids_x, centroids_y] )
@@ -845,7 +845,7 @@ def get_rgrid_delr_delc(grid_layer):
     all_features = {feat.id():feat for feat in grid_layer.getFeatures()}
     allCentroids = [feat.geometry().centroid().asPoint() \
                         for feat in all_features.values()]
-    centroids_ids = all_features.keys()
+    centroids_ids = list(all_features.keys())
     centroids_x = [centroid.x() for centroid in allCentroids]
     centroids_y = [centroid.y() for centroid in allCentroids]
     centroids = np.array( [centroids_ids , centroids_x, centroids_y] )
@@ -919,7 +919,7 @@ def rgrid_numbering(grid_layer):
     all_features = {feat.id():feat for feat in grid_layer.getFeatures()}
     allCentroids = [feat.geometry().centroid().asPoint() \
                         for feat in all_features.values()]
-    centroids_ids = all_features.keys()
+    centroids_ids = list(all_features.keys())
     centroids_x = np.around(np.array([centroid.x() for centroid in allCentroids]), MAX_DECIMALS)
     centroids_y = np.around(np.array([centroid.y() for centroid in allCentroids]), MAX_DECIMALS)
     centroids = np.array( [centroids_ids , centroids_x, centroids_y] )

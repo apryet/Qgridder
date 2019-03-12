@@ -56,7 +56,7 @@ UI_FILES = ui_qgridder_check3D.py ui_qgridder_export.py ui_qgridder_new.py \
 	  ui_qgridder_plot.py ui_qgridder_preproc.py ui_qgridder_refinement.py \
 	  ui_qgridder_settings.py 
  
-RESOURCE_FILES = resources.py metadata.txt
+RESOURCE_FILES = resources.py
 
 HELP = help/build/html
 

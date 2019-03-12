@@ -31,20 +31,22 @@
 
 # Import PyQt and QGIS modules
 from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
+import os.path
 
 # Initialize Qt resources from file resources.py
-import resources
+from . import resources
 
 # Import the code for the dialogs
-from qgridder_dialog_new import QGridderDialogNew
-from qgridder_dialog_refinement import QGridderDialogRefinement
-from qgridder_dialog_check3D import QGridderDialogCheck3D
-from qgridder_dialog_preproc import QGridderDialogPreProc
-from qgridder_dialog_plot import QGridderDialogPlot
-from qgridder_dialog_export import QGridderDialogExport
-from qgridder_dialog_settings import QGridderDialogSettings
+from .qgridder_dialog_new import QGridderDialogNew
+from .qgridder_dialog_refinement import QGridderDialogRefinement
+from .qgridder_dialog_check3D import QGridderDialogCheck3D
+from .qgridder_dialog_preproc import QGridderDialogPreProc
+from .qgridder_dialog_plot import QGridderDialogPlot
+from .qgridder_dialog_export import QGridderDialogExport
+from .qgridder_dialog_settings import QGridderDialogSettings
 
 #  ---------------------------------------------
 class QGridder:
@@ -78,17 +80,17 @@ class QGridder:
         # Initialize menu
         self.qgridder_menu = None
         # initialize plugin directory
-        self.plugin_dir = QFileInfo(QgsApplication.qgisUserDbFilePath()).path() + "/python/plugins/Qgridder"
+        self.plugin_dir =  os.path.dirname(__file__) 
         # initialize locale
-        localePath = ""
-        locale = QSettings().value("locale/userLocale")[0:2]
+        locale = QSettings().value('locale/userLocale')[0:2]
+        locale_path = os.path.join(
+            self.plugin_dir,
+            'i18n',
+            'TemplateClass_{}.qm'.format(locale))
 
-        if QFileInfo(self.plugin_dir).exists():
-            localePath = self.plugin_dir + "/i18n/Qgridder_" + locale + ".qm"
-
-        if QFileInfo(localePath).exists():
+        if os.path.exists(locale_path):
             self.translator = QTranslator()
-            self.translator.load(localePath)
+            self.translator.load(locale_path)
 
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
@@ -116,14 +118,13 @@ class QGridder:
             "Settings", self.iface.mainWindow())
 
         # connect the action to the run method
-        QObject.connect(self.action_new, SIGNAL("activated()"), self.run_new)
-        QObject.connect(self.action_refinement, SIGNAL("activated()"), self.run_refinement)
-        QObject.connect(self.action_check3D, SIGNAL("activated()"), self.run_check3D)
-        QObject.connect(self.action_plot, SIGNAL("activated()"), self.run_plot)
-        QObject.connect(self.action_export, SIGNAL("activated()"), self.run_export)
-        QObject.connect(self.action_settings, SIGNAL("activated()"), self.run_settings)
-        QObject.connect(self.action_preproc, SIGNAL("activated()"), self.run_preproc)
-
+        self.action_new.triggered.connect(self.run_new)
+        self.action_refinement.triggered.connect(self.run_refinement)
+        self.action_check3D.triggered.connect(self.run_check3D)
+        self.action_plot.triggered.connect(self.run_plot)
+        self.action_export.triggered.connect(self.run_export)
+        self.action_settings.triggered.connect(self.run_settings)
+        self.action_preproc.triggered.connect(self.run_preproc)
 
         # Add toolbar buttons
         self.iface.addToolBarIcon(self.action_new)
@@ -133,7 +134,6 @@ class QGridder:
         self.iface.addToolBarIcon(self.action_export)
         self.iface.addToolBarIcon(self.action_settings)
         self.iface.addToolBarIcon(self.action_preproc)
-
 
         # Add menu items
         self.iface.addPluginToMenu("Qgridder", self.action_new)

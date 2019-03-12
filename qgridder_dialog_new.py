@@ -25,15 +25,18 @@
  ***************************************************************************/
 """
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
+
 from qgis.core import *
+from qgis.gui import *
 
-from qgridder_dialog_base import QGridderDialog
-from ui_qgridder_new import Ui_QGridderNew
+from .qgridder_dialog_base import QGridderDialog
+from .ui_qgridder_new import Ui_QGridderNew
 
-import qgridder_utils
-import ftools_utils
+from . import qgridder_utils
+from .qgridder_utils import ftools_utils
 
 import numpy as np
 
@@ -51,25 +54,25 @@ class QGridderDialogNew(QGridderDialog, Ui_QGridderNew):
         self.setupUi(self)
 
         # Set up widgets
-        self.checkRatio.setCheckState(Qt.Checked)
-        self.checkLoadLayer.setCheckState(Qt.Checked)
+        self.checkRatio.setChecked(True)
+        self.checkLoadLayer.setChecked(True)
 
         # Connect buttons
-        QObject.connect(self.buttonUpdateFromLayer, SIGNAL("clicked()"), self.update_from_layer)
-        QObject.connect(self.buttonUpdateFromCanvas, SIGNAL("clicked()"), self.update_from_canvas)
-        QObject.connect(self.buttonBrowse, SIGNAL("clicked()"), self.out_file)
-        QObject.connect(self.buttonWriteGrid, SIGNAL("clicked()"), self.run_write_grid)
+        self.buttonUpdateFromLayer.clicked.connect(self.update_from_layer)
+        self.buttonUpdateFromCanvas.clicked.connect(self.update_from_canvas)
+        self.buttonBrowse.clicked.connect(self.out_file)
+        self.buttonWriteGrid.clicked.connect(self.run_write_grid)
 
         # Connect actions
-        QObject.connect(self.sboxXres, SIGNAL("valueChanged(double)"), self.set_Yres)
-        QObject.connect(self.textXmin, SIGNAL("textChanged(const QString &)"), self.estim_number_grid_cells)
-        QObject.connect(self.textXmax, SIGNAL("textChanged(const QString &)"), self.estim_number_grid_cells)
-        QObject.connect(self.textYmin, SIGNAL("textChanged(const QString &)"), self.estim_number_grid_cells)
-        QObject.connect(self.textYmax, SIGNAL("textChanged(const QString &)"), self.estim_number_grid_cells)
-        QObject.connect(self.sboxXres, SIGNAL("valueChanged(double)"), self.estim_number_grid_cells)
-        QObject.connect(self.sboxYres, SIGNAL("valueChanged(double)"), self.estim_number_grid_cells)
-        QObject.connect(self.textOutFilename, SIGNAL("textChanged(const QString &)"), self.set_out_file)
-
+        self.sboxXres.valueChanged.connect(self.set_Yres)
+        self.textXmin.textChanged.connect(self.estim_number_grid_cells)
+        self.textXmax.textChanged.connect(self.estim_number_grid_cells)
+        self.textYmin.textChanged.connect(self.estim_number_grid_cells)
+        self.textYmax.textChanged.connect(self.estim_number_grid_cells)
+        self.sboxXres.valueChanged.connect(self.estim_number_grid_cells)
+        self.sboxYres.valueChanged.connect(self.estim_number_grid_cells)
+        self.textOutFilename.textChanged.connect(self.set_out_file)
+        
         # Populate model name list
         self.populate_layer_list(self.listSourceLayer)
 
@@ -103,9 +106,13 @@ class QGridderDialogNew(QGridderDialog, Ui_QGridderNew):
     def out_file(self):
         self.textOutFilename.clear()
         ( self.OutFileName, self.encoding ) = ftools_utils.saveDialog( self )
-        if self.OutFileName is None or self.encoding is None:
-            return
+        #if self.OutFileName is None or self.encoding is None:
+        #    QMessageBox.information(parent, "Gridder",
+        #            str( 'encoding' + str(self.encoding) + 'file: ' + str(self.OutFileName) ))
+        #    return
         self.textOutFilename.setText( self.OutFileName  )
+        self.raise_()
+        self.activateWindow()
 
     #  ======= Choose output shape file
     def set_out_file(self):
@@ -192,8 +199,6 @@ class QGridderDialogNew(QGridderDialog, Ui_QGridderNew):
             Yres = self.sboxYres.value()
 
             # Compute number of elements
-
-
             n = int( round( (boundBox.yMaximum() - boundBox.yMinimum()) / Yres ) )
             m = int( round( (boundBox.xMaximum() - boundBox.xMinimum()) / Xres ) )
 
@@ -203,7 +208,7 @@ class QGridderDialogNew(QGridderDialog, Ui_QGridderNew):
 
             if n*m <= 0 :
                 QMessageBox.information(self, self.tr("Gridder"),
-                        self.tr("Invalid extent or resolution entered")
+                        self.tr("Invalid extent or resolution")
                         )
                 return
             # TO DO : Here, you should check whether elements  is correct...
@@ -230,45 +235,44 @@ class QGridderDialogNew(QGridderDialog, Ui_QGridderNew):
             rectFeat = QgsFeature()
             rectGeom = QgsGeometry()
             rectFeat.setGeometry(rectGeom.fromRect(boundBox))
-            #rectFeat.setAttributeMap(fields)
             rectFeat.initAttributes(1)
             idVar = 0
-            #rectFeat.addAttribute(0, QVariant(idVar))
             rectFeat.setAttribute(0, idVar)
 
             # if the file exits, remove it
             check = QFile(self.OutFileName)
             if QFile(self.OutFileName).exists():
                 if not QgsVectorFileWriter.deleteShapeFile(self.OutFileName):
+                    QMessageBox.information(self, self.tr("Generate Vector Grid"),
+                    "Cannot delete file:\n" + unicode(self.OutFileName) + "\n")
                     return
 
             # Load shape file writer
-            writer = QgsVectorFileWriter(unicode(self.textOutFilename.text()), self.encoding, fields, QGis.WKBPolygon, crs)
+            writer = QgsVectorFileWriter(unicode(self.textOutFilename.text()), 
+                    self.encoding, fields, QgsWkbTypes.Polygon, 
+                    crs, driverName="ESRI Shapefile")
 
             # Call function to make grid
             qgridder_utils.make_rgrid(rectFeat, n, m, writer, self.progressBarBuildGrid)
 
             # Delete writer
             del writer
-
-            # Post-operation information
-            QApplication.restoreOverrideCursor()
-            QMessageBox.information(self, self.tr("Generate Vector Grid"),
-                    "Created output shapefile:\n" + unicode(self.OutFileName) + "\n"
-                    )
-
+            
             # Load output layer if it is not already loaded
             if self.checkLoadLayer.isChecked():
                 # list currently loaded layer. If the layer is loaded, unload it.
-                for (name,layer) in QgsMapLayerRegistry.instance().mapLayers().iteritems():
+                for (name,layer) in QgsProject.instance().mapLayers().items():
                     # Note : reload() doesn't work.
                     if layer.source()==self.OutFileName:
-                        QgsMapLayerRegistry.instance().removeMapLayers( layer.id() )
-
+                        QgsProject.instance().removeMapLayer( layer.id() )
                 # load layer
                 ftools_utils.addShapeToCanvas( self.OutFileName )
                 # update layer list in plugin
                 self.populate_layer_list(self.listSourceLayer)
+
+        # Post-operation information
+        QApplication.restoreOverrideCursor()
+
         # Enable Write Grid button
         self.buttonWriteGrid.setEnabled( True )
 

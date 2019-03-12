@@ -25,15 +25,17 @@
  ***************************************************************************/
 """
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 
-from qgridder_dialog_base import QGridderDialog
-from ui_qgridder_check3D import Ui_QGridderCheck3D
+from .qgridder_dialog_base import QGridderDialog
+from .ui_qgridder_check3D import Ui_QGridderCheck3D
 
-import ftools_utils
-import qgridder_utils
+from . import qgridder_utils
+from .qgridder_utils import ftools_utils
 
 import numpy as np
 
@@ -52,13 +54,13 @@ class QGridderDialogCheck3D(QGridderDialog, Ui_QGridderCheck3D):
 
 
         # Connect buttons
-        QObject.connect(self.buttonLayer3DUp, SIGNAL("clicked()"), self.layer3D_up)
-        QObject.connect(self.buttonLayer3DDown, SIGNAL("clicked()"), self.layer3D_down)
-        QObject.connect(self.buttonLayer3DRemove, SIGNAL("clicked()"), self.remove_layer3D)
-        QObject.connect(self.buttonAddNewLayer3D, SIGNAL("clicked()"), self.add_new_layer3D)
-        QObject.connect(self.buttonAddExistingLayer3D, SIGNAL("clicked()"), self.add_existing_layer3D)
-        QObject.connect(self.buttonCheck3D, SIGNAL("clicked()"), self.run_check3D)
-
+        self.buttonLayer3DUp.clicked.connect(self.layer3D_up)
+        self.buttonLayer3DDown.clicked.connect(self.layer3D_down)
+        self.buttonLayer3DRemove.clicked.connect(self.remove_layer3D)
+        self.buttonAddNewLayer3D.clicked.connect(self.add_new_layer3D)
+        self.buttonAddExistingLayer3D.clicked.connect(self.add_existing_layer3D)
+        self.buttonCheck3D.clicked.connect(self.run_check3D)
+        
         # Populate model name list
         self.populate_layer_list(self.listReferenceGrid)
         self.populate_layer_list(self.listExistingLayer)
@@ -129,7 +131,7 @@ class QGridderDialogCheck3D(QGridderDialog, Ui_QGridderCheck3D):
 
 
         # Load new layer into map canvas ...
-        for (name,layer) in QgsMapLayerRegistry.instance().mapLayers().iteritems():
+        for (name,layer) in QgsProject.instance().mapLayers().items():
             # Note : reload() doesn't work.
             if layer.source()==self.OutFileName:
                 QgsMapLayerRegistry.instance().removeMapLayers( layer.id() )

@@ -31,4 +31,4 @@ class Ui_QGridderPlot(object):
         _translate = QtCore.QCoreApplication.translate
         QGridderPlot.setWindowTitle(_translate("QGridderPlot", "Qgridder Plot"))
 
-from mplwidget import Mplwidget
+from .mplwidget import Mplwidget

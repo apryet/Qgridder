@@ -25,14 +25,15 @@
  ***************************************************************************/
 """
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 
-from qgridder_dialog_base import QGridderDialog
-from ui_qgridder_settings import Ui_QGridderSettings
+from .qgridder_dialog_base import QGridderDialog
+from .ui_qgridder_settings import Ui_QGridderSettings
 
-import ftools_utils
+from . import qgridder_utils
+from .qgridder_utils import ftools_utils
 
 
 class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
@@ -54,14 +55,14 @@ class QGridderDialogSettings(QGridderDialog, Ui_QGridderSettings):
         self.proj = QgsProject.instance()
 
         # Connect buttons
-        QObject.connect(self.buttonBrowseModelSrcDir, SIGNAL("clicked()"), self.browse_model_src_dir)
-        QObject.connect(self.buttonBrowseObsDir, SIGNAL("clicked()"), self.browse_obs_dir)
-        QObject.connect(self.buttonBrowseSimulDir, SIGNAL("clicked()"), self.browse_simul_dir)
-        QObject.connect(self.buttonBrowseSimulFile, SIGNAL("clicked()"), self.browse_simul_file)
-        QObject.connect(self.buttonOK, SIGNAL("clicked()"), self.commit_changes)
-        QObject.connect(self.buttonCancel, SIGNAL("clicked()"), self.exit)
-        QObject.connect(self.listSimulSources, SIGNAL("currentIndexChanged(const QString&)"), self.update_simul_sources)
-        QObject.connect(self.checkPlotSimul, SIGNAL("clicked()"), self.update_simul_sources)
+        self.buttonBrowseModelSrcDir.clicked.connect(self.browse_model_src_dir)
+        self.buttonBrowseObsDir.clicked.connect(self.browse_obs_dir)
+        self.buttonBrowseSimulDir.clicked.connect(self.browse_simul_dir)
+        self.buttonBrowseSimulFile.clicked.connect(self.browse_simul_file)
+        self.buttonOK.clicked.connect(self.commit_changes)
+        self.buttonCancel.clicked.connect(self.exit)
+        self.listSimulSources.currentIndexChanged.connect(self.update_simul_sources)
+        self.checkPlotSimul.clicked.connect(self.update_simul_sources)
 
         # Populate model type list
         model_types = self.settings.model_types

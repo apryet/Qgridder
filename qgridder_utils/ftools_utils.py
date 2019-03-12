@@ -8,6 +8,8 @@
 # WEB  : http://www.ftools.ca/fTools.html
 #
 # A collection of data management and analysis tools for vector data
+
+# Modified by Pryet, 2019 for compatibility with QGIS3
 #
 #-----------------------------------------------------------
 #
@@ -56,7 +58,8 @@
 # -------------------------------------------------
 
 from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import *
 
@@ -189,15 +192,15 @@ def checkFieldNameLength( fieldList ):
             longNames.append( field.name() )
     return longNames
 
-# Return list of names of all layers in QgsMapLayerRegistry
+# Return list of names of all layers in QgsProject.instance()
 def getLayerNames( vTypes ):
-    layermap = QgsMapLayerRegistry.instance().mapLayers()
+    layermap = QgsProject.instance().mapLayers()
     layerlist = []
     if vTypes == "all":
-        for name, layer in layermap.iteritems():
+        for name, layer in layermap.items():
             layerlist.append( layer.name() )
     else:
-        for name, layer in layermap.iteritems():
+        for name, layer in layermap.items():
             if layer.type() == QgsMapLayer.VectorLayer:
                 if layer.geometryType() in vTypes:
                     layerlist.append( layer.name() )
@@ -217,8 +220,8 @@ def getFieldNames( vlayer ):
 
 # Return QgsVectorLayer from a layer name ( as string )
 def getVectorLayerByName( myName ):
-    layermap = QgsMapLayerRegistry.instance().mapLayers()
-    for name, layer in layermap.iteritems():
+    layermap = QgsProject.instance().mapLayers()
+    for name, layer in layermap.items():
         if layer.type() == QgsMapLayer.VectorLayer and layer.name() == myName:
             if layer.isValid():
                 return layer
@@ -227,8 +230,8 @@ def getVectorLayerByName( myName ):
 
 # Return QgsRasterLayer from a layer name ( as string )
 def getRasterLayerByName( myName ):
-    layermap = QgsMapLayerRegistry.instance().mapLayers()
-    for name, layer in layermap.iteritems():
+    layermap = QgsProject.instance().mapLayers()
+    for name, layer in layermap.items():
         if layer.type() == QgsMapLayer.RasterLayer and layer.name() == myName:
             if layer.isValid():
                 return layer
@@ -237,8 +240,8 @@ def getRasterLayerByName( myName ):
 
 # Return QgsMapLayer from a layer name ( as string )
 def getMapLayerByName( myName ):
-    layermap = QgsMapLayerRegistry.instance().mapLayers()
-    for name, layer in layermap.iteritems():
+    layermap = QgsProject.instance().mapLayers()
+    for name, layer in layermap.items():
         if layer.name() == myName:
             if layer.isValid():
                 return layer
@@ -267,7 +270,7 @@ def addShapeToCanvas( shapefile_path ):
         return False
     vlayer_new = QgsVectorLayer( shapefile_path, layer_name, "ogr" )
     if vlayer_new.isValid():
-        QgsMapLayerRegistry.instance().addMapLayers( [vlayer_new] )
+        QgsProject.instance().addMapLayers( [vlayer_new] )
         return True
     else:
         return False
@@ -285,12 +288,13 @@ def saveDialog( parent, filtering="Shapefiles (*.shp *.SHP)"):
     fileDialog.setDefaultSuffix( "shp" )
     fileDialog.setFileMode( QFileDialog.AnyFile )
     fileDialog.setAcceptMode( QFileDialog.AcceptSave )
-    fileDialog.setConfirmOverwrite( True )
-    if not fileDialog.exec_() == QDialog.Accepted:
-            return None, None
-    files = fileDialog.selectedFiles()
-    settings.setValue("/UI/lastShapefileDir", QFileInfo( unicode( files[0] ) ).absolutePath() )
-    return ( unicode( files[0] ), unicode( fileDialog.encoding() ) )
+    fileDialog.setOption(QFileDialog.DontConfirmOverwrite, False)
+    if fileDialog.exec_() == QDialog.Accepted:
+        files = fileDialog.selectedFiles()
+        settings.setValue("/UI/lastShapefileDir", QFileInfo( unicode( files[0] ) ).absolutePath() )
+        return ( unicode( files[0] ), unicode( fileDialog.encoding() ) )
+    else :
+       return None, None
 
 # Generate a save file dialog with a dropdown box for choosing encoding style
 # with mode="SingleFile" will allow to select only one file, in other cases - several files
