@@ -12,7 +12,7 @@
 
                               -------------------
         begin                : 2013-04-08
-        copyright            : (C) 2013 by Pryet
+        copyright            : (C) 2019 by Pryet
         email                : alexandre.pryet@ensegid.fr
  ***************************************************************************/
  This plugin uses functions from fTools
@@ -85,7 +85,7 @@ def get_param(grid_layer, output_type = 'array', layer = '', field_name = ''):
 
     # If a field name is provided, get corresponding field index
     if field_name !='' :
-        attr_field_idx = grid_layer.dataProvider().fieldNameIndex(field_name)
+        attr_field_idx = grid_layer.fields().indexFromName(field_name)
 
         # If the field is not found in attribute table
         if attr_field_idx == -1 :
@@ -100,14 +100,14 @@ def get_param(grid_layer, output_type = 'array', layer = '', field_name = ''):
                 return(np.array([]))
 
     # Get row and col field indexes
-    row_field_idx = grid_layer.dataProvider().fieldNameIndex('ROW')
-    col_field_idx = grid_layer.dataProvider().fieldNameIndex('COL')
+    row_field_idx = grid_layer.fields().indexFromName('ROW')
+    col_field_idx = grid_layer.fields().indexFromName('COL')
 
     # If row and col fields are not found, call rgrid_numbering
     if row_field_idx == -1 | col_field_idx == -1 :
         rgrid_numbering(grid_layer)
-        row_field_idx = grid_layer.dataProvider().fieldNameIndex('ROW')
-        col_field_idx = grid_layer.dataProvider().fieldNameIndex('COL')
+        row_field_idx = grid_layer.fields().indexFromName('ROW')
+        col_field_idx = grid_layer.fields().indexFromName('COL')
 
     if output_type == 'list':
         output = get_param_list(grid_layer, all_features, layer = layer, field_name = field_name)
@@ -146,11 +146,11 @@ def get_param_list(grid_layer, all_features,  layer = '', field_name = ''):
     selected_feature_ids = grid_layer.selectedFeaturesIds()
 
     # Get field_name attribute index
-    attr_field_idx = grid_layer.dataProvider().fieldNameIndex(field_name)
+    attr_field_idx = grid_layer.fields().indexFromName(field_name)
 
     # Get ROW and COL fields attribute indexes
-    row_field_idx = grid_layer.dataProvider().fieldNameIndex('ROW')
-    col_field_idx = grid_layer.dataProvider().fieldNameIndex('COL')
+    row_field_idx = grid_layer.fields().indexFromName('ROW')
+    col_field_idx = grid_layer.fields().indexFromName('COL')
 
     # init output list
     grid_list = []
@@ -207,7 +207,7 @@ def get_param_array(grid_layer, field_name = 'ID'):
     nrow, ncol =  get_rgrid_nrow_ncol(grid_layer)
 
     # Get field_name attribute index
-    attr_field_idx = grid_layer.dataProvider().fieldNameIndex(field_name)
+    attr_field_idx = grid_layer.fields().indexFromName(field_name)
 
     # init lists
     rows = [feat['ROW'] for feat in grid_layer.getFeatures()]
@@ -221,11 +221,6 @@ def get_param_array(grid_layer, field_name = 'ID'):
     val = rowColVal[idx,2]
     val.shape = (nrow, ncol)
 
-    #field_values = field_values[idx]
-
-    #field_values.shape = (nrow, ncol)
-
-    #return(field_values)
     return(val)
 
 
@@ -729,7 +724,6 @@ def data_to_grid(data, grid_layer, field_name = 'PARAM', fieldType = QVariant.Do
     # Select all features along with their attributes
     #allAttrs = grid_layer.pendingAllAttributesList()
     #grid_layer.select(allAttrs)
-    print('STARTING')
     # load dic of current layer attributes
     field_name_map = grid_layer.dataProvider().fieldNameMap()
 
@@ -742,14 +736,11 @@ def data_to_grid(data, grid_layer, field_name = 'PARAM', fieldType = QVariant.Do
     # elements are sorted from top left to bottom right
     data = np.reshape(data, -1)
 
-    print('building all_features')
     # Init variables
     all_features = {feat.id():feat for feat in grid_layer.getFeatures()}
-    print('building all_centroids')
     all_centroids = [feat.geometry().centroid().asPoint() \
                         for feat in all_features.values()]
-    print('sorting centroids')
-    centroids_ids = all_features.keys()
+    centroids_ids = list(all_features.keys())
     centroids_x = np.around(np.array([centroid.x() for centroid in all_centroids]), MAX_DECIMALS)
     centroids_y = np.around(np.array([centroid.y() for centroid in all_centroids]), MAX_DECIMALS)
     centroids = np.array( [centroids_ids , centroids_x, centroids_y] )
@@ -760,12 +751,10 @@ def data_to_grid(data, grid_layer, field_name = 'PARAM', fieldType = QVariant.Do
     idx = np.lexsort( [centroids_x,-1*centroids_y] )
     centroids = centroids[idx,:]
 
-    print('building attribute map')
     # populate change attribute map
-    field_idx = grid_layer.fieldNameIndex(field_name)
+    field_idx = grid_layer.fields().indexFromName(field_name)
     attr_map = { centroids[i,0] : { field_idx : float(data[i]) } for i in range( centroids.shape[0] ) }
 
-    print('updating attributes')
     # write attributes
     grid_layer.startEditing()
     res = grid_layer.dataProvider().changeAttributeValues(attr_map)

@@ -65,6 +65,9 @@ class QGridderDialogCheck3D(QGridderDialog, Ui_QGridderCheck3D):
         self.populate_layer_list(self.listReferenceGrid)
         self.populate_layer_list(self.listExistingLayer)
 
+        # Set encoding 
+        self.encoding = 'System'
+        
 
     # ========== update listLayers3D
     def update_listLayers3D(self) :
@@ -111,17 +114,18 @@ class QGridderDialogCheck3D(QGridderDialog, Ui_QGridderCheck3D):
 
         # Copy reference grid to shapefile to user defined location
         OutFileName, Encoding = ftools_utils.saveDialog( self )
-        if (OutFileName, OutFileName) == (None, None) :
+        if OutFileName == None :
             return()
 
         # write new layer to shapefile
-        ftools_utils.writeVectorLayerToShape( ReferenceGridLayer, OutFileName, self.encoding )
-
+        ftools_utils.writeVectorLayerToShape( ReferenceGridLayer, OutFileName, Encoding )
 
         # get new layer name
         file_info = QFileInfo( OutFileName )
         if file_info.exists():
             newLayerName = file_info.completeBaseName()
+        else :
+            newLayerName = OutFileName
 
         # check whether this layer name is already in the 3D list
         if len(self.listLayers3D.findItems(newLayerName,Qt.MatchFixedString)) != 0 :
@@ -129,11 +133,10 @@ class QGridderDialogCheck3D(QGridderDialog, Ui_QGridderCheck3D):
                     self.tr("This layer is already in the list."))
             return()
 
-
         # Load new layer into map canvas ...
         for (name,layer) in QgsProject.instance().mapLayers().items():
             # Note : reload() doesn't work.
-            if layer.source()==self.OutFileName:
+            if layer.source()== OutFileName:
                 QgsMapLayerRegistry.instance().removeMapLayers( layer.id() )
         ftools_utils.addShapeToCanvas( OutFileName )
 

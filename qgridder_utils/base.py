@@ -317,7 +317,7 @@ def is_over(geomA,geomB,relativeError=TOLERANCE):
             )
 
 # ======================================================================================
-def refine_by_split(featIds, n, m, topo_rules, grid_layer, progress_bar, labelIter ) :
+def refine_by_split(featIds, n, m, topo_rules, grid_layer, progress_bar = None, labelIter = None ) :
     """
     Description
     ----------
@@ -426,8 +426,10 @@ def refine_by_split(featIds, n, m, topo_rules, grid_layer, progress_bar, labelIt
         fix_dict = { 'id':[] , 'n':[], 'm':[] }
 
         # Initialize progress bar
-        progress_bar.setRange(0,100)
-        progress_bar.setValue(0)
+        if progress_bar is not None :
+            progress_bar.setRange(0,100)
+            progress_bar.setValue(0)
+
         count = 0
         countMax = len(newFeatIds)
         countUpdate = countMax * 0.05 # update each 5%
@@ -443,15 +445,17 @@ def refine_by_split(featIds, n, m, topo_rules, grid_layer, progress_bar, labelIt
            # update progress_bar
             if int( np.fmod( count, countUpdate ) ) == 0:
                 prog = int( count / countMax * 100 )
-                progress_bar.setValue(prog)
+                if progress_bar is not None :
+                    progress_bar.setValue(prog)
                 QCoreApplication.processEvents()
 
-        progress_bar.setValue(100)
+        if progress_bar is not None : 
+            progress_bar.setValue(100)
 
         # Update iteration counter
         itCount+=1
-        labelIter.setText(unicode(itCount))
-        #print("BASE OVER %s sec" % (time.time() - start_time))
+        if labelIter is not None : 
+            labelIter.setText(unicode(itCount))
 
 
 # ======================================================================================
