@@ -31,6 +31,7 @@
 
 
 from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtCore import QVariant
 from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 

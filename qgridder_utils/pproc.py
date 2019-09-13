@@ -143,7 +143,7 @@ def get_param_list(grid_layer, all_features,  layer = '', field_name = ''):
     """
 
     # Get selected features from input grid_layer
-    selected_feature_ids = grid_layer.selectedFeaturesIds()
+    selected_feature_ids = grid_layer.selectedFeatureIds()
 
     # Get field_name attribute index
     attr_field_idx = grid_layer.fields().indexFromName(field_name)
@@ -219,10 +219,13 @@ def get_param_array(grid_layer, field_name = 'ID'):
     idx = np.lexsort( [rowColVal[:,1], rowColVal[:,0]] )
 
     val = rowColVal[idx,2]
-    val.shape = (nrow, ncol)
+    val.shape = (nrow, ncol) 
+
+    # Avoid issue with Qvariant None in the output array for real fields
+    if grid_layer.fields().field(attr_field_idx).typeName() == 'Real':
+        val[val==None] = np.nan
 
     return(val)
-
 
 # -----------------------------------------------------
 def get_ptset_xy(v_layer, id_field_name = 'ID'):
@@ -334,7 +337,7 @@ def get_ptset_centroids(v_layer, grid_layer, id_field_name = 'ID',nNeighbors = 3
     PtsetCentroids = {}
 
    # check that the selection in v_layer is not empty
-    selected_feature_ids = v_layer.selectedFeaturesIds()
+    selected_feature_ids = v_layer.selectedFeatureIds()
     if len(selected_feature_ids) == 0:
         print("Empty selection, all features considered")
         features = v_layer.getFeatures()
@@ -514,7 +517,7 @@ def get_pline_centroids(pline_layer, grid_layer, id_field_name = 'ID', get_ndist
     pline_cells_dic = {}
 
     # check that the selection in pline_layer is not empty
-    selected_feat_ids = pline_layer.selectedFeaturesIds()
+    selected_feat_ids = pline_layer.selectedFeatureIds()
     if len(selected_feat_ids) == 0:
         print("Empty selection, all features considered")
         plines = pline_layer.getFeatures()
@@ -606,7 +609,7 @@ def get_polygon_centroids(polygon_layer, grid_layer, pline_layer = None, id_fiel
     polygon_cells_dic = {}
 
     # check that the selection in polygon_layer is not empty
-    selected_feat_ids = polygon_layer.selectedFeaturesIds()
+    selected_feat_ids = polygon_layer.selectedFeatureIds()
     if len(selected_feat_ids) == 0:
         print("Empty selection, all features considered")
         polygons = polygon_layer.getFeatures()
@@ -682,7 +685,7 @@ def get_feat_param(v_layer, id_field_name = 'ID', field_name = 'PARAM',):
     # field_name : the attribute field of v_layer containing feature identificator
 
    # check that the selection in v_layer is not empty
-    selected_feature_ids = v_layer.selectedFeaturesIds()
+    selected_feature_ids = v_layer.selectedFeatureIds()
     if len(selected_feature_ids) == 0:
         print("Empty selection, all features considered")
         features = v_layer.getFeatures()
