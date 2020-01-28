@@ -166,11 +166,12 @@ def interp_from_file(in_file_path, dates_out, date_string_format =  '%Y-%m-%d %H
     """
 
     # read observed data
+    str2date = lambda x: datetime.strptime(x.decode("utf-8"), date_string_format)
 
     try :
         datenums_in, vals_in = np.genfromtxt(in_file_path,delimiter=csv_delimiter,
                 unpack=True,skip_header=skip_header,
-                converters={ 0: mdates.strpdate2num(date_string_format)}
+                converters={ 0: str2date}
                 )
 
     except :
