@@ -22,6 +22,7 @@
 
 import numpy as np
 import datetime as dt
+import pandas as pd 
 
 try :
     import matplotlib.dates as mdates
@@ -166,22 +167,17 @@ def interp_from_file(in_file_path, dates_out, date_string_format =  '%Y-%m-%d %H
     """
 
     # read observed data
-    str2date = lambda x: datetime.strptime(x.decode("utf-8"), date_string_format)
 
     try :
-        datenums_in, vals_in = np.genfromtxt(in_file_path,delimiter=csv_delimiter,
-                unpack=True,skip_header=skip_header,
-                converters={ 0: str2date}
-                )
+        df = pd.read_csv(in_file_path,index_col = 0, parse_dates = True)
+        dates_in = np.array(df.index)
+        vals_in = np.array(df.iloc[:,0])
 
     except :
         print('Error while reading file ' + in_file_path + '.\n'+
                 'Check file path and format (should be a 2 column CSV file).'
                 )
         return(None)
-
-    # convert datesnums to datetime
-    dates_in = mdates.num2date(datenums_in)
 
     # compute vals_out
     vals_out = lin_time_interp(dates_in, vals_in, dates_out)
