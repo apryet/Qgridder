@@ -389,14 +389,15 @@ def get_pline_data(pline, pline_layer) :
     """
 
     # get points from polyline
-    pline_point_list = pline.geometry().asPolyline()
+    #pline_point_list = pline.geometry().asPolyline()
+    pline_point_list = pline.geometry().asMultiPolyline()[0]
 
     # build list of features constituting the polyline
     pline_feat_list = []
 
     for point in pline_point_list :
         feat = QgsFeature()
-        geom = QgsGeometry.fromPoint(point)
+        geom = QgsGeometry.fromPointXY(point)
         feat.setGeometry(geom)
         pline_feat_list.append(feat)
 
@@ -475,7 +476,7 @@ def get_dist_pline_centroid(centroid, pline, pline_feat_dic, pline_point_layer_i
     dist_centroid_origin = pline_cumdist_dic[first_neighbor_id] + dist_centroid_projected
 
     # compute normalized distance ( curvilinear distance from pline origin / total pline length )
-    norm_dist_centroid_origin = dist_centroid_origin / np.max(pline_cumdist_dic.values())
+    norm_dist_centroid_origin = dist_centroid_origin / np.max([v for v in pline_cumdist_dic.values()])
 
     return(norm_dist_centroid_origin)
 
