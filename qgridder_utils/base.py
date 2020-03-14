@@ -448,7 +448,7 @@ def refine_by_split(featIds, n, m, topo_rules, grid_layer, progress_bar = None, 
                 prog = int( count / countMax * 100 )
                 if progress_bar is not None :
                     progress_bar.setValue(prog)
-                QCoreApplication.processEvents()
+                QApplication.processEvents()
 
         if progress_bar is not None : 
             progress_bar.setValue(100)
